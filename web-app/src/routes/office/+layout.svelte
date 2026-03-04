@@ -12,6 +12,8 @@
     let sidebarCollapsed = $state(false);
     let commandPaletteOpen = $state(false);
     let searchQuery = $state('');
+    let theme = $state<'dark' | 'light'>('dark');
+    let mounted = $state(false);
 
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: 'grid', href: '/office' },
@@ -33,7 +35,18 @@
         searchQuery = '';
     }
 
+    function toggleTheme() {
+        theme = theme === 'dark' ? 'light' : 'dark';
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('office-theme', theme);
+        }
+    }
+
     onMount(() => {
+        const saved = localStorage.getItem('office-theme') as 'dark' | 'light' | null;
+        if (saved) theme = saved;
+        mounted = true;
+
         function handleKeydown(e: KeyboardEvent) {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
@@ -51,22 +64,20 @@
 
 <svelte:head>
     <title>Office — VASpeak</title>
-    <style>
-        .office-layout {
-            --office-bg: #0a0a0b;
-            --office-surface: #141415;
-            --office-surface-hover: #1c1c1e;
-            --office-border: #27272a;
-            --office-text: #fafafa;
-            --office-text-muted: #71717a;
-            --office-accent: #f2a906;
-            --office-accent-muted: rgba(242, 169, 6, 0.15);
-        }
-    </style>
 </svelte:head>
 
 {#if data.authenticated}
-    <div class="office-layout flex h-screen bg-[var(--office-bg)] text-[var(--office-text)]">
+    <div 
+        class="office-layout flex h-screen transition-colors duration-300 {mounted ? theme : 'dark'}"
+        style:--office-bg={theme === 'dark' ? '#0a0a0b' : '#fafafa'}
+        style:--office-surface={theme === 'dark' ? '#141415' : '#ffffff'}
+        style:--office-surface-hover={theme === 'dark' ? '#1c1c1e' : '#f4f4f5'}
+        style:--office-border={theme === 'dark' ? '#27272a' : '#e4e4e7'}
+        style:--office-text={theme === 'dark' ? '#fafafa' : '#18181b'}
+        style:--office-text-muted={theme === 'dark' ? '#71717a' : '#71717a'}
+        style:--office-accent="#f2a906"
+        style:--office-accent-muted={theme === 'dark' ? 'rgba(242, 169, 6, 0.15)' : 'rgba(242, 169, 6, 0.2)'}
+    >
         <!-- Sidebar -->
         <aside 
             class="flex flex-col border-r border-[var(--office-border)] bg-[var(--office-surface)] transition-all duration-300 {sidebarCollapsed ? 'w-16' : 'w-60'}"
@@ -144,6 +155,21 @@
                 </button>
 
                 <div class="flex items-center gap-3">
+                    <button
+                        onclick={toggleTheme}
+                        class="p-2 rounded-lg text-[var(--office-text-muted)] hover:text-[var(--office-text)] hover:bg-[var(--office-surface-hover)] transition-colors"
+                        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                    >
+                        {#if theme === 'dark'}
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                        {:else}
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                            </svg>
+                        {/if}
+                    </button>
                     <a
                         href="/"
                         class="text-xs text-[var(--office-text-muted)] hover:text-[var(--office-text)] transition-colors"
@@ -168,7 +194,7 @@
         <!-- Command Palette -->
         {#if commandPaletteOpen}
             <div
-                class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-[15vh]"
+                class="fixed inset-0 {theme === 'dark' ? 'bg-black/60' : 'bg-black/40'} backdrop-blur-sm z-50 flex items-start justify-center pt-[15vh]"
                 onclick={closeCommandPalette}
                 onkeydown={(e) => e.key === 'Escape' && closeCommandPalette()}
                 role="button"
