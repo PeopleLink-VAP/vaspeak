@@ -1,292 +1,273 @@
 /**
- * VASpeak SpacetimeDB Module — Reducers
+ * SpacetimeDB Module for VASpeak.
  *
- * All server-side reducers for auth, membership, newsletter.
- * Password hashing/verification happens in SvelteKit API routes,
- * NOT in these reducers. The reducers simply store/retrieve data.
+ * Tables for auth, membership, and newsletter.
+ * Reducers for all auth operations.
+ *
+ * Uses SpacetimeDB SDK v2.0.2 API.
+ * Reducer names are derived from the exported variable names.
  */
 
-import spacetimedb, {
-    User,
-    EmailVerification,
-    MagicLink,
-    PasswordReset,
-    NewsletterSubscriber,
-    BlacklistedDomain,
-} from './schema.js';
+import { schema, table, t } from 'spacetimedb/server';
 
-// ─── Auth Reducers ──────────────────────────────────────────────────────────
+// ─── Schema: All Tables ─────────────────────────────────────────────────────
 
-/**
- * Register a new user. Password is already hashed by the SvelteKit API route.
- */
-spacetimedb.reducer('register_user', {
-    email: spacetimedb.type.string(),
-    passwordHash: spacetimedb.type.string(),
-    verificationToken: spacetimedb.type.string(),
-    tokenExpiresAt: spacetimedb.type.u64(),
-}, (ctx, { email, passwordHash, verificationToken, tokenExpiresAt }) => {
-    // Check if user already exists
-    const existing = ctx.db.users.email.find(email);
-    if (existing) {
-        throw new Error('User with this email already exists');
-    }
+const spacetimedb = schema({
+    users: table(
+        { public: true },
+        {
+            id: t.u64().autoInc().primaryKey(),
+            email: t.string().unique(),
+            passwordHash: t.string(),
+            emailVerified: t.bool().default(false),
+            role: t.string().default('user'),
+            createdAt: t.u64(),
+            updatedAt: t.u64(),
+        }
+    ),
 
-    const now = BigInt(Date.now());
+    emailVerifications: table(
+        { public: false },
+        {
+            id: t.u64().autoInc().primaryKey(),
+            userId: t.u64(),
+            token: t.string().unique(),
+            expiresAt: t.u64(),
+        }
+    ),
 
-    // Insert user
-    const user = ctx.db.users.insert({
-        id: 0n,
-        email,
-        passwordHash,
-        emailVerified: false,
-        role: 'user',
-        createdAt: now,
-        updatedAt: now,
-    });
+    magicLinks: table(
+        { public: false },
+        {
+            id: t.u64().autoInc().primaryKey(),
+            email: t.string(),
+            token: t.string().unique(),
+            expiresAt: t.u64(),
+            used: t.bool().default(false),
+        }
+    ),
 
-    // Create email verification token
-    ctx.db.emailVerifications.insert({
-        id: 0n,
-        userId: user.id,
-        token: verificationToken,
-        expiresAt: tokenExpiresAt,
-    });
+    passwordResets: table(
+        { public: false },
+        {
+            id: t.u64().autoInc().primaryKey(),
+            userId: t.u64(),
+            token: t.string().unique(),
+            expiresAt: t.u64(),
+            used: t.bool().default(false),
+        }
+    ),
+
+    newsletterSubscribers: table(
+        { public: false },
+        {
+            id: t.u64().autoInc().primaryKey(),
+            email: t.string().unique(),
+            subscribedAt: t.u64(),
+            unsubscribed: t.bool().default(false),
+        }
+    ),
+
+    blacklistedDomains: table(
+        { public: true },
+        {
+            id: t.u64().autoInc().primaryKey(),
+            domain: t.string().unique(),
+        }
+    ),
 });
 
-/**
- * Verify a user's email address using the verification token.
- */
-spacetimedb.reducer('verify_email', {
-    token: spacetimedb.type.string(),
-}, (ctx, { token }) => {
-    const verification = ctx.db.emailVerifications.token.find(token);
-    if (!verification) {
-        throw new Error('Invalid verification token');
-    }
+export default spacetimedb;
 
-    const now = BigInt(Date.now());
-    if (verification.expiresAt < now) {
-        // Clean up expired token
-        ctx.db.emailVerifications.id.delete(verification.id);
-        throw new Error('Verification token has expired');
-    }
+// ─── Lifecycle ──────────────────────────────────────────────────────────────
 
-    // Mark user as verified
-    const user = ctx.db.users.id.find(verification.userId);
-    if (!user) {
-        throw new Error('User not found');
-    }
+export const init = spacetimedb.init(_ctx => { });
 
-    ctx.db.users.id.update({
-        ...user,
-        emailVerified: true,
-        updatedAt: now,
-    });
+// ─── User Registration ──────────────────────────────────────────────────────
 
-    // Delete the verification token
-    ctx.db.emailVerifications.id.delete(verification.id);
-});
+export const register_user = spacetimedb.reducer(
+    {
+        email: t.string(),
+        passwordHash: t.string(),
+        verificationToken: t.string(),
+        tokenExpiresAt: t.u64(),
+    },
+    (ctx, args) => {
+        const now = BigInt(Date.now());
 
-/**
- * Create a magic link token for passwordless login.
- */
-spacetimedb.reducer('create_magic_link', {
-    email: spacetimedb.type.string(),
-    token: spacetimedb.type.string(),
-    expiresAt: spacetimedb.type.u64(),
-}, (ctx, { email, token, expiresAt }) => {
-    ctx.db.magicLinks.insert({
-        id: 0n,
-        email,
-        token,
-        expiresAt,
-        used: false,
-    });
-});
-
-/**
- * Consume a magic link — marks it as used and returns success if valid.
- */
-spacetimedb.reducer('consume_magic_link', {
-    token: spacetimedb.type.string(),
-}, (ctx, { token }) => {
-    const link = ctx.db.magicLinks.token.find(token);
-    if (!link) {
-        throw new Error('Invalid magic link');
-    }
-    if (link.used) {
-        throw new Error('Magic link already used');
-    }
-
-    const now = BigInt(Date.now());
-    if (link.expiresAt < now) {
-        throw new Error('Magic link has expired');
-    }
-
-    // Mark as used
-    ctx.db.magicLinks.id.update({
-        ...link,
-        used: true,
-    });
-
-    // Ensure user exists and is verified (magic link acts as email verification)
-    const user = ctx.db.users.email.find(link.email);
-    if (user && !user.emailVerified) {
-        ctx.db.users.id.update({
-            ...user,
-            emailVerified: true,
+        ctx.db.users.insert({
+            id: 0n,
+            email: args.email,
+            passwordHash: args.passwordHash,
+            emailVerified: false,
+            role: 'user',
+            createdAt: now,
             updatedAt: now,
         });
+
+        const user = ctx.db.users.email.find(args.email);
+        if (!user) return;
+
+        ctx.db.emailVerifications.insert({
+            id: 0n,
+            userId: user.id,
+            token: args.verificationToken,
+            expiresAt: args.tokenExpiresAt,
+        });
     }
-});
+);
 
-/**
- * Create a password reset token.
- */
-spacetimedb.reducer('request_password_reset', {
-    userId: spacetimedb.type.u64(),
-    token: spacetimedb.type.string(),
-    expiresAt: spacetimedb.type.u64(),
-}, (ctx, { userId, token, expiresAt }) => {
-    ctx.db.passwordResets.insert({
-        id: 0n,
-        userId,
-        token,
-        expiresAt,
-        used: false,
-    });
-});
+// ─── Email Verification ─────────────────────────────────────────────────────
 
-/**
- * Reset password using a valid reset token.
- * New password hash is computed by SvelteKit API route.
- */
-spacetimedb.reducer('reset_password', {
-    token: spacetimedb.type.string(),
-    newPasswordHash: spacetimedb.type.string(),
-}, (ctx, { token, newPasswordHash }) => {
-    const reset = ctx.db.passwordResets.token.find(token);
-    if (!reset) {
-        throw new Error('Invalid reset token');
+export const verify_email = spacetimedb.reducer(
+    { token: t.string() },
+    (ctx, args) => {
+        const verification = ctx.db.emailVerifications.token.find(args.token);
+        if (!verification) throw new Error('Invalid verification token');
+
+        const now = BigInt(Date.now());
+        if (verification.expiresAt < now) throw new Error('Verification token has expired');
+
+        const user = ctx.db.users.id.find(verification.userId);
+        if (!user) throw new Error('User not found');
+
+        ctx.db.users.delete(user);
+        ctx.db.users.insert({ ...user, emailVerified: true, updatedAt: now });
+        ctx.db.emailVerifications.delete(verification);
     }
-    if (reset.used) {
-        throw new Error('Reset token already used');
+);
+
+// ─── Magic Link ─────────────────────────────────────────────────────────────
+
+export const create_magic_link = spacetimedb.reducer(
+    { email: t.string(), token: t.string(), expiresAt: t.u64() },
+    (ctx, args) => {
+        ctx.db.magicLinks.insert({
+            id: 0n,
+            email: args.email,
+            token: args.token,
+            expiresAt: args.expiresAt,
+            used: false,
+        });
     }
+);
 
-    const now = BigInt(Date.now());
-    if (reset.expiresAt < now) {
-        throw new Error('Reset token has expired');
-    }
+export const consume_magic_link = spacetimedb.reducer(
+    { token: t.string() },
+    (ctx, args) => {
+        const link = ctx.db.magicLinks.token.find(args.token);
+        if (!link) throw new Error('Invalid magic link');
 
-    // Update the user's password
-    const user = ctx.db.users.id.find(reset.userId);
-    if (!user) {
-        throw new Error('User not found');
-    }
+        const now = BigInt(Date.now());
+        if (link.expiresAt < now) throw new Error('Magic link has expired');
+        if (link.used) throw new Error('Magic link has already been used');
 
-    ctx.db.users.id.update({
-        ...user,
-        passwordHash: newPasswordHash,
-        updatedAt: now,
-    });
+        ctx.db.magicLinks.delete(link);
+        ctx.db.magicLinks.insert({ ...link, used: true });
 
-    // Mark reset token as used
-    ctx.db.passwordResets.id.update({
-        ...reset,
-        used: true,
-    });
-});
-
-// ─── Newsletter Reducers ────────────────────────────────────────────────────
-
-/**
- * Subscribe an email to the newsletter.
- */
-spacetimedb.reducer('subscribe_newsletter', {
-    email: spacetimedb.type.string(),
-}, (ctx, { email }) => {
-    const existing = ctx.db.newsletterSubscribers.email.find(email);
-    if (existing) {
-        // Re-subscribe if previously unsubscribed
-        if (existing.unsubscribed) {
-            ctx.db.newsletterSubscribers.id.update({
-                ...existing,
-                unsubscribed: false,
-                subscribedAt: BigInt(Date.now()),
-            });
+        const user = ctx.db.users.email.find(link.email);
+        if (user && !user.emailVerified) {
+            ctx.db.users.delete(user);
+            ctx.db.users.insert({ ...user, emailVerified: true, updatedAt: now });
         }
-        return; // Already subscribed
     }
+);
 
-    ctx.db.newsletterSubscribers.insert({
-        id: 0n,
-        email,
-        subscribedAt: BigInt(Date.now()),
-        unsubscribed: false,
-    });
-});
+// ─── Password Reset ─────────────────────────────────────────────────────────
 
-/**
- * Unsubscribe from the newsletter.
- */
-spacetimedb.reducer('unsubscribe_newsletter', {
-    email: spacetimedb.type.string(),
-}, (ctx, { email }) => {
-    const sub = ctx.db.newsletterSubscribers.email.find(email);
-    if (!sub) {
-        throw new Error('Email not found in newsletter subscribers');
+export const request_password_reset = spacetimedb.reducer(
+    { userId: t.u64(), token: t.string(), expiresAt: t.u64() },
+    (ctx, args) => {
+        ctx.db.passwordResets.insert({
+            id: 0n,
+            userId: args.userId,
+            token: args.token,
+            expiresAt: args.expiresAt,
+            used: false,
+        });
     }
+);
 
-    ctx.db.newsletterSubscribers.id.update({
-        ...sub,
-        unsubscribed: true,
-    });
-});
+export const reset_password = spacetimedb.reducer(
+    { token: t.string(), newPasswordHash: t.string() },
+    (ctx, args) => {
+        const reset = ctx.db.passwordResets.token.find(args.token);
+        if (!reset) throw new Error('Invalid reset token');
 
-// ─── Domain Blacklist Reducers ──────────────────────────────────────────────
+        const now = BigInt(Date.now());
+        if (reset.expiresAt < now) throw new Error('Reset token has expired');
+        if (reset.used) throw new Error('Reset token has already been used');
 
-/**
- * Add a domain to the blacklist (admin only in practice).
- */
-spacetimedb.reducer('add_blacklisted_domain', {
-    domain: spacetimedb.type.string(),
-}, (ctx, { domain }) => {
-    const existing = ctx.db.blacklistedDomains.domain.find(domain);
-    if (existing) return; // Already blacklisted
+        const user = ctx.db.users.id.find(reset.userId);
+        if (!user) throw new Error('User not found');
 
-    ctx.db.blacklistedDomains.insert({
-        id: 0n,
-        domain: domain.toLowerCase(),
-    });
-});
+        ctx.db.users.delete(user);
+        ctx.db.users.insert({ ...user, passwordHash: args.newPasswordHash, updatedAt: now });
 
-/**
- * Seed the blacklisted domains table with common disposable email providers.
- * Should be called once during initial setup.
- */
-spacetimedb.reducer('seed_blacklisted_domains', {}, (ctx) => {
-    const disposableDomains = [
-        'tempmail.com', 'throwaway.email', 'guerrillamail.com',
-        'mailinator.com', 'yopmail.com', 'trashmail.com',
-        'tempail.com', 'fakeinbox.com', 'sharklasers.com',
-        'guerrillamailblock.com', 'grr.la', 'dispostable.com',
-        'temp-mail.org', 'getnada.com', 'emailondeck.com',
-        'maildrop.cc', 'harakirimail.com', 'tempmailo.com',
-        'mohmal.com', 'burnermail.io',
-        '10minutemail.com', 'minutemail.com', 'tempinbox.com',
-        'mailnesia.com', 'mailcatch.com', 'mytemp.email',
-        'throwawaymail.com', 'inboxbear.com', 'mailsac.com',
-        'anonbox.net',
+        ctx.db.passwordResets.delete(reset);
+        ctx.db.passwordResets.insert({ ...reset, used: true });
+    }
+);
+
+// ─── Newsletter ─────────────────────────────────────────────────────────────
+
+export const subscribe_newsletter = spacetimedb.reducer(
+    { email: t.string() },
+    (ctx, args) => {
+        const existing = ctx.db.newsletterSubscribers.email.find(args.email);
+        if (existing) {
+            if (existing.unsubscribed) {
+                ctx.db.newsletterSubscribers.delete(existing);
+                ctx.db.newsletterSubscribers.insert({
+                    ...existing,
+                    unsubscribed: false,
+                    subscribedAt: BigInt(Date.now()),
+                });
+            }
+            return;
+        }
+        ctx.db.newsletterSubscribers.insert({
+            id: 0n,
+            email: args.email,
+            subscribedAt: BigInt(Date.now()),
+            unsubscribed: false,
+        });
+    }
+);
+
+export const unsubscribe_newsletter = spacetimedb.reducer(
+    { email: t.string() },
+    (ctx, args) => {
+        const subscriber = ctx.db.newsletterSubscribers.email.find(args.email);
+        if (!subscriber) throw new Error('Subscriber not found');
+        ctx.db.newsletterSubscribers.delete(subscriber);
+        ctx.db.newsletterSubscribers.insert({ ...subscriber, unsubscribed: true });
+    }
+);
+
+// ─── Blacklisted Domains ────────────────────────────────────────────────────
+
+export const add_blacklisted_domain = spacetimedb.reducer(
+    { domain: t.string() },
+    (ctx, args) => {
+        const existing = ctx.db.blacklistedDomains.domain.find(args.domain.toLowerCase());
+        if (existing) return;
+        ctx.db.blacklistedDomains.insert({ id: 0n, domain: args.domain.toLowerCase() });
+    }
+);
+
+export const seed_blacklisted_domains = spacetimedb.reducer(ctx => {
+    const domains = [
+        'tempmail.com', 'throwaway.email', 'mailinator.com', 'guerrillamail.com',
+        'yopmail.com', '10minutemail.com', 'trashmail.com', 'sharklasers.com',
+        'guerrillamailblock.com', 'grr.la', 'discard.email', 'dispostable.com',
+        'mailnesia.com', 'maildrop.cc', 'temp-mail.org', 'fakeinbox.com',
+        'burnermail.io', 'tempail.com', 'mohmal.com', 'getnada.com',
     ];
-
-    for (const domain of disposableDomains) {
+    for (const domain of domains) {
         const existing = ctx.db.blacklistedDomains.domain.find(domain);
         if (!existing) {
-            ctx.db.blacklistedDomains.insert({
-                id: 0n,
-                domain,
-            });
+            ctx.db.blacklistedDomains.insert({ id: 0n, domain });
         }
     }
 });

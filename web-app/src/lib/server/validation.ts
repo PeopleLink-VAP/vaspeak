@@ -65,47 +65,15 @@ export function extractDomain(email: string): string {
 
 // ─── Disposable Domain Check ────────────────────────────────────────────────
 
-/**
- * Hardcoded list of well-known disposable email domains.
- * This provides a fast local check before hitting the database.
- */
-const DISPOSABLE_DOMAINS = new Set([
-    // Major disposable email providers
-    'tempmail.com', 'throwaway.email', 'guerrillamail.com',
-    'mailinator.com', 'yopmail.com', 'trashmail.com',
-    'tempail.com', 'fakeinbox.com', 'sharklasers.com',
-    'guerrillamailblock.com', 'grr.la', 'dispostable.com',
-    'temp-mail.org', 'getnada.com', 'emailondeck.com',
-    'maildrop.cc', 'harakirimail.com', 'tempmailo.com',
-    'mohmal.com', 'burnermail.io',
-    '10minutemail.com', 'minutemail.com', 'tempinbox.com',
-    'mailnesia.com', 'mailcatch.com', 'mytemp.email',
-    'throwawaymail.com', 'inboxbear.com', 'mailsac.com',
-    'anonbox.net', 'jetable.org', 'spambox.us',
-    'trashmail.ws', 'trashmail.me', 'trashmail.net',
-    'getairmail.com', 'filzmail.com', 'tempr.email',
-    'binkmail.com', 'safetymail.info', 'tempmailaddress.com',
-    'tempsky.com', 'emailfake.com', 'crazymailing.com',
-    'armyspy.com', 'dayrep.com', 'einrot.com',
-    'fleckens.hu', 'gustr.com', 'jourrapide.com',
-    'rhyta.com', 'superrito.com', 'teleworm.us',
-    // More common ones
-    'disposableemailaddresses.emailmiser.com',
-    'guerrillamail.info', 'guerrillamail.net', 'guerrillamail.org',
-    'guerrillamail.de', 'guerrillamailblock.com',
-    'temp-mail.io', 'tempmailer.com', 'tempmails.com',
-    'throwam.com', 'trash-mail.com', 'tmail.ws',
-    'yomail.info', 'boun.cr', 'mailexpire.com',
-    'mailforspam.com', 'mailmoat.com', 'mailnull.com',
-    'meltmail.com', 'mintemail.com', 'mt2015.com',
-    'nobulk.com', 'nospamfor.us', 'nowmymail.com',
-    'spamfree24.org', 'spamgourmet.com', 'spamhole.com',
-    'thankyou2010.com', 'wegwerfmail.de', 'wegwerfmail.net',
-]);
+// @ts-ignore — disposable-email-domains ships as a JSON array, no types needed
+import disposableDomains from 'disposable-email-domains';
+
+/** Set of ~4,000+ known disposable email domains (community-maintained). */
+const DISPOSABLE_DOMAINS: Set<string> = new Set(disposableDomains);
 
 /**
  * Check if a domain belongs to a known disposable email provider.
- * Fast, local-only check against hardcoded list.
+ * Uses the `disposable-email-domains` npm package for comprehensive coverage.
  */
 export function isDisposableDomain(domain: string): boolean {
     return DISPOSABLE_DOMAINS.has(domain.toLowerCase());

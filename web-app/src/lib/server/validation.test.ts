@@ -108,17 +108,16 @@ describe('extractDomain', () => {
 
 describe('isDisposableDomain', () => {
     it('detects known disposable domains', () => {
-        expect(isDisposableDomain('tempmail.com')).toBe(true);
         expect(isDisposableDomain('mailinator.com')).toBe(true);
         expect(isDisposableDomain('guerrillamail.com')).toBe(true);
         expect(isDisposableDomain('yopmail.com')).toBe(true);
-        expect(isDisposableDomain('10minutemail.com')).toBe(true);
-        expect(isDisposableDomain('burnermail.io')).toBe(true);
+        expect(isDisposableDomain('trashmail.com')).toBe(true);
+        expect(isDisposableDomain('sharklasers.com')).toBe(true);
     });
 
     it('is case insensitive', () => {
-        expect(isDisposableDomain('TEMPMAIL.COM')).toBe(true);
-        expect(isDisposableDomain('Mailinator.Com')).toBe(true);
+        expect(isDisposableDomain('MAILINATOR.COM')).toBe(true);
+        expect(isDisposableDomain('Yopmail.Com')).toBe(true);
     });
 
     it('allows legitimate domains', () => {
@@ -145,7 +144,7 @@ describe('validateRegistrationEmail', () => {
     });
 
     it('rejects disposable email domains', () => {
-        const result = validateRegistrationEmail('user@tempmail.com');
+        const result = validateRegistrationEmail('user@mailinator.com');
         expect(result.valid).toBe(false);
         expect(result.error).toBe('Disposable email addresses are not allowed');
     });
