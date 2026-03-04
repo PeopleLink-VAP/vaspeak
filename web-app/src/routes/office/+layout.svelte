@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { LayoutData } from './$types';
+    import { onMount } from 'svelte';
 
     interface Props {
         data: LayoutData;
@@ -7,31 +8,211 @@
     }
 
     let { data, children }: Props = $props();
+
+    let sidebarCollapsed = $state(false);
+    let commandPaletteOpen = $state(false);
+    let searchQuery = $state('');
+
+    const navItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: 'grid', href: '/office' },
+        { id: 'users', label: 'Users', icon: 'users', href: '/office/users' },
+        { id: 'newsletter', label: 'Newsletter', icon: 'mail', href: '/office/newsletter' },
+        { id: 'settings', label: 'Settings', icon: 'settings', href: '/office/settings' },
+    ];
+
+    function toggleSidebar() {
+        sidebarCollapsed = !sidebarCollapsed;
+    }
+
+    function openCommandPalette() {
+        commandPaletteOpen = true;
+    }
+
+    function closeCommandPalette() {
+        commandPaletteOpen = false;
+        searchQuery = '';
+    }
+
+    onMount(() => {
+        function handleKeydown(e: KeyboardEvent) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                openCommandPalette();
+            }
+            if (e.key === 'Escape' && commandPaletteOpen) {
+                closeCommandPalette();
+            }
+        }
+
+        window.addEventListener('keydown', handleKeydown);
+        return () => window.removeEventListener('keydown', handleKeydown);
+    });
 </script>
 
 <svelte:head>
-    <title>Admin Portal — VASpeak</title>
+    <title>Office — VASpeak</title>
+    <style>
+        .office-layout {
+            --office-bg: #0a0a0b;
+            --office-surface: #141415;
+            --office-surface-hover: #1c1c1e;
+            --office-border: #27272a;
+            --office-text: #fafafa;
+            --office-text-muted: #71717a;
+            --office-accent: #f2a906;
+            --office-accent-muted: rgba(242, 169, 6, 0.15);
+        }
+    </style>
 </svelte:head>
 
 {#if data.authenticated}
-    <div class="min-h-screen bg-background">
-        <nav class="bg-navy text-warm-white px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <span class="text-xl font-heading font-bold">VASpeak Admin</span>
-                <span class="text-xs bg-sunflower text-navy px-2 py-0.5 rounded">Office</span>
+    <div class="office-layout flex h-screen bg-[var(--office-bg)] text-[var(--office-text)]">
+        <!-- Sidebar -->
+        <aside 
+            class="flex flex-col border-r border-[var(--office-border)] bg-[var(--office-surface)] transition-all duration-300 {sidebarCollapsed ? 'w-16' : 'w-60'}"
+        >
+            <!-- Logo -->
+            <div class="flex items-center h-14 px-4 border-b border-[var(--office-border)]">
+                {#if !sidebarCollapsed}
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-[var(--office-accent)] flex items-center justify-center">
+                            <span class="text-xs font-bold text-[var(--office-bg)]">V</span>
+                        </div>
+                        <span class="font-semibold text-sm">VASpeak</span>
+                    </div>
+                {:else}
+                    <div class="w-7 h-7 rounded-lg bg-[var(--office-accent)] flex items-center justify-center mx-auto">
+                        <span class="text-xs font-bold text-[var(--office-bg)]">V</span>
+                    </div>
+                {/if}
             </div>
-            <div class="flex items-center gap-4">
-                <a href="/" class="text-warm-white/70 hover:text-sunflower text-sm transition-colors">
-                    ← Back to Site
-                </a>
-                <a href="/office/logout" class="text-warm-white/70 hover:text-sunflower text-sm transition-colors">
-                    Logout
-                </a>
+
+            <!-- Navigation -->
+            <nav class="flex-1 p-2 space-y-1">
+                {#each navItems as item}
+                    <a
+                        href={item.href}
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[var(--office-surface-hover)] text-[var(--office-text-muted)] hover:text-[var(--office-text)]"
+                        class:bg-[var(--office-accent-muted)]={item.href === '/office'}
+                        class:text-[var(--office-accent)]={item.href === '/office'}
+                    >
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {#if item.icon === 'grid'}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                            {:else if item.icon === 'users'}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            {:else if item.icon === 'mail'}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            {:else if item.icon === 'settings'}
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            {/if}
+                        </svg>
+                        {#if !sidebarCollapsed}
+                            <span>{item.label}</span>
+                        {/if}
+                    </a>
+                {/each}
+            </nav>
+
+            <!-- Bottom actions -->
+            <div class="p-2 border-t border-[var(--office-border)]">
+                <button
+                    onclick={toggleSidebar}
+                    class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--office-text-muted)] hover:text-[var(--office-text)] hover:bg-[var(--office-surface-hover)] transition-colors"
+                >
+                    <svg class="w-4 h-4 transition-transform {sidebarCollapsed ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                    </svg>
+                </button>
             </div>
-        </nav>
-        <main class="p-6">
-            {@render children()}
-        </main>
+        </aside>
+
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="h-14 flex items-center justify-between px-6 border-b border-[var(--office-border)] bg-[var(--office-surface)]">
+                <button
+                    onclick={openCommandPalette}
+                    class="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-[var(--office-bg)] border border-[var(--office-border)] text-[var(--office-text-muted)] text-sm hover:border-[var(--office-text-muted)] transition-colors"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <span>Search...</span>
+                    <kbd class="px-1.5 py-0.5 rounded text-xs bg-[var(--office-surface)] text-[var(--office-text-muted)]">⌘K</kbd>
+                </button>
+
+                <div class="flex items-center gap-3">
+                    <a
+                        href="/"
+                        class="text-xs text-[var(--office-text-muted)] hover:text-[var(--office-text)] transition-colors"
+                    >
+                        View Site →
+                    </a>
+                    <a
+                        href="/office/logout"
+                        class="text-xs text-[var(--office-text-muted)] hover:text-[var(--office-accent)] transition-colors"
+                    >
+                        Logout
+                    </a>
+                </div>
+            </header>
+
+            <!-- Page content -->
+            <main class="flex-1 overflow-auto p-6">
+                {@render children()}
+            </main>
+        </div>
+
+        <!-- Command Palette -->
+        {#if commandPaletteOpen}
+            <div
+                class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-[15vh]"
+                onclick={closeCommandPalette}
+                onkeydown={(e) => e.key === 'Escape' && closeCommandPalette()}
+                role="button"
+                tabindex="-1"
+            >
+                <div
+                    class="w-full max-w-xl bg-[var(--office-surface)] border border-[var(--office-border)] rounded-xl shadow-2xl overflow-hidden"
+                    onclick={(e) => e.stopPropagation()}
+                    role="dialog"
+                >
+                    <!-- Search input -->
+                    <div class="flex items-center gap-3 px-4 py-3 border-b border-[var(--office-border)]">
+                        <svg class="w-5 h-5 text-[var(--office-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input
+                            type="text"
+                            bind:value={searchQuery}
+                            placeholder="Type a command or search..."
+                            class="flex-1 bg-transparent text-[var(--office-text)] placeholder:text-[var(--office-text-muted)] outline-none text-sm"
+                            autofocus
+                        />
+                        <kbd class="px-1.5 py-0.5 rounded text-xs bg-[var(--office-bg)] text-[var(--office-text-muted)] border border-[var(--office-border)]">ESC</kbd>
+                    </div>
+
+                    <!-- Results -->
+                    <div class="max-h-80 overflow-auto p-2">
+                        <div class="px-3 py-1.5 text-xs font-medium text-[var(--office-text-muted)] uppercase tracking-wider">
+                            Quick Actions
+                        </div>
+                        {#each navItems as item}
+                            <a
+                                href={item.href}
+                                onclick={closeCommandPalette}
+                                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-[var(--office-surface-hover)] transition-colors"
+                            >
+                                <span class="text-[var(--office-text-muted)]">→</span>
+                                <span>{item.label}</span>
+                            </a>
+                        {/each}
+                    </div>
+                </div>
+            </div>
+        {/if}
     </div>
 {:else}
     {@render children()}
