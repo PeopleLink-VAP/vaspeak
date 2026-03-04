@@ -5,8 +5,11 @@ node_modules
 .vercel
 .netlify
 .wrangler
-/.svelte-kit
-/build
+.svelte-kit
+build
+
+# IDE
+.vscode/
 
 # OS
 .DS_Store
@@ -23,7 +26,7 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 # Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
