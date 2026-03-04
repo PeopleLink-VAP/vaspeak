@@ -1,12 +1,19 @@
 /**
  * Layout data for /office admin portal.
  *
- * Basic Auth is handled in hooks.server.ts.
- * This just returns authorized status for the layout.
+ * Checks for admin authentication cookie.
  */
 
+import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
+import { isAdminAuthenticated } from '$lib/server/admin-auth';
 
-export const load: LayoutServerLoad = async () => {
-    return { authorized: true };
+export const load: LayoutServerLoad = async ({ cookies, url }) => {
+    const authenticated = isAdminAuthenticated(cookies);
+
+    if (!authenticated && url.pathname !== '/office/login') {
+        throw redirect(303, '/office/login');
+    }
+
+    return { authenticated };
 };
