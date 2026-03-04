@@ -16,7 +16,7 @@ import {
 } from './email-templates';
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
-const FROM_EMAIL = 'VASpeak <noreply@eskills.virtualassistanpro.vn>';
+const FROM_EMAIL = 'VASpeak <hello@virtualassistantpro.vn>';
 
 function getSiteUrl(): string {
   return env.SITE_URL || 'http://localhost:5173';

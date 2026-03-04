@@ -5,7 +5,7 @@
  * and populates event.locals.user for downstream route handlers.
  */
 
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { getSessionCookie, verifySessionToken } from '$lib/server/auth';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -22,5 +22,21 @@ export const handle: Handle = async ({ event, resolve }) => {
         }
     }
 
-    return resolve(event);
+    const response = await resolve(event);
+
+    if (
+        event.url.pathname.startsWith('/office') &&
+        response.status === 401
+    ) {
+        response.headers.set('WWW-Authenticate', 'Basic realm="VASpeak Admin Portal"');
+    }
+
+    return response;
+};
+
+export const handleError: HandleServerError = ({ status }) => {
+    if (status === 401) {
+        return { message: 'Unauthorized' };
+    }
+    return { message: 'Internal Server Error' };
 };
