@@ -4,7 +4,7 @@ This document serves as the guide for humans and AI agents extending or maintain
 
 ## Context & Key Architecture Decisions
 
-- Lessons use **JSONB columns** in the Supabase backend for flexible block content (tasks, variations, steps) rather than separate relational tables per block type.
+- Lessons use **SpacetimeDB tables** for flexible block content (tasks, variations, steps) with real-time sync capabilities.
 - There are **4 User Levels**: Survival Speaker → Working VA → Client Manager → Strategic Partner
 - **Simulation Difficulties**: There are 3 difficulty modes for Guided Simulation: Practice, Real, Stress.
 - **Weekly Themes**: Lessons group into weekly themes taking up 5 daily lessons.
@@ -16,8 +16,8 @@ This document serves as the guide for humans and AI agents extending or maintain
    - Svelte files must follow standard `+page.svelte`, `+layout.svelte`, and server hooks.
    
 2. **Database interactions**:
-   - Access the Supabase tables directly for now: `lessons`, `profiles`, `user_progress`. 
-   - Observe Row-Level Security (RLS) policies - components interacting with lists/user info must properly pass auth tokens.
+   - Access SpacetimeDB tables directly: `lessons`, `profiles`, `user_progress`. 
+   - Use SpacetimeDB client SDK for real-time subscriptions and queries.
 
 3. **Styling**:
    - The design system utilizes **Tailwind CSS**. 
