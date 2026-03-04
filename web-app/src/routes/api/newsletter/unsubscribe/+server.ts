@@ -8,6 +8,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { validateEmail } from '$lib/server/validation';
 import { spacetimeCallReducer } from '$lib/server/spacetimedb';
+import { sendUnsubscribeConfirmationEmail } from '$lib/server/email';
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
@@ -22,6 +23,11 @@ export const POST: RequestHandler = async ({ request }) => {
         const normalizedEmail = email.trim().toLowerCase();
 
         await spacetimeCallReducer('unsubscribe_newsletter', { email: normalizedEmail });
+
+        // Send confirmation (non-blocking)
+        sendUnsubscribeConfirmationEmail(normalizedEmail).catch(err =>
+            console.error('[Newsletter] Unsubscribe confirmation email failed:', err)
+        );
 
         return json({ success: true, message: 'Successfully unsubscribed from the newsletter.' });
     } catch (error) {

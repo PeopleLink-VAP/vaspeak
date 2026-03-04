@@ -57,19 +57,15 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-sunflower text-navy font-semibold py-3 px-6 rounded-button shadow-sunflower
-      hover:brightness-110 transition-all duration-300 flex items-center justify-center cursor-pointer
-      disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-sunflower text-navy font-semibold py-3 px-6 rounded-button shadow-sunflower hover:brightness-110 transition-all duration-300 flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply bg-navy text-warm-white font-semibold py-3 px-6 rounded-button shadow-navy
-      hover:brightness-110 transition-all duration-300 flex items-center justify-center cursor-pointer;
+    @apply bg-navy text-warm-white font-semibold py-3 px-6 rounded-button shadow-navy hover:brightness-110 transition-all duration-300 flex items-center justify-center cursor-pointer;
   }
 
   .btn-ghost {
-    @apply bg-transparent text-navy font-semibold py-3 px-6 rounded-input border border-navy/20
-      hover:bg-navy/5 transition-all duration-300 flex items-center justify-center cursor-pointer;
+    @apply bg-transparent text-navy font-semibold py-3 px-6 rounded-input border border-navy/20 hover:bg-navy/5 transition-all duration-300 flex items-center justify-center cursor-pointer;
   }
 
   .card {
@@ -82,10 +78,7 @@
   }
 
   .input-field {
-    @apply w-full px-3 py-2.5 bg-white border border-navy/20 rounded-input
-      placeholder:text-navy/50 text-navy
-      focus:outline-none focus:ring-2 focus:ring-sunflower focus:border-sunflower
-      transition-all duration-200;
+    @apply w-full px-3 py-2.5 bg-white border border-navy/20 rounded-input placeholder:text-navy/50 text-navy focus:outline-none focus:ring-2 focus:ring-sunflower focus:border-sunflower transition-all duration-200;
   }
 
   .alert-error {
@@ -98,5 +91,108 @@
 
   .link {
     @apply text-leaf-green underline hover:text-navy transition-colors;
+  }
+
+  /* Onboarding Components */
+  .onboarding-page {
+    @apply min-h-screen bg-background flex flex-col px-6 py-8;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .onboarding-topbar {
+    @apply flex items-center justify-between mb-8;
+  }
+
+  .onboarding-back {
+    @apply w-10 h-10 flex items-center justify-center rounded-full bg-navy/5 text-navy hover:bg-navy/10 transition-colors cursor-pointer;
+  }
+
+  .onboarding-skip {
+    @apply text-sm font-medium text-sunflower hover:text-sunflower/80 transition-colors cursor-pointer;
+  }
+
+  .onboarding-heading {
+    @apply text-2xl font-heading font-bold text-navy mb-2;
+  }
+
+  .onboarding-subtext {
+    @apply text-sm text-navy/70 mb-6;
+  }
+
+  .onboarding-dots {
+    @apply flex items-center justify-center gap-2 mt-auto pt-6;
+  }
+
+  .onboarding-dot {
+    @apply w-2 h-2 rounded-full bg-navy/20 transition-all duration-300;
+  }
+
+  .onboarding-dot-active {
+    @apply w-2 h-2 rounded-full bg-sunflower transition-all duration-300;
+  }
+
+  .selection-card {
+    @apply bg-surface rounded-card shadow-subtle p-4 flex items-start gap-4 border-2 border-transparent cursor-pointer hover:shadow-navy transition-all duration-200;
+  }
+
+  .selection-card-selected {
+    @apply border-sunflower bg-sunflower/5 shadow-sunflower;
+  }
+
+  .goal-card {
+    @apply flex flex-col items-center justify-center bg-surface rounded-card shadow-subtle p-4 cursor-pointer border-2 border-transparent hover:shadow-navy transition-all duration-200 text-center;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .goal-card-selected {
+    @apply bg-sunflower text-navy border-sunflower shadow-sunflower;
+  }
+
+  .timeline-line {
+    @apply absolute left-5 top-10 bottom-0 w-0.5 bg-sunflower/30;
+  }
+
+  .timeline-dot {
+    @apply w-10 h-10 rounded-full bg-navy text-warm-white flex items-center justify-center font-heading font-bold text-sm shrink-0;
+  }
+
+  .timeline-card {
+    @apply rounded-card p-4 flex-1;
+  }
+}
+
+@layer utilities {
+  .fade-in {
+    animation: fadeInUp 0.4s ease-out both;
+  }
+
+  .fade-in-delay-1 {
+    animation-delay: 0.1s;
+  }
+
+  .fade-in-delay-2 {
+    animation-delay: 0.2s;
+  }
+
+  .fade-in-delay-3 {
+    animation-delay: 0.3s;
+  }
+
+  .fade-in-delay-4 {
+    animation-delay: 0.4s;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

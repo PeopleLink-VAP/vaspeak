@@ -9,6 +9,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { validateRegistrationEmail } from '$lib/server/validation';
 import { spacetimeCallReducer } from '$lib/server/spacetimedb';
+import { sendNewsletterWelcomeEmail } from '$lib/server/email';
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
@@ -23,6 +24,11 @@ export const POST: RequestHandler = async ({ request }) => {
         const normalizedEmail = email.trim().toLowerCase();
 
         await spacetimeCallReducer('subscribe_newsletter', { email: normalizedEmail });
+
+        // Send welcome email (non-blocking — don't fail subscription if email fails)
+        sendNewsletterWelcomeEmail(normalizedEmail).catch(err =>
+            console.error('[Newsletter] Welcome email failed:', err)
+        );
 
         return json({ success: true, message: 'Successfully subscribed to the newsletter!' });
     } catch (error) {
