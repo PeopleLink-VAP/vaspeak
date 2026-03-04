@@ -1,26 +1,43 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #196376;
-  --color-primary-light: #307E91;
-  --color-primary-dark: #124B59;
-  --color-background: #F9FAFB;
+  /* VAP Brand Colors */
+  --color-navy: #1B365D;
+  --color-sunflower: #F2A906;
+  --color-warm-white: #FFFBF1;
+  --color-leaf-green: #8A491B;
+  --color-crimson: #990033;
+
+  /* Functional Mappings */
+  --color-primary: #F2A906;
+  --color-primary-foreground: #1B365D;
+  --color-secondary: #1B365D;
+  --color-secondary-foreground: #FFFBF1;
+  --color-background: #FFFBF1;
   --color-surface: #FFFFFF;
-  --color-text-primary: #171C26;
-  --color-text-secondary: #6A7181;
+  --color-text-primary: #1B365D;
+  --color-text-secondary: #1B365DCC;
   --color-success: #22C55E;
   --color-warning: #F59E0B;
+  --color-info: #3B82F6;
+  --color-error: #990033;
+  --color-muted: hsl(48, 50%, 90%);
+  --color-muted-foreground: hsl(217, 30%, 40%);
 
-  --font-sans: "Inter", sans-serif;
-  --font-heading: "Plus Jakarta Sans", sans-serif;
+  /* Typography */
+  --font-sans: "Inter", "Roboto", sans-serif;
+  --font-heading: "Plus Jakarta Sans", "Farro", sans-serif;
 
-  --radius-button: 10px;
+  /* Shape */
+  --radius-button: 6px;
   --radius-card: 16px;
+  --radius-input: 8px;
 
-  --shadow-subtle: 0 2px 4px rgba(23, 28, 38, 0.04), 0 4px 8px rgba(23, 28, 38, 0.06);
-  --shadow-elevated: 0 4px 6px rgba(23, 28, 38, 0.08), 0 10px 15px rgba(23, 28, 38, 0.1);
-
-  --background-image-primary-gradient: linear-gradient(135deg, #196376, #307E91);
+  /* Shadows */
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-navy: 0 4px 20px rgba(27, 54, 93, 0.15);
+  --shadow-sunflower: 0 4px 20px rgba(255, 215, 0, 0.3);
+  --shadow-elevated: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 @layer base {
@@ -34,16 +51,52 @@
   h4,
   h5,
   h6 {
-    @apply font-heading font-bold text-text-primary;
+    @apply font-heading font-bold text-navy;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-gradient text-white font-semibold py-3 px-6 rounded-button shadow-subtle hover:opacity-90 transition-opacity flex items-center justify-center;
+    @apply bg-sunflower text-navy font-semibold py-3 px-6 rounded-button shadow-sunflower
+      hover:brightness-110 transition-all duration-300 flex items-center justify-center cursor-pointer
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-navy text-warm-white font-semibold py-3 px-6 rounded-button shadow-navy
+      hover:brightness-110 transition-all duration-300 flex items-center justify-center cursor-pointer;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-navy font-semibold py-3 px-6 rounded-input border border-navy/20
+      hover:bg-navy/5 transition-all duration-300 flex items-center justify-center cursor-pointer;
   }
 
   .card {
-    @apply bg-surface rounded-card shadow-subtle p-6;
+    @apply bg-surface rounded-card shadow-navy p-6 transition-all duration-300;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-sunflower);
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2.5 bg-white border border-navy/20 rounded-input
+      placeholder:text-navy/50 text-navy
+      focus:outline-none focus:ring-2 focus:ring-sunflower focus:border-sunflower
+      transition-all duration-200;
+  }
+
+  .alert-error {
+    @apply bg-crimson/10 border border-crimson/30 text-crimson px-4 py-3 rounded-input text-sm;
+  }
+
+  .alert-success {
+    @apply bg-success/10 border border-success/30 text-green-800 px-4 py-3 rounded-input text-sm;
+  }
+
+  .link {
+    @apply text-leaf-green underline hover:text-navy transition-colors;
   }
 }
