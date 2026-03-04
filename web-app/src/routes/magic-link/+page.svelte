@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { t } from "$lib/stores/i18n.svelte";
+    import LanguageSwitcher from "$lib/components/LanguageSwitcher.svelte";
+
     let email = $state("");
     let loading = $state(false);
     let success = $state("");
@@ -17,11 +20,9 @@
                 body: JSON.stringify({ email }),
             });
             const data = await res.json();
-            success =
-                data.message ||
-                "If this email exists, a magic link has been sent.";
+            success = data.message || t("magic_success");
         } catch {
-            error = "Network error. Please try again.";
+            error = t("magic_error_network");
         } finally {
             loading = false;
         }
@@ -29,14 +30,17 @@
 </script>
 
 <svelte:head>
-    <title>Magic Link — VASpeak</title>
+    <title>{t("page_title_magic")} — VASpeak</title>
 </svelte:head>
 
-<div class="min-h-screen flex items-center justify-center p-4 bg-background">
+<div
+    class="min-h-screen flex items-center justify-center p-4 bg-background relative"
+>
+    <div class="absolute top-4 right-4"><LanguageSwitcher /></div>
     <div class="card w-full max-w-md space-y-6">
-        <h1 class="text-2xl text-center">Magic Link Login</h1>
+        <h1 class="text-2xl text-center">{t("magic_title")}</h1>
         <p class="text-sm text-text-secondary text-center">
-            No password needed — we'll email you a login link.
+            {t("magic_subtitle")}
         </p>
 
         {#if error}
@@ -52,7 +56,7 @@
                 <label
                     for="email"
                     class="block text-sm font-medium mb-1 text-navy"
-                    >Email</label
+                    >{t("magic_label_email")}</label
                 >
                 <input
                     id="email"
@@ -65,12 +69,12 @@
             </div>
 
             <button type="submit" class="btn-primary w-full" disabled={loading}>
-                {loading ? "Sending..." : "Send Magic Link"}
+                {loading ? t("magic_loading") : t("magic_btn")}
             </button>
         </form>
 
         <p class="text-sm text-center text-text-secondary">
-            <a href="/login" class="link">← Back to login</a>
+            <a href="/login" class="link">{t("magic_back")}</a>
         </p>
     </div>
 </div>

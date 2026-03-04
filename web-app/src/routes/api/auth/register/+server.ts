@@ -2,8 +2,8 @@
  * POST /api/auth/register
  *
  * Register a new user with email and password.
- * Validates email format, checks disposable/blacklisted domains,
- * hashes password, creates user in SpacetimeDB, sends verification email.
+ * Validates email format, hashes password, creates user in SpacetimeDB,
+ * sends verification email.
  */
 
 import { json } from '@sveltejs/kit';
@@ -11,7 +11,7 @@ import type { RequestHandler } from './$types';
 import { hashPassword, generateToken } from '$lib/server/auth';
 import { sendVerificationEmail } from '$lib/server/email';
 import { validateRegistrationEmail, validatePassword, extractDomain } from '$lib/server/validation';
-import { spacetimeCallReducer, findUserByEmail, isBlacklistedDomainInDb } from '$lib/server/spacetimedb';
+import { spacetimeCallReducer, findUserByEmail } from '$lib/server/spacetimedb';
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
@@ -33,14 +33,6 @@ export const POST: RequestHandler = async ({ request }) => {
         const normalizedEmail = email.trim().toLowerCase();
         const domain = extractDomain(normalizedEmail);
 
-        // Check blacklisted domain in DB
-        const isBlacklisted = await isBlacklistedDomainInDb(domain);
-        if (isBlacklisted) {
-            return json(
-                { success: false, error: 'This email domain is not allowed for registration' },
-                { status: 400 }
-            );
-        }
 
         // Check if user already exists
         const existingUser = await findUserByEmail(normalizedEmail);

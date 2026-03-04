@@ -7,6 +7,7 @@
         GOAL_META,
         type DailyGoal,
     } from "$lib/stores/onboarding.svelte";
+    import { t } from "$lib/stores/i18n.svelte";
 
     const onboardingData = getOnboardingState();
     const goals = Object.entries(GOAL_META) as [
@@ -16,7 +17,7 @@
 </script>
 
 <svelte:head>
-    <title>Daily Goal — VASpeak</title>
+    <title>{t("page_title_goal")} — VASpeak</title>
 </svelte:head>
 
 <!-- Top bar -->
@@ -24,7 +25,7 @@
     <button
         class="onboarding-back"
         onclick={() => goto("/onboarding/level")}
-        aria-label="Go back"
+        aria-label={t("btn_back")}
         id="back-btn"
     >
         <svg
@@ -45,8 +46,10 @@
 
 <!-- Content -->
 <div class="flex-1 fade-in">
-    <h1 class="onboarding-heading" id="goal-heading">Set your daily goal</h1>
-    <p class="onboarding-subtext">How much time can you commit each day?</p>
+    <h1 class="onboarding-heading" id="goal-heading">
+        {t("onboarding_goal_title")}
+    </h1>
+    <p class="onboarding-subtext">{t("onboarding_goal_subtitle")}</p>
 
     <!-- Goal cards -->
     <div class="flex gap-3 mb-6">
@@ -62,13 +65,15 @@
             >
                 <span class="text-2xl mb-1">{meta.emoji}</span>
                 <div class="font-bold text-lg">{minutes}</div>
-                <div class="text-xs opacity-70">min/day</div>
-                <div class="text-xs font-medium mt-1">{meta.label}</div>
+                <div class="text-xs opacity-70">{t("goal_unit")}</div>
+                <div class="text-xs font-medium mt-1">
+                    {t(meta.labelKey)}
+                </div>
             </button>
         {/each}
     </div>
 
-    <!-- Motivational card -->
+    <!-- Tip card -->
     <div
         class="bg-sunflower/5 border-l-4 border-sunflower rounded-card p-4 mb-6 fade-in fade-in-delay-3"
     >
@@ -76,24 +81,26 @@
             <span class="text-2xl">💡</span>
             <div>
                 <p class="font-semibold text-navy text-sm">
-                    Consistency beats intensity
+                    {t("goal_tip_title")}
                 </p>
                 <p class="text-navy/60 text-xs mt-1">
-                    Even 5 minutes daily builds confidence faster than
-                    occasional long sessions.
+                    {t("goal_tip_body")}
                 </p>
             </div>
         </div>
     </div>
 
-    <!-- Daily reminder toggle -->
+    <!-- Reminder toggle -->
     <div
         class="bg-surface rounded-card shadow-subtle p-4 flex items-center justify-between fade-in fade-in-delay-4"
     >
         <div>
-            <div class="font-semibold text-navy text-sm">Daily Reminder</div>
+            <div class="font-semibold text-navy text-sm">
+                {t("goal_reminder_label")}
+            </div>
             <div class="text-xs text-navy/50 mt-0.5">
-                {onboardingData.reminderTime} every day
+                {onboardingData.reminderTime}
+                {t("goal_reminder_time")}
             </div>
         </div>
         <button
@@ -104,7 +111,7 @@
             role="switch"
             aria-checked={onboardingData.reminderEnabled}
             id="reminder-toggle"
-            aria-label="Toggle daily reminder"
+            aria-label={t("goal_reminder_label")}
         >
             <div
                 class="absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-200 {onboardingData.reminderEnabled
@@ -115,14 +122,14 @@
     </div>
 </div>
 
-<!-- Continue button -->
+<!-- Continue -->
 <div class="pt-4">
     <button
         class="btn-primary w-full"
         onclick={() => goto("/onboarding/how-it-works")}
         id="continue-btn"
     >
-        Continue
+        {t("btn_continue")}
         <svg
             class="ml-2 w-5 h-5"
             fill="none"

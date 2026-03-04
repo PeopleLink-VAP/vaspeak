@@ -4,8 +4,11 @@
         getOnboardingState,
         setLevel,
         LEVEL_META,
+        LEVEL_TITLE_KEYS,
+        LEVEL_DESC_KEYS,
         type UserLevel,
     } from "$lib/stores/onboarding.svelte";
+    import { t } from "$lib/stores/i18n.svelte";
 
     const onboardingData = getOnboardingState();
     const levels = Object.entries(LEVEL_META) as [
@@ -19,7 +22,7 @@
 </script>
 
 <svelte:head>
-    <title>Your Level — VASpeak</title>
+    <title>{t("page_title_level")} — VASpeak</title>
 </svelte:head>
 
 <!-- Top bar -->
@@ -27,7 +30,7 @@
     <button
         class="onboarding-back"
         onclick={() => goto("/onboarding")}
-        aria-label="Go back"
+        aria-label={t("btn_back")}
         id="back-btn"
     >
         <svg
@@ -49,11 +52,9 @@
 <!-- Content -->
 <div class="flex-1 fade-in">
     <h1 class="onboarding-heading" id="level-heading">
-        What's your English level?
+        {t("onboarding_level_title")}
     </h1>
-    <p class="onboarding-subtext">
-        This helps us personalize your learning journey.
-    </p>
+    <p class="onboarding-subtext">{t("onboarding_level_subtitle")}</p>
 
     <div class="space-y-3">
         {#each levels as [key, meta], i}
@@ -68,9 +69,11 @@
             >
                 <span class="text-3xl shrink-0">{meta.emoji}</span>
                 <div class="min-w-0">
-                    <div class="font-semibold text-navy">{meta.title}</div>
+                    <div class="font-semibold text-navy">
+                        {t(LEVEL_TITLE_KEYS[key])}
+                    </div>
                     <div class="text-sm text-navy/60 mt-0.5">
-                        {meta.description}
+                        {t(LEVEL_DESC_KEYS[key])}
                     </div>
                 </div>
                 {#if onboardingData.level === key}
@@ -91,7 +94,7 @@
     </div>
 </div>
 
-<!-- Continue button -->
+<!-- Continue -->
 <div class="pt-4 fade-in fade-in-delay-4">
     <button
         class="btn-primary w-full"
@@ -99,7 +102,7 @@
         onclick={() => goto("/onboarding/goal")}
         id="continue-btn"
     >
-        Continue
+        {t("btn_continue")}
         <svg
             class="ml-2 w-5 h-5"
             fill="none"

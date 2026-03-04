@@ -1,5 +1,7 @@
 <script lang="ts">
     import { page } from "$app/state";
+    import { t } from "$lib/stores/i18n.svelte";
+    import LanguageSwitcher from "$lib/components/LanguageSwitcher.svelte";
 
     let password = $state("");
     let loading = $state(false);
@@ -18,7 +20,7 @@
 
         const token = getToken();
         if (!token) {
-            error = "Missing reset token. Please use the link from your email.";
+            error = t("reset_error_no_token");
             loading = false;
             return;
         }
@@ -32,13 +34,13 @@
             const data = await res.json();
 
             if (data.success) {
-                success = "Password reset successfully! You can now login.";
+                success = t("reset_success");
                 password = "";
             } else {
-                error = data.error || "Reset failed";
+                error = data.error || t("reset_error_default");
             }
         } catch {
-            error = "Network error. Please try again.";
+            error = t("reset_error_network");
         } finally {
             loading = false;
         }
@@ -46,12 +48,15 @@
 </script>
 
 <svelte:head>
-    <title>Reset Password — VASpeak</title>
+    <title>{t("page_title_reset")} — VASpeak</title>
 </svelte:head>
 
-<div class="min-h-screen flex items-center justify-center p-4 bg-background">
+<div
+    class="min-h-screen flex items-center justify-center p-4 bg-background relative"
+>
+    <div class="absolute top-4 right-4"><LanguageSwitcher /></div>
     <div class="card w-full max-w-md space-y-6">
-        <h1 class="text-2xl text-center">Reset Password</h1>
+        <h1 class="text-2xl text-center">{t("reset_title")}</h1>
 
         {#if error}
             <div class="alert-error">{error}</div>
@@ -60,7 +65,9 @@
         {#if success}
             <div class="alert-success">
                 {success}
-                <a href="/login" class="block mt-2 link">Go to login →</a>
+                <a href="/login" class="block mt-2 link"
+                    >{t("reset_success_link")}</a
+                >
             </div>
         {/if}
 
@@ -70,7 +77,7 @@
                     <label
                         for="password"
                         class="block text-sm font-medium mb-1 text-navy"
-                        >New Password</label
+                        >{t("reset_label_password")}</label
                     >
                     <input
                         id="password"
@@ -79,7 +86,7 @@
                         required
                         minlength={8}
                         class="input-field"
-                        placeholder="Min 8 chars, uppercase, lowercase, number"
+                        placeholder={t("reset_password_placeholder")}
                     />
                 </div>
 
@@ -88,7 +95,7 @@
                     class="btn-primary w-full"
                     disabled={loading}
                 >
-                    {loading ? "Resetting..." : "Reset Password"}
+                    {loading ? t("reset_loading") : t("reset_btn")}
                 </button>
             </form>
         {/if}

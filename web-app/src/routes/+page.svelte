@@ -1,5 +1,7 @@
 <script lang="ts">
     import LoginModal from "$lib/components/LoginModal.svelte";
+    import LanguageSwitcher from "$lib/components/LanguageSwitcher.svelte";
+    import { t } from "$lib/stores/i18n.svelte";
 
     let user: { email: string } | null = $state(null);
     let newsletterEmail = $state("");
@@ -36,13 +38,13 @@
             const data = await res.json();
 
             if (data.success) {
-                newsletterMsg = "Subscribed! Check your inbox.";
+                newsletterMsg = t("newsletter_success");
                 newsletterEmail = "";
             } else {
-                newsletterError = data.error || "Subscription failed";
+                newsletterError = data.error || t("newsletter_error_network");
             }
         } catch {
-            newsletterError = "Network error. Please try again.";
+            newsletterError = t("newsletter_error_network");
         } finally {
             newsletterLoading = false;
         }
@@ -50,10 +52,10 @@
 </script>
 
 <svelte:head>
-    <title>VASpeak — English Confidence Trainer for Virtual Assistants</title>
+    <title>VASpeak — English Speaking Practice for Virtual Assistants</title>
     <meta
         name="description"
-        content="Build real English speaking confidence for your VA career. Daily 15-minute lessons designed specifically for Vietnamese Virtual Assistants."
+        content="Daily English speaking practice designed for Vietnamese virtual assistants. Listening, pronunciation drills, and client conversation simulations."
     />
 </svelte:head>
 
@@ -61,28 +63,29 @@
     <!-- ═══════ NAV ═══════ -->
     <nav class="max-w-5xl mx-auto flex items-center justify-between px-6 py-5">
         <a href="/" class="text-xl font-heading font-bold text-navy">
-            🎤 VASpeak
+            {t("nav_brand")}
         </a>
         <div class="flex items-center gap-4 text-sm">
+            <LanguageSwitcher />
             {#if user}
                 <span class="text-navy/60 hidden sm:inline">{user.email}</span>
                 <button
                     onclick={handleLogout}
                     class="text-navy/60 hover:text-navy cursor-pointer transition-colors"
-                    >Logout</button
+                    >{t("nav_logout")}</button
                 >
             {:else}
                 <button
                     onclick={() => loginModal?.open()}
                     class="text-navy/70 hover:text-navy transition-colors cursor-pointer"
-                    >Login</button
+                    >{t("nav_login")}</button
                 >
                 <a
                     href="/onboarding"
                     class="btn-primary !py-2 !px-5 text-sm"
                     id="nav-cta"
                 >
-                    Start Free
+                    {t("nav_start")}
                 </a>
             {/if}
         </div>
@@ -97,22 +100,21 @@
             >
                 <span class="w-2 h-2 bg-sunflower rounded-full animate-pulse"
                 ></span>
-                Built for Vietnamese Virtual Assistants
+                {t("hero_badge")}
             </div>
 
             <h1
                 class="text-4xl md:text-5xl font-heading font-bold text-navy leading-tight mb-5"
                 id="hero-heading"
             >
-                Speak English with confidence —
-                <span class="text-sunflower">one conversation at a time</span>
+                {t("hero_heading")} —
+                <span class="text-sunflower">{t("hero_heading_accent")}</span>
             </h1>
 
             <p
                 class="text-lg text-navy/70 leading-relaxed mb-8 max-w-xl mx-auto"
             >
-                Daily 15-minute lessons that build real speaking confidence
-                through listening, drilling, and simulated client conversations.
+                {t("hero_subtext")}
             </p>
 
             <!-- CTAs -->
@@ -124,7 +126,7 @@
                     class="btn-primary text-lg !px-8 !py-3.5 w-full sm:w-auto"
                     id="hero-cta"
                 >
-                    Start Your Journey
+                    {t("hero_cta")}
                     <svg
                         class="ml-2 w-5 h-5"
                         fill="none"
@@ -139,9 +141,7 @@
                         />
                     </svg>
                 </a>
-                <span class="text-sm text-navy/50"
-                    >Free · No credit card needed</span
-                >
+                <span class="text-sm text-navy/50">{t("hero_cta_free")}</span>
             </div>
         </div>
 
@@ -149,14 +149,16 @@
         <div
             class="flex flex-wrap items-center justify-center gap-6 mt-12 text-navy/40 text-sm fade-in fade-in-delay-2"
         >
-            <span class="font-medium">Designed with</span>
             <span class="flex items-center gap-1.5 text-navy/60 font-semibold">
-                <span class="text-lg">🇻🇳</span> Vietnamese VAs in mind
+                <span class="text-lg">🇻🇳</span>
+                {t("social_designed")}
             </span>
-            <span class="hidden sm:inline">·</span>
+            <span class="hidden sm:inline">{t("social_separator")}</span>
             <span class="flex items-center gap-1.5">
                 <span class="text-sunflower">★★★★★</span>
-                <span class="text-navy/60 font-medium">50+ daily lessons</span>
+                <span class="text-navy/60 font-medium"
+                    >{t("social_lessons")}</span
+                >
             </span>
         </div>
     </section>
@@ -165,25 +167,22 @@
     <section class="bg-white py-16 md:py-20">
         <div class="max-w-5xl mx-auto px-6">
             <div class="max-w-2xl mx-auto text-center mb-12 fade-in">
-                <h2 class="text-2xl md:text-3xl mb-4">Sound familiar?</h2>
-                <p class="text-navy/60">
-                    You know the grammar. You know the vocabulary. But when it's
-                    time to speak on a real client call…
-                </p>
+                <h2 class="text-2xl md:text-3xl mb-4">
+                    {t("problem_heading")}
+                </h2>
+                <p class="text-navy/60">{t("problem_subtext")}</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-6 mb-12">
-                <!-- Pain point cards -->
                 <div
                     class="bg-crimson/5 rounded-card p-6 border border-crimson/10 fade-in fade-in-delay-1"
                 >
                     <span class="text-2xl mb-3 block">😰</span>
                     <h3 class="font-semibold text-navy text-sm mb-2">
-                        Freezing on calls
+                        {t("pain_1_title")}
                     </h3>
                     <p class="text-navy/60 text-sm leading-relaxed">
-                        You prepare everything, but your mind goes blank when
-                        the client actually speaks.
+                        {t("pain_1_desc")}
                     </p>
                 </div>
                 <div
@@ -191,11 +190,10 @@
                 >
                     <span class="text-2xl mb-3 block">🔄</span>
                     <h3 class="font-semibold text-navy text-sm mb-2">
-                        Repeating the same phrases
+                        {t("pain_2_title")}
                     </h3>
                     <p class="text-navy/60 text-sm leading-relaxed">
-                        You rely on safe, simple sentences and wish you could
-                        express ideas more naturally.
+                        {t("pain_2_desc")}
                     </p>
                 </div>
                 <div
@@ -203,11 +201,10 @@
                 >
                     <span class="text-2xl mb-3 block">📉</span>
                     <h3 class="font-semibold text-navy text-sm mb-2">
-                        Missing opportunities
+                        {t("pain_3_title")}
                     </h3>
                     <p class="text-navy/60 text-sm leading-relaxed">
-                        Better-paying clients require confident English — and
-                        you know you're not there yet.
+                        {t("pain_3_desc")}
                     </p>
                 </div>
             </div>
@@ -228,12 +225,9 @@
                             clip-rule="evenodd"
                         />
                     </svg>
-                    VASpeak is built exactly for this
+                    {t("solution_badge")}
                 </div>
-                <p class="text-navy/60 text-sm">
-                    Not grammar drills. Not vocabulary flashcards. Real speaking
-                    practice for real VA scenarios.
-                </p>
+                <p class="text-navy/60 text-sm">{t("solution_desc")}</p>
             </div>
         </div>
     </section>
@@ -242,13 +236,8 @@
     <section class="py-16 md:py-20">
         <div class="max-w-5xl mx-auto px-6">
             <div class="text-center mb-12 fade-in">
-                <h2 class="text-2xl md:text-3xl mb-3">
-                    Your daily lesson, in 4 steps
-                </h2>
-                <p class="text-navy/60 max-w-md mx-auto">
-                    Each lesson follows a proven method that builds lasting
-                    confidence — not just knowledge.
-                </p>
+                <h2 class="text-2xl md:text-3xl mb-3">{t("how_heading")}</h2>
+                <p class="text-navy/60 max-w-md mx-auto">{t("how_subtext")}</p>
             </div>
 
             <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -261,12 +250,13 @@
                     <div
                         class="text-xs font-medium text-sunflower uppercase tracking-wider mb-1"
                     >
-                        Step 1
+                        {t("step_label")} 1
                     </div>
-                    <h3 class="font-semibold text-navy text-sm mb-1">Listen</h3>
+                    <h3 class="font-semibold text-navy text-sm mb-1">
+                        {t("step_1_title")}
+                    </h3>
                     <p class="text-navy/60 text-xs leading-relaxed">
-                        Hear real VA scenarios and train your ear for natural
-                        English.
+                        {t("step_1_desc")}
                     </p>
                 </div>
                 <div class="text-center fade-in fade-in-delay-2">
@@ -278,12 +268,13 @@
                     <div
                         class="text-xs font-medium text-sunflower uppercase tracking-wider mb-1"
                     >
-                        Step 2
+                        {t("step_label")} 2
                     </div>
-                    <h3 class="font-semibold text-navy text-sm mb-1">Drill</h3>
+                    <h3 class="font-semibold text-navy text-sm mb-1">
+                        {t("step_2_title")}
+                    </h3>
                     <p class="text-navy/60 text-xs leading-relaxed">
-                        Repeat key phrases until they feel natural and
-                        automatic.
+                        {t("step_2_desc")}
                     </p>
                 </div>
                 <div class="text-center fade-in fade-in-delay-3">
@@ -295,13 +286,13 @@
                     <div
                         class="text-xs font-medium text-sunflower uppercase tracking-wider mb-1"
                     >
-                        Step 3
+                        {t("step_label")} 3
                     </div>
                     <h3 class="font-semibold text-navy text-sm mb-1">
-                        Simulate
+                        {t("step_3_title")}
                     </h3>
                     <p class="text-navy/60 text-xs leading-relaxed">
-                        Role-play real client calls to build muscle memory.
+                        {t("step_3_desc")}
                     </p>
                 </div>
                 <div class="text-center fade-in fade-in-delay-4">
@@ -313,13 +304,13 @@
                     <div
                         class="text-xs font-medium text-sunflower uppercase tracking-wider mb-1"
                     >
-                        Step 4
+                        {t("step_label")} 4
                     </div>
                     <h3 class="font-semibold text-navy text-sm mb-1">
-                        Reflect
+                        {t("step_4_title")}
                     </h3>
                     <p class="text-navy/60 text-xs leading-relaxed">
-                        Review your growth and track your confidence over time.
+                        {t("step_4_desc")}
                     </p>
                 </div>
             </div>
@@ -331,11 +322,10 @@
         <div class="max-w-5xl mx-auto px-6">
             <div class="text-center mb-12 fade-in">
                 <h2 class="text-2xl md:text-3xl mb-3">
-                    Made for your VA journey
+                    {t("features_heading")}
                 </h2>
                 <p class="text-navy/60 max-w-md mx-auto">
-                    Every lesson is designed around the situations you actually
-                    face as a Virtual Assistant.
+                    {t("features_subtext")}
                 </p>
             </div>
 
@@ -350,11 +340,10 @@
                     </div>
                     <div>
                         <h3 class="font-semibold text-navy text-sm mb-1">
-                            Real client scenarios
+                            {t("feat_1_title")}
                         </h3>
                         <p class="text-navy/60 text-sm leading-relaxed">
-                            Onboarding calls, status updates, scope changes —
-                            the conversations that actually matter.
+                            {t("feat_1_desc")}
                         </p>
                     </div>
                 </div>
@@ -368,11 +357,10 @@
                     </div>
                     <div>
                         <h3 class="font-semibold text-navy text-sm mb-1">
-                            Just 15 minutes a day
+                            {t("feat_2_title")}
                         </h3>
                         <p class="text-navy/60 text-sm leading-relaxed">
-                            Designed for busy VAs. Short, focused sessions that
-                            fit between client tasks.
+                            {t("feat_2_desc")}
                         </p>
                     </div>
                 </div>
@@ -386,11 +374,10 @@
                     </div>
                     <div>
                         <h3 class="font-semibold text-navy text-sm mb-1">
-                            Built for Vietnamese speakers
+                            {t("feat_3_title")}
                         </h3>
                         <p class="text-navy/60 text-sm leading-relaxed">
-                            Targets the specific pronunciation and confidence
-                            patterns that Vietnamese VAs struggle with.
+                            {t("feat_3_desc")}
                         </p>
                     </div>
                 </div>
@@ -404,11 +391,10 @@
                     </div>
                     <div>
                         <h3 class="font-semibold text-navy text-sm mb-1">
-                            Track your confidence
+                            {t("feat_4_title")}
                         </h3>
                         <p class="text-navy/60 text-sm leading-relaxed">
-                            See your progress grow day by day. Build streaks and
-                            unlock new scenarios.
+                            {t("feat_4_desc")}
                         </p>
                     </div>
                 </div>
@@ -416,7 +402,7 @@
         </div>
     </section>
 
-    <!-- ═══════ TESTIMONIAL / QUOTE ═══════ -->
+    <!-- ═══════ QUOTE ═══════ -->
     <section class="py-16">
         <div class="max-w-3xl mx-auto px-6 text-center fade-in">
             <div class="bg-surface rounded-card shadow-navy p-8 md:p-12">
@@ -424,10 +410,9 @@
                 <blockquote
                     class="text-lg md:text-xl text-navy/80 leading-relaxed italic mb-6"
                 >
-                    "Confidence isn't something you wait for — it's something
-                    you build, one conversation at a time."
+                    {t("quote_text")}
                 </blockquote>
-                <div class="text-sm text-navy/50">The VASpeak philosophy</div>
+                <div class="text-sm text-navy/50">{t("quote_source")}</div>
             </div>
         </div>
     </section>
@@ -436,11 +421,10 @@
     <section class="bg-navy py-16">
         <div class="max-w-2xl mx-auto px-6 text-center">
             <h2 class="text-2xl md:text-3xl text-warm-white mb-3">
-                Weekly confidence tips
+                {t("newsletter_heading")}
             </h2>
             <p class="text-warm-white/60 text-sm mb-8 max-w-md mx-auto">
-                Get practical English tips, new lesson previews, and VA career
-                advice delivered every Tuesday.
+                {t("newsletter_subtext")}
             </p>
 
             {#if newsletterError}
@@ -466,7 +450,7 @@
                     type="email"
                     bind:value={newsletterEmail}
                     required
-                    placeholder="your.email@example.com"
+                    placeholder={t("newsletter_placeholder")}
                     class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-input text-warm-white placeholder:text-warm-white/40 focus:outline-none focus:ring-2 focus:ring-sunflower focus:border-sunflower transition-all"
                     id="newsletter-email"
                 />
@@ -476,12 +460,14 @@
                     disabled={newsletterLoading}
                     id="newsletter-submit"
                 >
-                    {newsletterLoading ? "..." : "Subscribe"}
+                    {newsletterLoading
+                        ? t("newsletter_submitting")
+                        : t("newsletter_submit")}
                 </button>
             </form>
 
             <p class="text-warm-white/30 text-xs mt-4">
-                No spam. Unsubscribe anytime.
+                {t("newsletter_no_spam")}
             </p>
         </div>
     </section>
@@ -489,19 +475,16 @@
     <!-- ═══════ FINAL CTA ═══════ -->
     <section class="py-16 md:py-20">
         <div class="max-w-2xl mx-auto px-6 text-center fade-in">
-            <h2 class="text-2xl md:text-3xl mb-4">
-                Ready to build confidence?
-            </h2>
+            <h2 class="text-2xl md:text-3xl mb-4">{t("final_heading")}</h2>
             <p class="text-navy/60 mb-8 max-w-md mx-auto">
-                Set up your personalized learning path in under 2 minutes. Start
-                your first lesson today.
+                {t("final_subtext")}
             </p>
             <a
                 href="/onboarding"
                 class="btn-primary text-lg !px-8 !py-3.5 inline-flex"
                 id="final-cta"
             >
-                Get Started — It's Free
+                {t("final_cta")}
                 <svg
                     class="ml-2 w-5 h-5"
                     fill="none"
@@ -524,24 +507,30 @@
         <div
             class="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-navy/40"
         >
-            <div class="font-heading font-bold text-navy/60">🎤 VASpeak</div>
+            <div class="font-heading font-bold text-navy/60">
+                {t("nav_brand")}
+            </div>
             <div class="flex items-center gap-4">
                 <button
                     onclick={() => loginModal?.open()}
                     class="hover:text-navy transition-colors cursor-pointer"
-                    >Login</button
+                    >{t("footer_login")}</button
                 >
                 <a href="/onboarding" class="hover:text-navy transition-colors"
-                    >Get Started</a
+                    >{t("footer_start")}</a
                 >
             </div>
             <div>
-                A <a
+                {t("footer_made_by")}
+                <a
                     href="https://virtualassistantpro.vn"
                     class="text-sunflower hover:underline"
                     target="_blank"
-                    rel="noopener">Virtual Assistant PRO</a
-                > product
+                    rel="noopener">{t("footer_made_by_link")}</a
+                >
+                {#if t("footer_made_by_suffix")}
+                    {t("footer_made_by_suffix")}
+                {/if}
             </div>
         </div>
     </footer>

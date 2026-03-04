@@ -1,14 +1,15 @@
 /**
- * GET /office/logout
+ * POST /office/logout
  *
  * Clear admin cookie and redirect to login.
+ * Uses POST to prevent CSRF via prefetch/img-tag tricks.
  */
 
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { clearAdminCookie } from '$lib/server/admin-auth';
 
-export const GET: RequestHandler = async ({ cookies }) => {
+export const POST: RequestHandler = async ({ cookies }) => {
     clearAdminCookie(cookies);
-    throw redirect(303, '/office/login');
+    return redirect(303, '/office/login');
 };

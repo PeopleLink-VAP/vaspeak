@@ -1,8 +1,15 @@
 <script lang="ts">
 	import favicon from "$lib/assets/favicon.svg";
+	import { getLocale } from "$lib/stores/i18n.svelte";
 	import "../app.css";
 
 	let { children } = $props();
+
+	$effect(() => {
+		if (typeof document !== "undefined") {
+			document.documentElement.lang = getLocale();
+		}
+	});
 </script>
 
 <svelte:head>

@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { t } from "$lib/stores/i18n.svelte";
+    import LanguageSwitcher from "$lib/components/LanguageSwitcher.svelte";
+
     let email = $state("");
     let loading = $state(false);
     let success = $state("");
@@ -17,11 +20,9 @@
                 body: JSON.stringify({ email }),
             });
             const data = await res.json();
-            success =
-                data.message ||
-                "If this email exists, a reset link has been sent.";
+            success = data.message || t("forgot_success");
         } catch {
-            error = "Network error. Please try again.";
+            error = t("forgot_error_network");
         } finally {
             loading = false;
         }
@@ -29,14 +30,17 @@
 </script>
 
 <svelte:head>
-    <title>Forgot Password — VASpeak</title>
+    <title>{t("page_title_forgot")} — VASpeak</title>
 </svelte:head>
 
-<div class="min-h-screen flex items-center justify-center p-4 bg-background">
+<div
+    class="min-h-screen flex items-center justify-center p-4 bg-background relative"
+>
+    <div class="absolute top-4 right-4"><LanguageSwitcher /></div>
     <div class="card w-full max-w-md space-y-6">
-        <h1 class="text-2xl text-center">Forgot Password</h1>
+        <h1 class="text-2xl text-center">{t("forgot_title")}</h1>
         <p class="text-sm text-text-secondary text-center">
-            Enter your email and we'll send you a reset link.
+            {t("forgot_subtitle")}
         </p>
 
         {#if error}
@@ -52,7 +56,7 @@
                 <label
                     for="email"
                     class="block text-sm font-medium mb-1 text-navy"
-                    >Email</label
+                    >{t("forgot_label_email")}</label
                 >
                 <input
                     id="email"
@@ -65,12 +69,12 @@
             </div>
 
             <button type="submit" class="btn-primary w-full" disabled={loading}>
-                {loading ? "Sending..." : "Send Reset Link"}
+                {loading ? t("forgot_loading") : t("forgot_btn")}
             </button>
         </form>
 
         <p class="text-sm text-center text-text-secondary">
-            <a href="/login" class="link">← Back to login</a>
+            <a href="/login" class="link">{t("forgot_back")}</a>
         </p>
     </div>
 </div>

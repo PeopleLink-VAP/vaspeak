@@ -12,7 +12,7 @@ export const load: LayoutServerLoad = async ({ cookies, url }) => {
     const authenticated = isAdminAuthenticated(cookies);
 
     if (!authenticated && url.pathname !== '/office/login') {
-        throw redirect(303, '/office/login');
+        return redirect(303, '/office/login');
     }
 
     return { authenticated };

@@ -1,44 +1,41 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import { t } from "$lib/stores/i18n.svelte";
 
     const steps = [
         {
             num: 1,
             emoji: "🎧",
-            title: "Listening Decoding",
-            description:
-                "Listen to real VA scenarios and train your ear for natural English patterns.",
+            titleKey: "step_listening_title" as const,
+            descKey: "step_listening_desc" as const,
             bg: "bg-navy/5",
         },
         {
             num: 2,
             emoji: "🗣️",
-            title: "Pronunciation Drilling",
-            description:
-                "Practice key phrases with guided repetition and immediate feedback.",
+            titleKey: "step_drilling_title" as const,
+            descKey: "step_drilling_desc" as const,
             bg: "bg-sunflower/10",
         },
         {
             num: 3,
             emoji: "🤝",
-            title: "Simulation",
-            description:
-                "Role-play realistic client calls and meetings to build real confidence.",
+            titleKey: "step_simulation_title" as const,
+            descKey: "step_simulation_desc" as const,
             bg: "bg-leaf-green/5",
         },
         {
             num: 4,
             emoji: "📝",
-            title: "Reflection",
-            description:
-                "Review your performance and track your confidence growth over time.",
+            titleKey: "step_reflection_title" as const,
+            descKey: "step_reflection_desc" as const,
             bg: "bg-navy/5",
         },
     ];
 </script>
 
 <svelte:head>
-    <title>How It Works — VASpeak</title>
+    <title>{t("page_title_how")} — VASpeak</title>
 </svelte:head>
 
 <!-- Top bar -->
@@ -46,7 +43,7 @@
     <button
         class="onboarding-back"
         onclick={() => goto("/onboarding/goal")}
-        aria-label="Go back"
+        aria-label={t("btn_back")}
         id="back-btn"
     >
         <svg
@@ -68,15 +65,12 @@
 <!-- Content -->
 <div class="flex-1 fade-in">
     <h1 class="onboarding-heading" id="how-heading">
-        How your daily lesson works
+        {t("onboarding_how_title")}
     </h1>
-    <p class="onboarding-subtext">
-        Each lesson follows a proven 4-step method to build lasting confidence.
-    </p>
+    <p class="onboarding-subtext">{t("onboarding_how_subtitle")}</p>
 
     <!-- Timeline -->
     <div class="relative space-y-4">
-        <!-- Vertical line -->
         <div class="timeline-line"></div>
 
         {#each steps as step, i}
@@ -89,33 +83,32 @@
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-lg">{step.emoji}</span>
                         <h3 class="font-bold text-navy text-sm">
-                            {step.title}
+                            {t(step.titleKey)}
                         </h3>
                     </div>
                     <p class="text-navy/60 text-xs leading-relaxed">
-                        {step.description}
+                        {t(step.descKey)}
                     </p>
                 </div>
             </div>
         {/each}
     </div>
 
-    <!-- Motivational tagline -->
     <p
         class="text-center text-navy/50 text-xs italic mt-6 fade-in fade-in-delay-4"
     >
-        "Confidence isn't something you wait for — it's something you build."
+        {t("how_quote")}
     </p>
 </div>
 
-<!-- Continue button -->
+<!-- Continue -->
 <div class="pt-4">
     <button
         class="btn-primary w-full"
         onclick={() => goto("/onboarding/signup")}
         id="continue-btn"
     >
-        Continue
+        {t("btn_continue")}
         <svg
             class="ml-2 w-5 h-5"
             fill="none"

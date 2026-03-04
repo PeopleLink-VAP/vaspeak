@@ -1,3 +1,5 @@
+import type { TranslationKey } from '$lib/i18n/en';
+
 /**
  * Onboarding state store.
  *
@@ -74,31 +76,46 @@ export function clearOnboarding(): void {
     }
 }
 
-export const LEVEL_META: Record<UserLevel, { emoji: string; title: string; description: string }> = {
+export const LEVEL_META: Record<UserLevel, { emoji: string; titleKey: TranslationKey; descKey: TranslationKey }> = {
     survival: {
         emoji: '🌱',
-        title: 'Survival Speaker',
-        description: 'I struggle with basic English communication',
+        titleKey: 'level_survival_title',
+        descKey: 'level_survival_desc',
     },
     working: {
         emoji: '💼',
-        title: 'Working VA',
-        description: 'I can handle simple daily tasks in English',
+        titleKey: 'level_working_title',
+        descKey: 'level_working_desc',
     },
     client: {
         emoji: '🤝',
-        title: 'Client Manager',
-        description: 'I communicate with clients but want more confidence',
+        titleKey: 'level_client_title',
+        descKey: 'level_client_desc',
     },
     strategic: {
         emoji: '🚀',
-        title: 'Strategic Partner',
-        description: "I'm advanced but want to sound more natural",
+        titleKey: 'level_strategic_title',
+        descKey: 'level_strategic_desc',
     },
 };
 
-export const GOAL_META: Record<DailyGoal, { emoji: string; label: string }> = {
-    5: { emoji: '☕', label: 'Casual' },
-    15: { emoji: '🔥', label: 'Regular' },
-    30: { emoji: '💪', label: 'Intense' },
+/** Type-safe lookup maps for level translation keys (avoids unsound template literals). */
+export const LEVEL_TITLE_KEYS = {
+    survival: 'level_survival_title',
+    working: 'level_working_title',
+    client: 'level_client_title',
+    strategic: 'level_strategic_title',
+} as const satisfies Record<UserLevel, TranslationKey>;
+
+export const LEVEL_DESC_KEYS = {
+    survival: 'level_survival_desc',
+    working: 'level_working_desc',
+    client: 'level_client_desc',
+    strategic: 'level_strategic_desc',
+} as const satisfies Record<UserLevel, TranslationKey>;
+
+export const GOAL_META: Record<DailyGoal, { emoji: string; labelKey: 'goal_casual' | 'goal_regular' | 'goal_intense' }> = {
+    5: { emoji: '☕', labelKey: 'goal_casual' },
+    15: { emoji: '🔥', labelKey: 'goal_regular' },
+    30: { emoji: '💪', labelKey: 'goal_intense' },
 };

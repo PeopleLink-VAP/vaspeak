@@ -101,6 +101,15 @@ export async function spacetimeCallReducer(
 }
 
 /**
+ * Escape a string value for safe interpolation into a SpacetimeDB SQL literal.
+ * Doubles single-quotes and removes NUL bytes.
+ * NOTE: prefer parameterised queries when the SpacetimeDB HTTP API supports them.
+ */
+function escapeSqlString(value: string): string {
+    return value.replace(/\0/g, '').replace(/'/g, "''");
+}
+
+/**
  * Convenience: query a user by email.
  */
 export async function findUserByEmail(email: string) {
@@ -112,7 +121,7 @@ export async function findUserByEmail(email: string) {
         role: string;
         created_at: number;
         updated_at: number;
-    }>(`SELECT * FROM users WHERE email = '${email.replace(/'/g, "''")}'`);
+    }>(`SELECT * FROM users WHERE email = '${escapeSqlString(email)}'`);
 
     return rows[0] ?? null;
 }
@@ -121,6 +130,9 @@ export async function findUserByEmail(email: string) {
  * Convenience: query a user by ID.
  */
 export async function findUserById(userId: number) {
+    if (!Number.isInteger(userId) || userId <= 0) {
+        throw new Error(`[SpacetimeDB] findUserById: invalid userId "${userId}"`);
+    }
     const rows = await spacetimeQuery<{
         id: number;
         email: string;
@@ -132,14 +144,4 @@ export async function findUserById(userId: number) {
     }>(`SELECT * FROM users WHERE id = ${userId}`);
 
     return rows[0] ?? null;
-}
-
-/**
- * Check if a domain is blacklisted in SpacetimeDB.
- */
-export async function isBlacklistedDomainInDb(domain: string): Promise<boolean> {
-    const rows = await spacetimeQuery(
-        `SELECT * FROM blacklisted_domains WHERE domain = '${domain.replace(/'/g, "''").toLowerCase()}'`
-    );
-    return rows.length > 0;
 }
