@@ -7,7 +7,7 @@
         type UserLevel,
     } from "$lib/stores/onboarding";
 
-    const state = getOnboardingState();
+    const onboardingData = getOnboardingState();
     const levels = Object.entries(LEVEL_META) as [
         UserLevel,
         (typeof LEVEL_META)[UserLevel],
@@ -63,12 +63,13 @@
     <div class="space-y-3">
         {#each levels as [key, meta], i}
             <button
-                class="selection-card w-full text-left {state.level === key
+                class="selection-card w-full text-left {onboardingData.level ===
+                key
                     ? 'selection-card-selected'
                     : ''} fade-in fade-in-delay-{i + 1}"
                 onclick={() => selectLevel(key)}
                 id="level-{key}"
-                aria-pressed={state.level === key}
+                aria-pressed={onboardingData.level === key}
             >
                 <span class="text-3xl shrink-0">{meta.emoji}</span>
                 <div class="min-w-0">
@@ -77,7 +78,7 @@
                         {meta.description}
                     </div>
                 </div>
-                {#if state.level === key}
+                {#if onboardingData.level === key}
                     <svg
                         class="w-5 h-5 text-sunflower shrink-0 ml-auto"
                         fill="currentColor"
@@ -99,7 +100,7 @@
 <div class="pt-4 fade-in fade-in-delay-4">
     <button
         class="btn-primary w-full"
-        disabled={!state.level}
+        disabled={!onboardingData.level}
         onclick={() => goto("/onboarding/goal")}
         id="continue-btn"
     >

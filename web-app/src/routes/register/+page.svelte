@@ -96,6 +96,13 @@
             Already have an account? <a href="/login" class="link">Login</a>
         </p>
         <p class="text-sm text-center text-text-secondary">
+            New here? <a
+                href="/onboarding"
+                class="text-sunflower font-medium hover:underline"
+                >Start the onboarding →</a
+            >
+        </p>
+        <p class="text-sm text-center text-text-secondary">
             <a href="/" class="link">← Back to home</a>
         </p>
     </div>

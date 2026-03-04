@@ -8,7 +8,7 @@
         type DailyGoal,
     } from "$lib/stores/onboarding";
 
-    const state = getOnboardingState();
+    const onboardingData = getOnboardingState();
     const goals = Object.entries(GOAL_META) as [
         string,
         (typeof GOAL_META)[DailyGoal],
@@ -58,12 +58,12 @@
         {#each goals as [minutes, meta], i}
             {@const numMin = Number(minutes) as DailyGoal}
             <button
-                class="goal-card {state.dailyGoal === numMin
+                class="goal-card {onboardingData.dailyGoal === numMin
                     ? 'goal-card-selected'
                     : ''} fade-in fade-in-delay-{i + 1}"
                 onclick={() => setDailyGoal(numMin)}
                 id="goal-{minutes}"
-                aria-pressed={state.dailyGoal === numMin}
+                aria-pressed={onboardingData.dailyGoal === numMin}
             >
                 <span class="text-2xl mb-1">{meta.emoji}</span>
                 <div class="font-bold text-lg">{minutes}</div>
@@ -98,20 +98,21 @@
         <div>
             <div class="font-semibold text-navy text-sm">Daily Reminder</div>
             <div class="text-xs text-navy/50 mt-0.5">
-                {state.reminderTime} every day
+                {onboardingData.reminderTime} every day
             </div>
         </div>
         <button
-            class="relative w-12 h-7 rounded-full transition-colors duration-200 cursor-pointer {state.reminderEnabled
+            class="relative w-12 h-7 rounded-full transition-colors duration-200 cursor-pointer {onboardingData.reminderEnabled
                 ? 'bg-sunflower'
                 : 'bg-navy/20'}"
-            onclick={() => setReminder(!state.reminderEnabled)}
+            onclick={() => setReminder(!onboardingData.reminderEnabled)}
             role="switch"
-            aria-checked={state.reminderEnabled}
+            aria-checked={onboardingData.reminderEnabled}
             id="reminder-toggle"
+            aria-label="Toggle daily reminder"
         >
             <div
-                class="absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-200 {state.reminderEnabled
+                class="absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-200 {onboardingData.reminderEnabled
                     ? 'translate-x-5.5'
                     : 'translate-x-0.5'}"
             ></div>

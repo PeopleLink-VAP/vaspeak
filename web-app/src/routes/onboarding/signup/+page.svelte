@@ -7,7 +7,7 @@
         GOAL_META,
     } from "$lib/stores/onboarding";
 
-    const state = getOnboardingState();
+    const onboardingData = getOnboardingState();
 
     let email = $state("");
     let password = $state("");
@@ -120,23 +120,23 @@
             <div class="flex justify-between">
                 <span class="text-warm-white/70">Level</span>
                 <span class="font-medium">
-                    {state.level
-                        ? `${LEVEL_META[state.level].emoji} ${LEVEL_META[state.level].title}`
+                    {onboardingData.level
+                        ? `${LEVEL_META[onboardingData.level].emoji} ${LEVEL_META[onboardingData.level].title}`
                         : "Not set"}
                 </span>
             </div>
             <div class="flex justify-between">
                 <span class="text-warm-white/70">Daily Goal</span>
                 <span class="font-medium"
-                    >{GOAL_META[state.dailyGoal].emoji}
-                    {state.dailyGoal} min/day</span
+                    >{GOAL_META[onboardingData.dailyGoal].emoji}
+                    {onboardingData.dailyGoal} min/day</span
                 >
             </div>
             <div class="flex justify-between">
                 <span class="text-warm-white/70">Reminders</span>
                 <span class="font-medium"
-                    >{state.reminderEnabled
-                        ? `✅ ${state.reminderTime}`
+                    >{onboardingData.reminderEnabled
+                        ? `✅ ${onboardingData.reminderTime}`
                         : "❌ Off"}</span
                 >
             </div>
