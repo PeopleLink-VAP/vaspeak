@@ -19,10 +19,11 @@ test.describe('Onboarding — Welcome Screen', () => {
         await expect(btn).toContainText('Get Started');
     });
 
-    test('has login link', async ({ page }) => {
-        const link = page.locator('#login-link');
-        await expect(link).toBeVisible();
-        await expect(link).toHaveAttribute('href', '/login');
+    test('has login button that opens modal', async ({ page }) => {
+        const btn = page.locator('button:has-text("Log in")');
+        await expect(btn).toBeVisible();
+        await btn.click();
+        await expect(page.locator('.fixed.inset-0')).toBeVisible();
     });
 
     test('has 5 pagination dots', async ({ page }) => {
@@ -69,11 +70,6 @@ test.describe('Onboarding — Level Selection', () => {
     test('back button navigates to welcome', async ({ page }) => {
         await page.locator('#back-btn').click();
         await page.waitForURL('/onboarding');
-    });
-
-    test('skip navigates to goal', async ({ page }) => {
-        await page.locator('#skip-btn').click();
-        await page.waitForURL('/onboarding/goal');
     });
 
     test('selecting a level and continuing navigates to goal', async ({ page }) => {

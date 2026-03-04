@@ -101,15 +101,11 @@
   }
 
   .onboarding-topbar {
-    @apply flex items-center justify-between mb-8;
+    @apply flex items-center mb-8;
   }
 
   .onboarding-back {
     @apply w-10 h-10 flex items-center justify-center rounded-full bg-navy/5 text-navy hover:bg-navy/10 transition-colors cursor-pointer;
-  }
-
-  .onboarding-skip {
-    @apply text-sm font-medium text-sunflower hover:text-sunflower/80 transition-colors cursor-pointer;
   }
 
   .onboarding-heading {

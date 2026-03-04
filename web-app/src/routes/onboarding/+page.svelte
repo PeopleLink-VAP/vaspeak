@@ -1,5 +1,8 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import LoginModal from "$lib/components/LoginModal.svelte";
+
+    let loginModal = $state<ReturnType<typeof LoginModal>>();
 </script>
 
 <svelte:head>
@@ -82,10 +85,10 @@
 
     <p class="text-center text-sm text-navy/60">
         Already have an account?
-        <a
-            href="/login"
-            id="login-link"
-            class="text-sunflower font-medium hover:underline">Log in</a
+        <button
+            onclick={() => loginModal?.open()}
+            class="text-sunflower font-medium hover:underline cursor-pointer"
+            >Log in</button
         >
     </p>
 </div>
@@ -98,3 +101,5 @@
     <div class="onboarding-dot"></div>
     <div class="onboarding-dot"></div>
 </div>
+
+<LoginModal bind:this={loginModal} />

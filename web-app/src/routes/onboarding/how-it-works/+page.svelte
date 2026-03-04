@@ -63,11 +63,6 @@
             />
         </svg>
     </button>
-    <button
-        class="onboarding-skip"
-        onclick={() => goto("/onboarding/signup")}
-        id="skip-btn">Skip</button
-    >
 </div>
 
 <!-- Content -->

@@ -1,9 +1,12 @@
 <script lang="ts">
+    import LoginModal from "$lib/components/LoginModal.svelte";
+
     let user: { email: string } | null = $state(null);
     let newsletterEmail = $state("");
     let newsletterLoading = $state(false);
     let newsletterMsg = $state("");
     let newsletterError = $state("");
+    let loginModal = $state<ReturnType<typeof LoginModal>>();
 
     $effect(() => {
         fetch("/api/auth/me")
@@ -69,10 +72,10 @@
                     >Logout</button
                 >
             {:else}
-                <a
-                    href="/login"
-                    class="text-navy/70 hover:text-navy transition-colors"
-                    >Login</a
+                <button
+                    onclick={() => loginModal?.open()}
+                    class="text-navy/70 hover:text-navy transition-colors cursor-pointer"
+                    >Login</button
                 >
                 <a
                     href="/onboarding"
@@ -523,8 +526,10 @@
         >
             <div class="font-heading font-bold text-navy/60">🎤 VASpeak</div>
             <div class="flex items-center gap-4">
-                <a href="/login" class="hover:text-navy transition-colors"
-                    >Login</a
+                <button
+                    onclick={() => loginModal?.open()}
+                    class="hover:text-navy transition-colors cursor-pointer"
+                    >Login</button
                 >
                 <a href="/onboarding" class="hover:text-navy transition-colors"
                     >Get Started</a
@@ -541,3 +546,5 @@
         </div>
     </footer>
 </div>
+
+<LoginModal bind:this={loginModal} />
