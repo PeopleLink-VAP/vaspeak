@@ -85,8 +85,8 @@
         <div class="space-y-2 text-sm text-center text-text-secondary">
             <p><a href="/forgot-password" class="link">Forgot password?</a></p>
             <p>
-                Don't have an account? <a href="/register" class="link"
-                    >Register</a
+                Don't have an account? <a href="/onboarding" class="link"
+                    >Get Started</a
                 >
             </p>
             <p><a href="/magic-link" class="link">Login with magic link</a></p>

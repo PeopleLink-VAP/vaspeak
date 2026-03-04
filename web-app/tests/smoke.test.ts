@@ -1,12 +1,28 @@
 import { expect, test } from '@playwright/test';
 
-test('index page has expected h1', async ({ page }) => {
+test('index page has hero heading', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('h1')).toHaveText('VASpeak');
+    const heading = page.locator('#hero-heading');
+    await expect(heading).toBeVisible();
+    await expect(heading).toContainText('Speak English with confidence');
 });
 
-test('start lesson button is visible', async ({ page }) => {
+test('hero CTA links to onboarding', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('button', { name: /start lesson/i })).toBeVisible();
+    const cta = page.locator('#hero-cta');
+    await expect(cta).toBeVisible();
+    await expect(cta).toHaveAttribute('href', '/onboarding');
+});
+
+test('newsletter subscribe form is visible', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#newsletter-email')).toBeVisible();
+    await expect(page.locator('#newsletter-submit')).toBeVisible();
+});
+
+test('final CTA links to onboarding', async ({ page }) => {
+    await page.goto('/');
+    const finalCta = page.locator('#final-cta');
+    await expect(finalCta).toBeVisible();
+    await expect(finalCta).toHaveAttribute('href', '/onboarding');
 });
