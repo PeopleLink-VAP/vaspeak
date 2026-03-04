@@ -73,3 +73,11 @@ spacetime call vaspeak-dev seed_blacklisted_domains '{}'
 - Live at: [vaspeak.netlify.app](https://vaspeak.netlify.app)
 - Verified builds: `npm run build` in `web-app/` before deploying.
 - Netlify env vars needed: all `.env.example` vars, with `PUBLIC_SPACETIMEDB_MODULE=vaspeak-prod` and `PUBLIC_SPACETIMEDB_URI=wss://maincloud.spacetimedb.com`.
+
+## Version Control
+
+- **Always commit once a change is done and approved.** Do not leave uncommitted work.
+- Use **comprehensive, detailed commit messages** explaining what changed and why.
+- Follow conventional commit format: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`.
+- Include a summary line and a detailed body listing all notable changes.
+- Push to the remote after committing so Netlify auto-deploys.
