@@ -7,9 +7,11 @@ This document serves as the guide for humans and AI agents extending or maintain
 - **Auth**: Email/password + magic links, handled by SvelteKit API routes. SpacetimeDB stores user data; SvelteKit handles bcrypt, JWT sessions (7-day httpOnly cookies), and email sending via Resend.
 - **No OIDC**: We do NOT use SpacetimeDB's OIDC identity system — all auth is managed server-side.
 - **Dual SpacetimeDB environments**: `vaspeak-dev` (local dev) and `vaspeak-prod` (Netlify). Selected by `PUBLIC_SPACETIMEDB_MODULE` env var.
-- **Serverless-safe DB client**: `src/lib/server/spacetimedb.ts` uses SpacetimeDB's HTTP SQL/reducer endpoints (not WebSocket), safe for Netlify Functions.
-- **SpacetimeDB SDK v2.0.2**: Single-file module (`server/src/index.ts`) using `schema({key: table(opts, cols)})` + `spacetimedb.reducer(name, params, fn)` pattern.
+- **SpacetimeDB SDK v2.0.2**: Single-file module (`server/src/index.ts`) using `schema({key: table(opts, cols)})` + `spacetimedb.reducer(name, params, fn)` pattern. No v1 code remains.
 - **SpacetimeDB Tables**: `users`, `emailVerifications`, `magicLinks`, `passwordResets`, `newsletterSubscribers`, `blacklistedDomains`.
+- **DB Access Pattern (IMPORTANT)**:
+  - **Serverless HTTP mode (current)**: Web-app uses `$lib/server/spacetimedb.ts` which calls SpacetimeDB HTTP endpoints (SQL queries, reducer calls). No WebSocket, no `spacetimedb` npm package in web-app.
+  - **WebSocket SDK (future)**: `web-app/src/lib/module_bindings/` contains generated TypeScript bindings for real-time subscriptions. Currently unused but tracked in git. To enable: `npm i spacetimedb` in web-app, then use `spacetimedb/svelte` in components.
 - **Disposable email checking**: Uses `disposable-email-domains` npm package (121K+ domains), not a custom list.
 - **4 User Levels**: Survival Speaker → Working VA → Client Manager → Strategic Partner
 - **Weekly Themes**: Lessons group into weekly themes, 5 daily lessons each.
@@ -23,11 +25,11 @@ This document serves as the guide for humans and AI agents extending or maintain
    - Use `event.locals.user` (set by `hooks.server.ts`) to check auth in load functions.
 
 2. **Database (SpacetimeDB)**:
-   - Server module lives in `server/src/` (TypeScript).
+   - Server module lives in `server/` (TypeScript). Uses `spacetimedb` npm package v2.0.2.
    - After schema changes: rebuild module → republish → regenerate bindings.
-   - Client bindings live in `web-app/src/lib/module_bindings/` (generated, do not edit).
-   - Use `$lib/server/spacetimedb.ts` helpers in API routes for DB reads/writes.
-   - Real-time subscriptions (when needed): use the `spacetimedb/svelte` SDK in Svelte components.
+   - Client bindings live in `web-app/src/lib/module_bindings/` (generated, do not edit, currently unused).
+   - **Current approach**: Use `$lib/server/spacetimedb.ts` helpers in API routes for DB reads/writes via HTTP.
+   - **Future approach**: Real-time subscriptions will use `spacetimedb/svelte` SDK with generated bindings.
 
 3. **Auth patterns**:
    - Check `event.locals.user` in `+page.server.ts` load functions for protected pages.
