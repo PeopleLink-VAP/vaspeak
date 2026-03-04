@@ -5,7 +5,7 @@
         clearOnboarding,
         LEVEL_META,
         GOAL_META,
-    } from "$lib/stores/onboarding";
+    } from "$lib/stores/onboarding.svelte";
 
     const onboardingData = getOnboardingState();
 

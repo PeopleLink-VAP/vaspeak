@@ -6,7 +6,7 @@
         setReminder,
         GOAL_META,
         type DailyGoal,
-    } from "$lib/stores/onboarding";
+    } from "$lib/stores/onboarding.svelte";
 
     const onboardingData = getOnboardingState();
     const goals = Object.entries(GOAL_META) as [

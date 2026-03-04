@@ -5,7 +5,7 @@
         setLevel,
         LEVEL_META,
         type UserLevel,
-    } from "$lib/stores/onboarding";
+    } from "$lib/stores/onboarding.svelte";
 
     const onboardingData = getOnboardingState();
     const levels = Object.entries(LEVEL_META) as [
