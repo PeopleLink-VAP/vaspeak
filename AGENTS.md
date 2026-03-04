@@ -33,16 +33,23 @@ This document serves as the guide for humans and AI agents extending or maintain
 
 3. **Auth patterns**:
    - Check `event.locals.user` in `+page.server.ts` load functions for protected pages.
-   - Use `redirect(303, '/login')` for unauthenticated access.
+   - Login is a modal (`LoginModal.svelte`), not a separate page. Open via `loginModal.open()`.
+   - Use `redirect(303, '/onboarding')` for unauthenticated access to protected areas.
    - Never expose `password_hash` to the client.
    - Anti-enumeration: forgot-password and magic-link endpoints always return success.
 
-4. **Styling**:
+4. **Onboarding flow**:
+   - 5-step onboarding: Welcome → Level → Goal → How It Works → Signup
+   - No skip buttons — users must complete all steps sequentially.
+   - State persisted in sessionStorage via `$lib/stores/onboarding.svelte.ts`.
+   - After signup, user preferences (level, daily goal, reminder) are stored in SpacetimeDB.
+
+5. **Styling**:
    - Tailwind CSS 4 with custom theme tokens in `src/app.css`.
-   - Primary color: `#196376`. Use `btn-primary`, `card` component classes.
+   - Primary color: `#F2A906` (sunflower). Use `btn-primary`, `card` component classes.
    - Keep animations smooth and purposeful (no gratuitous motion).
 
-5. **Environment Variables**:
+6. **Environment Variables**:
    - Private (server-only): `JWT_SECRET`, `RESEND_API_KEY`, `GROQ_API_KEY`, `SPACETIMEDB_TOKEN`, `SITE_URL`
    - Public (client + server): `PUBLIC_SPACETIMEDB_URI`, `PUBLIC_SPACETIMEDB_MODULE`
    - Access via `$env/static/private`, `$env/dynamic/private`, or `$env/dynamic/public`.
