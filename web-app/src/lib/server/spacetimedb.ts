@@ -37,7 +37,7 @@ export async function spacetimeQuery<T = Record<string, unknown>>(
     const moduleName = getModuleName();
 
     const response = await fetch(
-        `${baseUrl}/database/sql/${moduleName}`,
+        `${baseUrl}/v1/database/${moduleName}/sql`,
         {
             method: 'POST',
             headers: {
@@ -82,7 +82,7 @@ export async function spacetimeCallReducer(
     const moduleName = getModuleName();
 
     const response = await fetch(
-        `${baseUrl}/database/call/${moduleName}/${reducerName}`,
+        `${baseUrl}/v1/database/${moduleName}/call/${reducerName}`,
         {
             method: 'POST',
             headers: {
