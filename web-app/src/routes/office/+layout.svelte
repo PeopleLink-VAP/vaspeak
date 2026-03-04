@@ -14,6 +14,7 @@
     let searchQuery = $state('');
     let theme = $state<'dark' | 'light'>('dark');
     let mounted = $state(false);
+    let currentPath = $state('/office');
 
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: 'grid', href: '/office' },
@@ -21,6 +22,13 @@
         { id: 'newsletter', label: 'Newsletter', icon: 'mail', href: '/office/newsletter' },
         { id: 'settings', label: 'Settings', icon: 'settings', href: '/office/settings' },
     ];
+
+    function isActive(href: string): boolean {
+        if (href === '/office') {
+            return currentPath === '/office';
+        }
+        return currentPath.startsWith(href);
+    }
 
     function toggleSidebar() {
         sidebarCollapsed = !sidebarCollapsed;
@@ -45,6 +53,7 @@
     onMount(() => {
         const saved = localStorage.getItem('office-theme') as 'dark' | 'light' | null;
         if (saved) theme = saved;
+        currentPath = window.location.pathname;
         mounted = true;
 
         function handleKeydown(e: KeyboardEvent) {
@@ -104,8 +113,8 @@
                     <a
                         href={item.href}
                         class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[var(--office-surface-hover)] text-[var(--office-text-muted)] hover:text-[var(--office-text)]"
-                        class:bg-[var(--office-accent-muted)]={item.href === '/office'}
-                        class:text-[var(--office-accent)]={item.href === '/office'}
+                        class:bg-[var(--office-accent-muted)]={isActive(item.href)}
+                        class:text-[var(--office-accent)]={isActive(item.href)}
                     >
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             {#if item.icon === 'grid'}
