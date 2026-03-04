@@ -5,10 +5,12 @@
 **VASpeak** is a mini-app site designed to serve as an English speaking confidence trainer for Virtual Assistants (VAs). It is part of the `eskills.virtualassistanpro.vn` project and offers 50+ days of lessons carefully structured around building real-world communication confidence.
 
 ### Lesson Flow
+
 Each day completes a guided 4-block structure:
+
 1. **Listening Decoding**
 2. **Pattern Drilling**
-3. **Guided Simulation** 
+3. **Guided Simulation**
 4. **Emotional Reflection**
 
 ---
@@ -29,10 +31,12 @@ Each day completes a guided 4-block structure:
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js v22+
 - SpacetimeDB CLI — install: `curl -sSf https://install.spacetimedb.com | bash -s -- --yes`
 
 ### Setup
+
 ```bash
 # 1. Install web app dependencies
 cd web-app && npm install
@@ -48,8 +52,8 @@ spacetime login
 
 # 5. Install and publish the server module
 cd ../server && npm install
-spacetime publish vaspeak-dev --project-path . --yes   # dev DB
-spacetime publish vaspeak-prod --project-path . --yes  # prod DB
+spacetime publish vaspeak-dev -p . --yes   # dev DB
+spacetime publish vaspeak-prod -p . --yes  # prod DB
 
 # 6. Seed disposable domain blocklist
 spacetime call vaspeak-dev seed_blacklisted_domains '{}'
@@ -64,12 +68,12 @@ cd ../web-app && npm run dev
 ```
 
 ### Project Structure
+
 ```
 vaspeak/
 ├── server/               # SpacetimeDB module (TypeScript)
 │   └── src/
-│       ├── schema.ts     # Table definitions
-│       └── index.ts      # Reducers
+│       └── index.ts      # Schema (6 tables) + reducers (11)
 └── web-app/              # SvelteKit 5 app
     └── src/
         ├── hooks.server.ts           # Auth middleware
@@ -86,8 +90,9 @@ vaspeak/
 ```
 
 ### Environment Variables (`.env`)
+
 ```bash
-PUBLIC_SPACETIMEDB_URI="wss://spacetimedb.com"
+PUBLIC_SPACETIMEDB_URI="wss://maincloud.spacetimedb.com"
 PUBLIC_SPACETIMEDB_MODULE="vaspeak-dev"   # or "vaspeak-prod"
 SPACETIMEDB_TOKEN=""          # from spacetime login
 JWT_SECRET=""                 # min 32 chars, random
@@ -106,10 +111,12 @@ GROQ_MODEL="meta-llama/llama-4-scout-17b-16e-instruct"
 - ✅ Login with JWT session cookie (httpOnly, 7-day)
 - ✅ Forgot password / password reset (1-hour token)
 - ✅ Magic link login (15-minute token, passwordless)
-- ✅ Disposable email domain blocking (~100 domains)
-- ✅ Blacklisted domain DB table (admin-managed)
+- ✅ Disposable email domain blocking (121K+ domains via `disposable-email-domains` npm package)
+- ✅ Blacklisted domain DB table (admin-managed, in SpacetimeDB)
 - ✅ Newsletter subscribe / unsubscribe
 - ✅ Anti-enumeration (forgot-password/magic-link always return success)
+- ✅ SpacetimeDB modules published to maincloud (`vaspeak-dev` + `vaspeak-prod`)
+- ✅ Live deployment at [vaspeak.netlify.app](https://vaspeak.netlify.app)
 
 ---
 

@@ -8,7 +8,9 @@ This document serves as the guide for humans and AI agents extending or maintain
 - **No OIDC**: We do NOT use SpacetimeDB's OIDC identity system — all auth is managed server-side.
 - **Dual SpacetimeDB environments**: `vaspeak-dev` (local dev) and `vaspeak-prod` (Netlify). Selected by `PUBLIC_SPACETIMEDB_MODULE` env var.
 - **Serverless-safe DB client**: `src/lib/server/spacetimedb.ts` uses SpacetimeDB's HTTP SQL/reducer endpoints (not WebSocket), safe for Netlify Functions.
-- **SpacetimeDB Tables**: `users`, `email_verifications`, `magic_links`, `password_resets`, `newsletter_subscribers`, `blacklisted_domains`, `lessons`, `profiles`, `user_progress`.
+- **SpacetimeDB SDK v2.0.2**: Single-file module (`server/src/index.ts`) using `schema({key: table(opts, cols)})` + `spacetimedb.reducer(name, params, fn)` pattern.
+- **SpacetimeDB Tables**: `users`, `emailVerifications`, `magicLinks`, `passwordResets`, `newsletterSubscribers`, `blacklistedDomains`.
+- **Disposable email checking**: Uses `disposable-email-domains` npm package (121K+ domains), not a custom list.
 - **4 User Levels**: Survival Speaker → Working VA → Client Manager → Strategic Partner
 - **Weekly Themes**: Lessons group into weekly themes, 5 daily lessons each.
 - **Simulation Difficulties**: Practice, Real, Stress.
@@ -57,14 +59,17 @@ npx playwright test      # E2E API tests (27 tests)
 npm run build
 
 # SpacetimeDB (from project root, add CLI to PATH first)
-spacetime build --project-path ./server
-spacetime publish vaspeak-dev --project-path ./server --yes
-spacetime generate --lang typescript --out-dir ./web-app/src/lib/module_bindings --project-path ./server
+spacetime build -p ./server
+spacetime publish vaspeak-dev -p ./server --yes
+spacetime publish vaspeak-prod -p ./server --yes
+spacetime generate --lang typescript --out-dir ./web-app/src/lib/module_bindings -p ./server
 spacetime logs vaspeak-dev -f
+spacetime call vaspeak-dev seed_blacklisted_domains '{}'
 ```
 
 ## Build & Deploy Cycle
 
-- Netlify reads `netlify.toml` at the project root (`base = "web-app"`).
+- Netlify auto-deploys from GitHub on push to `main`.
+- Live at: [vaspeak.netlify.app](https://vaspeak.netlify.app)
 - Verified builds: `npm run build` in `web-app/` before deploying.
-- Netlify env vars needed: all `.env.example` vars, with `PUBLIC_SPACETIMEDB_MODULE=vaspeak-prod`.
+- Netlify env vars needed: all `.env.example` vars, with `PUBLIC_SPACETIMEDB_MODULE=vaspeak-prod` and `PUBLIC_SPACETIMEDB_URI=wss://maincloud.spacetimedb.com`.
