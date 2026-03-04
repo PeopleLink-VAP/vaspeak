@@ -15,43 +15,125 @@ Each day completes a guided 4-block structure:
 
 ## Tech Stack
 
-This project uses a modern web stack:
-
-- **Frontend**: SvelteKit 5 (React logic will be migrated to Svelte 5 equivalents), TypeScript, Tailwind CSS
-- **Database Backend**: Supabase (currently partially completed via `lessons`, `profiles`, and `user_progress` tables).
-- **Hosting**: Netlify
-- **Key External APIs**:
-  - Resend (Email)
-  - Grok API (Future AI capabilities)
-  - SpacetimeDB 2 (Future foundational storage)
+| Layer | Technology |
+|-------|-----------|
+| Frontend | SvelteKit 5, TypeScript, Tailwind CSS 4 |
+| Database | **SpacetimeDB** (remote maincloud, 2 environments) |
+| Auth | SvelteKit API routes + bcrypt + JWT session cookies |
+| Email | Resend API (verification, magic links, password reset) |
+| Hosting | Netlify (adapter-netlify) |
+| AI | Groq API (future features) |
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v20+ recommended, developed on v22)
-- npm or pnpm
+- Node.js v22+
+- SpacetimeDB CLI — install: `curl -sSf https://install.spacetimedb.com | bash -s -- --yes`
 
 ### Setup
-1. Clone the repository
-2. Run `npm install`
-3. Copy `.env.example` to `.env` and fill in API keys
-4. Start the dev server: `npm run dev`
+```bash
+# 1. Install web app dependencies
+cd web-app && npm install
+
+# 2. Copy env file and fill in your values
+cp .env.example .env
+
+# 3. Add SpacetimeDB CLI to PATH (add to ~/.zshrc)
+export PATH="/Users/$USER/.local/bin:$PATH"
+
+# 4. Login to SpacetimeDB
+spacetime login
+
+# 5. Install and publish the server module
+cd ../server && npm install
+spacetime publish vaspeak-dev --project-path . --yes   # dev DB
+spacetime publish vaspeak-prod --project-path . --yes  # prod DB
+
+# 6. Seed disposable domain blocklist
+spacetime call vaspeak-dev seed_blacklisted_domains '{}'
+
+# 7. Generate TypeScript client bindings
+spacetime generate --lang typescript \
+  --out-dir ../web-app/src/lib/module_bindings \
+  --project-path .
+
+# 8. Start the dev server
+cd ../web-app && npm run dev
+```
 
 ### Project Structure
-- `/src/routes` - SvelteKit pages and API endpoints. 
-- `/src/lib` - Shared components and utilities.
+```
+vaspeak/
+├── server/               # SpacetimeDB module (TypeScript)
+│   └── src/
+│       ├── schema.ts     # Table definitions
+│       └── index.ts      # Reducers
+└── web-app/              # SvelteKit 5 app
+    └── src/
+        ├── hooks.server.ts           # Auth middleware
+        ├── lib/
+        │   ├── config.ts             # SpacetimeDB connection config
+        │   └── server/
+        │       ├── auth.ts           # JWT, bcrypt, cookies
+        │       ├── email.ts          # Resend email integration
+        │       ├── validation.ts     # Input validation + disposable domains
+        │       └── spacetimedb.ts    # HTTP-based DB client (serverless)
+        └── routes/
+            ├── api/auth/             # Auth API endpoints
+            └── api/newsletter/       # Newsletter API endpoints
+```
 
-## Roadmap & Features to Implement
+### Environment Variables (`.env`)
+```bash
+PUBLIC_SPACETIMEDB_URI="wss://spacetimedb.com"
+PUBLIC_SPACETIMEDB_MODULE="vaspeak-dev"   # or "vaspeak-prod"
+SPACETIMEDB_TOKEN=""          # from spacetime login
+JWT_SECRET=""                 # min 32 chars, random
+SITE_URL="http://localhost:5173"
+RESEND_API_KEY=""
+GROQ_API_KEY=""
+GROQ_MODEL="meta-llama/llama-4-scout-17b-16e-instruct"
+```
 
-According to the initial project brief, the frontend features need wiring up with real logic and database operations (Priority Order):
+---
 
-1. **Authentication** — Signup, login, protected routes interacting with Supabase RLS.
-2. **Lesson Data Fetching** — Replace the `/lesson/:id` mockup with dynamic data from the `lessons` table.
-3. **Progress Tracking Writes** — Implement writing to `user_progress` with block completions, stress levels, and scores.
-4. **Dashboard Reads from DB** — Wire up streak, progress, and upcoming lesson widgets.
-5. **Complete 50+ days of content** — Validate and generate missing lessons.
-6. **Audio Recording (Web Audio API)** — Recording integration with MediaRecorder logic.
-7. **Placement Test Logic** — Replace mock `/placement` flows with an assessment logic script checking for one of 4 user levels.
-8. **Audio Playback** — Provide playback mechanisms (TTS/Audio clips) for lessons.
+## Auth Features
+
+- ✅ Email + password registration (with strength validation)
+- ✅ Email verification (link sent via Resend)
+- ✅ Login with JWT session cookie (httpOnly, 7-day)
+- ✅ Forgot password / password reset (1-hour token)
+- ✅ Magic link login (15-minute token, passwordless)
+- ✅ Disposable email domain blocking (~100 domains)
+- ✅ Blacklisted domain DB table (admin-managed)
+- ✅ Newsletter subscribe / unsubscribe
+- ✅ Anti-enumeration (forgot-password/magic-link always return success)
+
+---
+
+## Testing
+
+```bash
+# Unit tests (validation + auth utilities)
+npm run test:unit
+
+# E2E API tests (Playwright — requires dev server)
+npx playwright test
+
+# All tests: 32 unit + 27 E2E = 59 total, all passing
+```
+
+---
+
+## Roadmap
+
+1. ✅ **Authentication** — signup, login, magic links, email verification, password reset
+2. **Lesson Data Fetching** — replace mockup with dynamic SpacetimeDB data
+3. **Progress Tracking** — write `user_progress` on block completions
+4. **Dashboard Reads** — wire streak, progress, upcoming lesson widgets
+5. **50+ Days of Content** — validate and generate missing lessons
+6. **Audio Recording** — Web Audio API + MediaRecorder
+7. **Placement Test** — assessment logic for 4 user levels
+8. **Audio Playback** — TTS / audio clips for lessons
