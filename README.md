@@ -20,10 +20,10 @@ Each day completes a guided 4-block structure:
 | Layer | Technology |
 |-------|-----------|
 | Frontend | SvelteKit 5, TypeScript, Tailwind CSS 4 |
-| Database | **SpacetimeDB** (remote maincloud, 2 environments) |
+| Database | **SQLite** (libsql) |
 | Auth | SvelteKit API routes + bcrypt + JWT session cookies |
 | Email | Resend API (verification, magic links, password reset) |
-| Hosting | Netlify (adapter-netlify) |
+| Hosting | Self-hosted (Node adapter, PM2) |
 | AI | Groq API (future features) |
 
 ---
@@ -33,7 +33,6 @@ Each day completes a guided 4-block structure:
 ### Prerequisites
 
 - Node.js v22+
-- SpacetimeDB CLI — install: `curl -sSf https://install.spacetimedb.com | bash -s -- --yes`
 
 ### Setup
 
@@ -44,27 +43,11 @@ cd web-app && npm install
 # 2. Copy env file and fill in your values
 cp .env.example .env
 
-# 3. Add SpacetimeDB CLI to PATH (add to ~/.zshrc)
-export PATH="/Users/$USER/.local/bin:$PATH"
+# 3. Initialize SQLite DB (run schema scripts if provided)
+# ...
 
-# 4. Login to SpacetimeDB
-spacetime login
-
-# 5. Install and publish the server module
-cd ../server && npm install
-spacetime publish vaspeak-dev -p . --yes   # dev DB
-spacetime publish vaspeak-prod -p . --yes  # prod DB
-
-# 6. Seed disposable domain blocklist
-spacetime call vaspeak-dev seed_blacklisted_domains '{}'
-
-# 7. Generate TypeScript client bindings
-spacetime generate --lang typescript \
-  --out-dir ../web-app/src/lib/module_bindings \
-  --project-path .
-
-# 8. Start the dev server
-cd ../web-app && npm run dev
+# 4. Start the dev server
+npm run dev
 ```
 
 ### Project Structure
@@ -78,12 +61,11 @@ vaspeak/
     └── src/
         ├── hooks.server.ts           # Auth middleware
         ├── lib/
-        │   ├── config.ts             # SpacetimeDB connection config
         │   └── server/
         │       ├── auth.ts           # JWT, bcrypt, cookies
         │       ├── email.ts          # Resend email integration
         │       ├── validation.ts     # Input validation + disposable domains
-        │       └── spacetimedb.ts    # HTTP-based DB client (serverless)
+        │       └── db.ts             # SQLite (libsql) client connection
         └── routes/
             ├── api/auth/             # Auth API endpoints
             └── api/newsletter/       # Newsletter API endpoints
@@ -92,9 +74,6 @@ vaspeak/
 ### Environment Variables (`.env`)
 
 ```bash
-PUBLIC_SPACETIMEDB_URI="wss://maincloud.spacetimedb.com"
-PUBLIC_SPACETIMEDB_MODULE="vaspeak-dev"   # or "vaspeak-prod"
-SPACETIMEDB_TOKEN=""          # from spacetime login
 JWT_SECRET=""                 # min 32 chars, random
 SITE_URL="http://localhost:5173"
 RESEND_API_KEY=""
@@ -112,11 +91,10 @@ GROQ_MODEL="meta-llama/llama-4-scout-17b-16e-instruct"
 - ✅ Forgot password / password reset (1-hour token)
 - ✅ Magic link login (15-minute token, passwordless)
 - ✅ Disposable email domain blocking (121K+ domains via `disposable-email-domains` npm package)
-- ✅ Blacklisted domain DB table (admin-managed, in SpacetimeDB)
+- ✅ Blacklisted domain DB table (admin-managed, in SQLite)
 - ✅ Newsletter subscribe / unsubscribe
 - ✅ Anti-enumeration (forgot-password/magic-link always return success)
-- ✅ SpacetimeDB modules published to maincloud (`vaspeak-dev` + `vaspeak-prod`)
-- ✅ Live deployment at [vaspeak.netlify.app](https://vaspeak.netlify.app)
+- ✅ Self-hosted deployment setup
 
 ---
 
@@ -137,7 +115,7 @@ npx playwright test
 ## Roadmap
 
 1. ✅ **Authentication** — signup, login, magic links, email verification, password reset
-2. **Lesson Data Fetching** — replace mockup with dynamic SpacetimeDB data
+2. **Lesson Data Fetching** — replace mockup with dynamic SQLite data
 3. **Progress Tracking** — write `user_progress` on block completions
 4. **Dashboard Reads** — wire streak, progress, upcoming lesson widgets
 5. **50+ Days of Content** — validate and generate missing lessons
