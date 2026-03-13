@@ -71,6 +71,45 @@ export function getInitials(name: string): string {
 	return name.trim().slice(0, 2).toUpperCase();
 }
 
+/** Known AI-model assignee names (lowercase, prefix-matched). */
+const AGENT_PREFIXES = ['gemini', 'claude', 'gpt', 'o1', 'o3', 'sonnet', 'haiku', 'opus', 'mistral', 'llama', 'deepseek'];
+
+/**
+ * Returns true if the assignee name looks like an AI agent.
+ * Matches known model names (case-insensitive, prefix-based).
+ */
+export function isAgent(assignee: string): boolean {
+	if (!assignee) return false;
+	const lower = assignee.toLowerCase().trim();
+	return AGENT_PREFIXES.some((prefix) => lower === prefix || lower.startsWith(prefix + '-') || lower.startsWith(prefix + ' '));
+}
+
+/**
+ * Formats the elapsed time since an ISO timestamp as a concise human string.
+ * e.g. "5s ago", "12m ago", "3h ago", "2d ago"
+ * Accepts an optional `now` param (ms since epoch) for testability.
+ */
+export function formatElapsed(updatedAt: string, now = Date.now()): string {
+	const ms = now - new Date(updatedAt).getTime();
+	const s = Math.floor(ms / 1000);
+	if (s < 0) return 'just now';
+	if (s < 60) return `${s}s ago`;
+	const m = Math.floor(s / 60);
+	if (m < 60) return `${m}m ago`;
+	const h = Math.floor(m / 60);
+	if (h < 24) return `${h}h ago`;
+	return `${Math.floor(h / 24)}d ago`;
+}
+
+/**
+ * Safely parses a JSON-stringified array from a DB TEXT column.
+ * Returns an empty array on null, undefined, or invalid JSON.
+ */
+export function parseJsonArray(raw: string | null | undefined): string[] {
+	if (!raw) return [];
+	try { return JSON.parse(raw); } catch { return []; }
+}
+
 // ---------------------------------------------------------------------------
 // Date / time
 // ---------------------------------------------------------------------------
