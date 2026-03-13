@@ -36,11 +36,15 @@
 			<p class="text-[#1B365D]/50 text-xs font-medium uppercase tracking-wide">Ngày Streak</p>
 		</div>
 
-		<!-- Credits -->
-		<div class="bg-white rounded-2xl p-4 shadow-[0_4px_14px_rgba(27,54,93,0.07)] border border-[#1B365D]/6">
+		<!-- Credits (links to ledger) -->
+		<a
+			href="/credits"
+			id="credits-widget"
+			class="bg-white rounded-2xl p-4 shadow-[0_4px_14px_rgba(27,54,93,0.07)] border border-[#1B365D]/6 hover:border-[#F2A906]/40 transition-colors"
+		>
 			<div class="flex items-center gap-2 mb-1">
 				<span class="text-xl">⚡</span>
-				<span class="font-heading font-bold text-[#1B365D] text-2xl">{creditsRemaining}</span>
+				<span id="credits-remaining-value" class="font-heading font-bold text-[#1B365D] text-2xl">{creditsRemaining}</span>
 				<span class="text-[#1B365D]/40 text-sm">/ {credits.allowance}</span>
 			</div>
 			<div class="w-full h-1.5 bg-[#1B365D]/8 rounded-full mt-1">
@@ -52,8 +56,8 @@
 					style="width: {creditsPercent}%"
 				></div>
 			</div>
-			<p class="text-[#1B365D]/50 text-xs font-medium uppercase tracking-wide mt-1">AI Credits</p>
-		</div>
+			<p class="text-[#1B365D]/50 text-xs font-medium uppercase tracking-wide mt-1">AI Credits →</p>
+		</a>
 	</div>
 
 	<!-- Progress Bar -->
@@ -134,9 +138,9 @@
 	<div class="flex justify-around max-w-lg mx-auto">
 		{#each [
 			{ href: '/dashboard', icon: '🏠', label: 'Trang Chủ', active: true },
-			{ href: '/lessons', icon: '📖', label: 'Bài Học', active: false },
-			{ href: '/leaderboard', icon: '🏆', label: 'Xếp Hạng', active: false },
-			{ href: '/profile', icon: '👤', label: 'Cá Nhân', active: false }
+			{ href: '/lessons',   icon: '📖', label: 'Bài Học',   active: false },
+			{ href: '/credits',   icon: '⚡', label: 'Credits',   active: false },
+			{ href: '/profile',   icon: '👤', label: 'Cá Nhân',   active: false }
 		] as nav}
 			<a href={nav.href} class="flex flex-col items-center gap-1 {nav.active ? 'text-[#F2A906]' : 'text-[#1B365D]/40'} hover:text-[#1B365D] transition-colors">
 				<span class="text-xl">{nav.icon}</span>
