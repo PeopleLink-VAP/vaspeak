@@ -19,7 +19,9 @@
 		"db:setup": "node scripts/init-db.js && node scripts/seed-lessons.js",
 		"test:unit": "vitest run --config tests/unit/vitest.config.ts",
 		"test:unit:watch": "vitest --config tests/unit/vitest.config.ts",
-		"test:unit:ui": "vitest --ui --config tests/unit/vitest.config.ts"
+		"test:unit:ui": "vitest --ui --config tests/unit/vitest.config.ts",
+		"test:e2e:record": "bash scripts/run-e2e-record.sh",
+		"test:e2e:record:smoke": "bash scripts/run-e2e-record.sh --grep=@smoke"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.58.2",
