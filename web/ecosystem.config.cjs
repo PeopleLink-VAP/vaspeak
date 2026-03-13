@@ -3,9 +3,11 @@
  * Production: runs the SvelteKit Node adapter build (node build/index.js).
  * Dev: runs vite dev server.
  *
- * Secrets are loaded from process.env — set them on the server before
- * starting PM2. Never commit real values here.
+ * Secrets are loaded from .env via dotenv so they persist across reboots.
  */
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 module.exports = {
   apps: [
     {

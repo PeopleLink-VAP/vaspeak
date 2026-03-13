@@ -38,6 +38,17 @@ export async function load() {
         git = { hash: hash?.slice(0, 8) ?? 'N/A', message: message ?? '', date: date ?? '', author: author ?? '' };
     } catch { /* ok */ }
 
+    // Get PM2 uptime (= last deploy time) for vaspeak-prod
+    let lastDeployISO = '';
+    try {
+        const { stdout: pm2Out } = await execAsync('pm2 jlist');
+        const pm2Apps = JSON.parse(pm2Out);
+        const prod = pm2Apps.find((a: any) => a.name === 'vaspeak-prod');
+        if (prod?.pm2_env?.pm_uptime) {
+            lastDeployISO = new Date(prod.pm2_env.pm_uptime).toISOString();
+        }
+    } catch { /* ok */ }
+
     return {
         system: {
             hostname:   os.hostname(),
@@ -57,6 +68,7 @@ export async function load() {
         },
         db:  { sizeBytes: dbSizeBytes, counts },
         git,
+        lastDeployISO,
         env: {
             NODE_ENV:          process.env.NODE_ENV ?? 'unknown',
             groqConfigured:    !!process.env.GROQ_API_KEY,

@@ -2,7 +2,19 @@
     import { formatUptime } from '$lib/utils';
 
     const { data } = $props();
-    const { system, db, git, env } = data;
+    const { system, db, git, env, lastDeployISO } = data;
+
+    function timeAgo(iso: string): string {
+        if (!iso) return '—';
+        const diff = Date.now() - new Date(iso).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ${mins % 60}m ago`;
+        const days = Math.floor(hrs / 24);
+        return `${days}d ${hrs % 24}h ago`;
+    }
 
     let actionStatus = $state('');
     let actionRunning = $state(false);
@@ -157,6 +169,10 @@
 
         <div class="info-grid">
             <div class="info-row">
+                <span class="key">Last Deploy</span>
+                <span class="val deploy-time">{timeAgo(lastDeployISO)}</span>
+            </div>
+            <div class="info-row">
                 <span class="key">Last commit</span>
                 <span class="val mono commit-hash">{git.hash}</span>
             </div>
@@ -279,4 +295,5 @@
 
     /* Commit hash pill in deployment */
     .commit-hash { background: #f2a90618; color: #f2a906; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; }
+    .deploy-time { background: #22c55e18; color: #22c55e; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; }
 </style>
