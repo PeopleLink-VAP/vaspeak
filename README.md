@@ -2,16 +2,16 @@
 
 ## Overview
 
-**VASpeak** is a mini-app site designed to serve as an English speaking confidence trainer for Virtual Assistants (VAs). It is part of the `vaspeak.virtualassistanpro.vn` project and offers 50+ days of lessons carefully structured around building real-world communication confidence.
+**VASpeak** is a gamified, mobile-first, "Duolingo-like" English speaking confidence trainer for Vietnamese Virtual Assistants (VAs). It offers daily 4-block lessons structured around real-world communication confidence, with AI-powered roleplay and a full gamification system.
 
 ### Lesson Flow
 
 Each day completes a guided 4-block structure:
 
-1. **Listening Decoding**
-2. **Pattern Drilling**
-3. **Guided Simulation**
-4. **Emotional Reflection**
+1. **Listening Decoding** — Audio comprehension with fill-in-the-blank
+2. **Pattern Drilling** — Repeat-after-me speaking practice
+3. **Guided Simulation** — AI roleplay chat (Groq-powered, credit-gated)
+4. **Emotional Reflection** — Emoji + text self-assessment
 
 ---
 
@@ -20,11 +20,13 @@ Each day completes a guided 4-block structure:
 | Layer | Technology |
 |-------|-----------|
 | Frontend | SvelteKit 5, TypeScript, Tailwind CSS 4 |
-| Database | **SQLite** (libsql) |
-| Auth | SvelteKit API routes + bcrypt + JWT session cookies |
-| Email | Resend API (verification, magic links, password reset) |
-| Hosting | Self-hosted (Node adapter, PM2) |
-| AI | Groq API (future features) |
+| Database | **SQLite** (`@libsql/client`) for app data; **Turso** for admin Kanban |
+| Auth | Custom server-side — bcrypt + JWT httpOnly cookies + magic links |
+| Email | Resend API (email verification, magic links, password reset) |
+| AI | Groq API — Llama models (Block 3 roleplay, credit-gated) |
+| PWA | `manifest.webmanifest` + `service-worker.ts` + install prompt |
+| Hosting | Self-hosted, Node adapter, PM2 process manager |
+| Reverse Proxy | Cloudflare Tunnel → `vaspeak.alphabits.team` |
 
 ---
 
@@ -32,53 +34,82 @@ Each day completes a guided 4-block structure:
 
 ### Prerequisites
 
-- Node.js v22+
+- Node.js v20+
+- A running SQLite database (auto-created on first run)
 
 ### Setup
 
 ```bash
-# 1. Install web app dependencies
-cd web-app && npm install
+# 1. Install dependencies
+cd web && npm install
 
-# 2. Copy env file and fill in your values
-cp .env.example .env
+# 2. Copy and fill env file
+cp .env.example .env  # see Environment Variables below
 
-# 3. Initialize SQLite DB (run schema scripts if provided)
-# ...
-
-# 4. Start the dev server
+# 3. Start dev server (port 19301)
 npm run dev
-```
-
-### Project Structure
-
-```
-vaspeak/
-├── server/               # SpacetimeDB module (TypeScript)
-│   └── src/
-│       └── index.ts      # Schema (6 tables) + reducers (11)
-└── web-app/              # SvelteKit 5 app
-    └── src/
-        ├── hooks.server.ts           # Auth middleware
-        ├── lib/
-        │   └── server/
-        │       ├── auth.ts           # JWT, bcrypt, cookies
-        │       ├── email.ts          # Resend email integration
-        │       ├── validation.ts     # Input validation + disposable domains
-        │       └── db.ts             # SQLite (libsql) client connection
-        └── routes/
-            ├── api/auth/             # Auth API endpoints
-            └── api/newsletter/       # Newsletter API endpoints
 ```
 
 ### Environment Variables (`.env`)
 
 ```bash
-JWT_SECRET=""                 # min 32 chars, random
-SITE_URL="http://localhost:5173"
-RESEND_API_KEY=""
-GROQ_API_KEY=""
-GROQ_MODEL="meta-llama/llama-4-scout-17b-16e-instruct"
+RESEND_API_KEY=""                  # Resend API key for transactional email
+GROQ_API_KEY=""                    # Groq API key for AI roleplay
+ADMIN_AUTH_USER="admin"            # Admin dashboard username
+ADMIN_AUTH_PASSWORD=""             # Admin dashboard password
+TURSO_DB_URL=""                    # Turso remote DB URL (admin Kanban)
+TURSO_DB_TOKEN=""                  # Turso auth token
+JWT_SECRET=""                      # min 32 chars, random string
+PUBLIC_BASE_URL="http://localhost:5173"
+```
+
+---
+
+## Project Structure
+
+```
+vaspeak/
+├── AGENTS.md                  # AI agent master context (always read first)
+├── SITE.md                    # Sitemap, routes, deployment overview
+├── schema.sql                 # SQLite schema (reference)
+├── web/                       # SvelteKit 5 application
+│   ├── ecosystem.config.cjs   # PM2 process config (prod + dev)
+│   ├── src/
+│   │   ├── hooks.server.ts    # Auth middleware (JWT session guard)
+│   │   ├── service-worker.ts  # PWA offline caching
+│   │   ├── lib/
+│   │   │   ├── pwa.ts         # PWA install prompt (SSR-safe)
+│   │   │   ├── utils.ts       # Shared utilities
+│   │   │   └── server/
+│   │   │       ├── auth.ts        # JWT + bcrypt helpers
+│   │   │       ├── db.ts          # SQLite (libsql) client
+│   │   │       ├── turso.ts       # Turso remote client (admin)
+│   │   │       ├── email.ts       # Resend email integration
+│   │   │       ├── magic-link.ts  # Magic link token gen/verify
+│   │   │       ├── credits.ts     # Credit balance helpers
+│   │   │       └── groq.ts        # Groq API wrapper
+│   │   └── routes/
+│   │       ├── +page.svelte          # Landing page + waitlist
+│   │       ├── login/                # Auth portal (login/register/magic)
+│   │       ├── auth/magic/           # Magic link verification
+│   │       ├── dashboard/            # User dashboard
+│   │       ├── lesson/[day]/         # 4-block lesson page
+│   │       ├── credits/              # Credits ledger UI
+│   │       ├── admin/                # Admin section (password-protected)
+│   │       │   ├── kanban/           # Turso Kanban board
+│   │       │   ├── settings/         # System health & DB info
+│   │       │   └── e2e-testing/      # Playwright recording viewer
+│   │       └── api/
+│   │           ├── roleplay/         # Groq AI roleplay (credit-gated)
+│   │           ├── progress/         # User block completion writes
+│   │           ├── credits/          # Credits ledger reads/writes
+│   │           └── waitlist/         # Waitlist signup
+│   └── static/
+│       ├── manifest.webmanifest
+│       ├── icon-192.png
+│       ├── icon-512.png
+│       └── icon-maskable.png
+└── .agents/skills/            # AI agent skills library
 ```
 
 ---
@@ -86,15 +117,14 @@ GROQ_MODEL="meta-llama/llama-4-scout-17b-16e-instruct"
 ## Auth Features
 
 - ✅ Email + password registration (with strength validation)
+- ✅ Disposable email domain blocking (121K+ domains)
 - ✅ Email verification (link sent via Resend)
 - ✅ Login with JWT session cookie (httpOnly, 7-day)
-- ✅ Forgot password / password reset (1-hour token)
 - ✅ Magic link login (15-minute token, passwordless)
-- ✅ Disposable email domain blocking (121K+ domains via `disposable-email-domains` npm package)
-- ✅ Blacklisted domain DB table (admin-managed, in SQLite)
-- ✅ Newsletter subscribe / unsubscribe
+- ✅ Forgot password / password reset (1-hour token)
+- ✅ Blacklisted domain DB table (admin-managed)
 - ✅ Anti-enumeration (forgot-password/magic-link always return success)
-- ✅ Self-hosted deployment setup
+- ✅ Route guards via `hooks.server.ts`
 
 ---
 
@@ -107,18 +137,44 @@ npm run test:unit
 # E2E API tests (Playwright — requires dev server)
 npx playwright test
 
-# All tests: 32 unit + 27 E2E = 59 total, all passing
+# View E2E recordings
+# Open /admin/e2e-testing in browser
 ```
+
+---
+
+## Deployment
+
+```bash
+# Build production bundle
+npm run build
+
+# Start via PM2 (reads ecosystem.config.cjs)
+pm2 start ecosystem.config.cjs
+
+# Reload prod with updated env vars
+pm2 reload ecosystem.config.cjs --only vaspeak-prod --update-env
+```
+
+- **Production**: `vaspeak.alphabits.team` (port 19300, Cloudflare tunnel)
+- **Dev/Beta**: `vaspeak-beta.alphabits.team` (port 19301, Cloudflare tunnel)
 
 ---
 
 ## Roadmap
 
 1. ✅ **Authentication** — signup, login, magic links, email verification, password reset
-2. **Lesson Data Fetching** — replace mockup with dynamic SQLite data
-3. **Progress Tracking** — write `user_progress` on block completions
-4. **Dashboard Reads** — wire streak, progress, upcoming lesson widgets
-5. **50+ Days of Content** — validate and generate missing lessons
-6. **Audio Recording** — Web Audio API + MediaRecorder
-7. **Placement Test** — assessment logic for 4 user levels
-8. **Audio Playback** — TTS / audio clips for lessons
+2. ✅ **Database** — SQLite schema, Week 1 lesson seed, progress tracking
+3. ✅ **Dashboard & Lessons** — wired to SQLite, 4-block lesson UI
+4. ✅ **AI Roleplay Engine** — Groq Block 3 integration with credit gating
+5. ✅ **Admin Dashboard** — health metrics, Kanban, E2E viewer, settings
+6. ✅ **PWA** — manifest, service worker, install prompt, app icons
+7. ✅ **Magic Link Auth** — passwordless login via Resend
+8. ✅ **Credits System** — ledger UI + API + balance-gated AI calls
+9. ✅ **Production Deployment** — PM2 with full env vars for prod/dev
+10. 🔄 **Gamification** — milestone rewards, streak bonuses, credit top-up
+11. 🔄 **Audio Recording** — MediaRecorder for Block 2 & 3
+12. 🔄 **Vocabulary Bank** — `/vocabulary` page + API
+13. 🔄 **User Profile** — `/profile` account settings
+14. 🔄 **Placement Test** — level assessment at first login
+15. 🔄 **50+ Days of Content** — Weeks 2–8 lesson generation

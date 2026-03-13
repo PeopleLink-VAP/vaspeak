@@ -4,17 +4,18 @@ This document provides the compressed, essential context for AI agents and human
 
 ## 1. Project Overview & Gamification Pivot
 VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence trainer for Vietnamese Virtual Assistants (VAs).
-- **Core Loop**: Short, daily, 4-block lessons (Listening, Pattern Drilling, AI Roleplay, Emotional Reflection). Emphasizes speaking/listening over reading/writing. 
+- **Core Loop**: Short, daily, 4-block lessons (Listening, Pattern Drilling, AI Roleplay, Emotional Reflection). Emphasizes speaking/listening over reading/writing.
 - **Niches**: Users start in General Communication. Unlocking 'Working VA' level unlocks 8 specific niche tracks (Ecommerce, Video Editor, Operations, etc.).
 - **Gamification**: Users get monthly AI Credits (e.g., 100/mo). Earning milestones unlocks rewards and templates. Includes daily challenges, vocabulary bank, and a community forum.
 - **Platform**: SvelteKit web app, structured as a Progressive Web App (PWA) for native-like installation and mobile/desktop reminders.
 
 ## 2. Tech Stack & Architecture
 - **Frontend**: SvelteKit 5 (Using Runes exclusively: `$state`, `$derived`, `$props`), TypeScript, Tailwind CSS 4.
-- **Backend / DB**: Serverless SvelteKit API routes. **Local SQLite (`libsql`)** replaces SpacetimeDB.
-- **Auth**: Fully custom server-side auth. Email/password (bcrypt) + magic links (Resend). 7-day httpOnly JWT cookies handling session state.
-- **AI Integration**: Groq API (Llama models) used for dynamic roleplay, pronunciation scoring, and dynamic lesson content generation.
-- **System Management**: A dedicated admin settings area to view system health, last deployed status, and manage/backup the local SQLite `.db` file.
+- **Backend / DB**: Serverless SvelteKit API routes. **Local SQLite (`libsql`)** replaces SpacetimeDB. Admin Kanban board uses a remote **Turso** database.
+- **Auth**: Fully custom server-side auth. Email/password (bcrypt) + magic links (Resend). 7-day httpOnly JWT cookies. Anti-enumeration on all sensitive flows. Disposable email blocking (121K+ domains).
+- **AI Integration**: Groq API (Llama models) used for dynamic roleplay (Block 3), pronunciation scoring, and lesson content generation. Credit balance is checked before every Groq call.
+- **System Management**: Admin dashboard at `/admin` with health metrics, PM2 status, Kanban board (Turso-backed), E2E recording viewer, and settings page.
+- **Deployment**: Self-hosted via PM2. `vaspeak-prod` on port 19300 → `vaspeak.alphabits.team`. `vaspeak-dev` on port 19301 → `vaspeak-beta.alphabits.team`. Both managed by `ecosystem.config.cjs`.
 
 ### Database Schema Shapes (SQLite / libsql)
 - `profiles`: id, email, display_name, current_level, native_language.
@@ -22,6 +23,22 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 - `lessons`: id, day_number, week_theme, niche, title, content (JSON blocks).
 - `user_progress`: user_id, lesson_id, block_completions (JSON), simulation_scores (JSON), reflection_notes.
 - `vocabulary_bank`: user_id, word, definition, context_sentence.
+
+### Key Routes
+- `/` — Landing page + waitlist
+- `/login` — Login, register, forgot password, magic link
+- `/auth/magic` — Magic link token verification
+- `/dashboard` — User dashboard (streak, credits, today's lesson CTA)
+- `/lesson/[day]` — Full 4-block lesson page (SQLite-backed)
+- `/credits` — Credits overview and usage ledger
+- `/admin` — Admin dashboard (password-protected)
+- `/admin/kanban` — Turso-backed Kanban board
+- `/admin/settings` — System health, DB status, env info
+- `/admin/e2e-testing` — Playwright recording viewer + run trigger
+- `/api/roleplay` — Groq AI roleplay endpoint (credit-gated)
+- `/api/progress` — User progress write endpoint
+- `/api/credits` — Credits ledger API
+- `/api/waitlist` — Waitlist signup endpoint
 
 ## 3. Design & Styling Rules
 **Aesthetics**: Mobile-first, friendly, rounded UI inheriting Virtual Assistant PRO's identity.
@@ -32,15 +49,27 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 - **Components**: Generously rounded cards (`border-radius: 16px`) with navy shadow. Hover states use sunflower glow. Buttons `radius: 6px`. No gratuitous animations (use `fade-in`, simple transforms).
 
 ## 4. Development & Testing Rules
-- **DB Access**: API routes use `$lib/server/db.ts` to execute SQL via `@libsql/client`.
-- **E2E Testing**: Playwright (`npx playwright test`). Test heavily on Mobile viewports (Pixel 5, iPhone 12 configs). Ensure touch interactions, audio buttons, and iOS Safari quirks are handled.
+- **DB Access**: API routes use `$lib/server/db.ts` for SQLite via `@libsql/client` and `$lib/server/turso.ts` for admin Kanban via Turso remote.
+- **Auth Helpers**: `$lib/server/auth.ts` (JWT, bcrypt), `$lib/server/email.ts` (Resend), `$lib/server/magic-link.ts` (token gen/verify), `$lib/server/credits.ts` (balance checks), `$lib/server/groq.ts` (Groq API wrapper).
+- **E2E Testing**: Playwright (`npx playwright test`). Test heavily on Mobile viewports (Pixel 5, iPhone 12 configs). E2E recordings visible in `/admin/e2e-testing`.
 - **Audio/Web API**: Extensive reliance on Web Audio API and MediaRecorder. Pay attention to autoplay policies requiring user gestures.
+- **PWA**: `manifest.webmanifest` in `/static`, `service-worker.ts` at `src/`, install prompt logic in `src/lib/pwa.ts` (SSR-safe, client-only).
 - **Commands**: `npm run dev`, `npm run build`, `npm run test:unit`, `npx playwright test`.
+- **PM2**: `pm2 reload ecosystem.config.cjs --update-env` to reload prod/dev with latest env vars.
 
 ## 5. Current Roadmap / Next Steps
 1. ✅ **Tech Stack Pivot**: Strip out SpacetimeDB, wire up SQLite (`@libsql/client`).
-2. 🔄 **Schema Setup**: Create and migrate the new SQLite tables (users, auth, progress, credits, vocab).
-3. 🔄 **AI Roleplay Engine**: Build the core Groq API integration for Block 3 (Guided Simulation).
-4. 🔄 **System Settings & DB Backups**: Build the admin dashboard for health metrics and SQLite database management.
-5. 🔄 **PWA Mechanics**: Add service workers, manifest, and install prompts.
-6. 🔄 **Gamification & Monetization**: Wire up the credit decrement system and Milestone rewards.
+2. ✅ **Schema Setup**: SQLite tables created — users, auth tokens, progress, credits, vocab, lessons (Week 1 seeded).
+3. ✅ **Auth System**: Full email/password + magic link auth, JWT session cookies, route guards, disposable email blocking.
+4. ✅ **Dashboard & Lesson Pages**: `/dashboard` and `/lesson/[day]` wired to SQLite with real progress tracking.
+5. ✅ **AI Roleplay Engine**: Groq API integration for Block 3 (Guided Simulation) with credit gating.
+6. ✅ **Admin Dashboard**: `/admin` with health metrics, Kanban (Turso), E2E viewer, and settings page.
+7. ✅ **PWA Mechanics**: Service worker, `manifest.webmanifest`, install prompt, VAP app icons.
+8. ✅ **Magic Link Auth**: Passwordless login via emailed token (Resend), 15-min expiry, anti-enumeration.
+9. ✅ **Credits System**: Credit ledger UI at `/credits`, API at `/api/credits`, balance checked before AI calls.
+10. ✅ **Production Deployment**: PM2 `ecosystem.config.cjs` with full env vars for both prod (19300) and dev (19301) processes.
+11. 🔄 **Gamification & Monetization**: Wire up milestone rewards, streak bonuses, and credit top-up flow.
+12. 🔄 **50+ Days of Content**: Generate and validate remaining lesson content beyond Week 1.
+13. 🔄 **Audio Recording**: Web Audio API + MediaRecorder for Block 2 (Pattern Drilling) and Block 3 (Roleplay).
+14. 🔄 **Vocabulary Bank**: UI and API for user vocab at `/vocabulary`.
+15. 🔄 **Placement Test**: Assessment logic determining starting level (Beginner / Working VA / Advanced).
