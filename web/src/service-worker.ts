@@ -72,9 +72,11 @@ self.addEventListener('fetch', (event) => {
 		event.respondWith(
 			fetch(request)
 				.then((response) => {
-					// Cache successful navigation responses
-					const clone = response.clone();
-					caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+					// Cache successful navigation responses (only valid for GET and non-partial)
+					if (response.ok && request.method === 'GET' && response.status !== 206) {
+						const clone = response.clone();
+						caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+					}
 					return response;
 				})
 				.catch(async () => {
@@ -82,7 +84,7 @@ self.addEventListener('fetch', (event) => {
 					const cached = await caches.match(request);
 					if (cached) return cached;
 					// Last resort: serve the dashboard shell from cache
-					return caches.match('/dashboard') ?? Response.error();
+					return (await caches.match('/dashboard')) ?? Response.error();
 				})
 		);
 		return;
@@ -92,7 +94,8 @@ self.addEventListener('fetch', (event) => {
 	event.respondWith(
 		fetch(request)
 			.then((response) => {
-				if (response.ok) {
+				// Only cache successful GET requests that are not partial responses (206)
+				if (response.ok && request.method === 'GET' && response.status !== 206) {
 					const clone = response.clone();
 					caches.open(CACHE_NAME).then((c) => c.put(request, clone));
 				}

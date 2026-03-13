@@ -14,6 +14,7 @@ module.exports = {
       script: '/media/dev/PROJECTS/LAB/vaspeak/web/build/index.js',
       cwd: '/media/dev/PROJECTS/LAB/vaspeak/web',
       watch: false,
+      env_file: '.env',
       env: {
         NODE_ENV: 'production',
         PORT: '19300',

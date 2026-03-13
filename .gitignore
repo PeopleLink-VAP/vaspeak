@@ -32,3 +32,6 @@ blob-report/
 playwright/.cache/
 server/dist/
 db/local.db
+
+# E2E test recordings
+web/static/e2e-recordings/
