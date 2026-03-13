@@ -43,6 +43,7 @@ export async function sendEmail(opts: SendEmailOpts): Promise<boolean> {
 			return false;
 		}
 
+		console.info(`[email] Successfully sent "${opts.subject}" to ${opts.to}`);
 		return true;
 	} catch (err) {
 		console.error('[email] Network error:', err);
