@@ -1,11 +1,35 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+		<!-- PWA / Mobile Web App -->
+		<meta name="theme-color" content="#1B365D" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="apple-mobile-web-app-title" content="VASpeak" />
+		<meta name="application-name" content="VASpeak" />
+
+		<!-- Manifest -->
+		<link rel="manifest" href="/manifest.webmanifest" />
+
+		<!-- Apple touch icons -->
+		<link rel="apple-touch-icon" href="/icon-192.png" />
+		<link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
+
+		<!-- Favicon -->
+		<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+		<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+
+		<!-- SEO -->
+		<meta name="description" content="Luyện nói tiếng Anh tự tin mỗi ngày — dành cho Virtual Assistants Việt Nam" />
+
 		%sveltekit.head%
 	</head>
-	<body data-sveltekit-preload-data="hover">
+	<body data-sveltekit-preload-data="hover" class="bg-[#FFFBF1]">
+		<!-- Safe-area padding handled via CSS env() in app.css -->
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>
