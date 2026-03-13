@@ -78,5 +78,5 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 11. 🔄 **Gamification & Monetization**: Wire up milestone rewards, streak bonuses, and credit top-up flow.
 12. 🔄 **50+ Days of Content**: Generate and validate remaining lesson content beyond Week 1.
 13. 🔄 **Audio Recording**: Web Audio API + MediaRecorder for Block 2 (Pattern Drilling) and Block 3 (Roleplay).
-14. 🔄 **Vocabulary Bank**: UI and API for user vocab at `/vocabulary`.
+14. ✅ **Vocabulary Bank**: UI and API for user vocab at `/vocabulary`.
 15. 🔄 **Placement Test**: Assessment logic determining starting level (Beginner / Working VA / Advanced).
