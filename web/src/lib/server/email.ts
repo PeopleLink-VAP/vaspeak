@@ -4,7 +4,7 @@
  */
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY ?? '';
-const FROM_ADDRESS   = 'VASpeak <noreply@vaspeak.app>';
+const FROM_ADDRESS   = 'VASpeak <hello@virtualassistantpro.vn>';
 const RESEND_URL     = 'https://api.resend.com/emails';
 
 export interface SendEmailOpts {
