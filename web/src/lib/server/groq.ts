@@ -4,7 +4,8 @@ import { GROQ_API_KEY } from '$env/static/private';
 export const groq = new Groq({ apiKey: GROQ_API_KEY });
 
 export const ROLEPLAY_MODEL = 'llama-3.3-70b-versatile';
-export const SCORE_MODEL    = 'llama3-8b-8192'; // fast, cheap for scoring
+export const SCORE_MODEL    = 'llama-3.1-8b-instant'; // fast, cheap for scoring
+export const STT_MODEL      = 'whisper-large-v3-turbo'; // for ASR
 
 /**
  * Builds the system prompt for an AI roleplay client character.

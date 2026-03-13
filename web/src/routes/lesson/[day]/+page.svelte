@@ -2,9 +2,8 @@
 	import { goto } from '$app/navigation';
 
 	let { data } = $props();
-	const { lesson } = data;
-
-	const blocks: any[] = lesson.content;
+	let lesson = $derived(data.lesson);
+	let blocks = $derived(lesson.content as any[]);
 	const blockMeta = [
 		{ label: 'Nghe & Giải Mã', icon: '🎧' },
 		{ label: 'Luyện Mẫu Câu', icon: '💬' },
@@ -21,9 +20,74 @@
 	let drillingIndex   = $state(0);
 	let completedBlocks = $state<Set<number>>(new Set());
 
-	const block       = $derived(blocks[currentBlock]);
-	const totalBlocks = blocks.length;
-	const progressPct = $derived(Math.round((currentBlock / totalBlocks) * 100));
+	let block       = $derived(blocks[currentBlock]);
+	let totalBlocks = $derived(blocks.length);
+	let progressPct = $derived(Math.round((currentBlock / totalBlocks) * 100));
+
+	// ── Drilling state ────────────────────────────────────────────────
+	let drIsRecording   = $state(false);
+	let drIsTranscribing= $state(false);
+	let drTranscript    = $state<string | null>(null);
+	let drResult        = $state<'pass' | 'fail' | null>(null);
+	let drMediaRecorder = $state<MediaRecorder | null>(null);
+	let drAudioChunks   = $state<Blob[]>([]);
+	let drError         = $state('');
+
+	async function startDrillingRecord() {
+		drError = '';
+		drTranscript = null;
+		drResult = null;
+		drAudioChunks = [];
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			drMediaRecorder = new MediaRecorder(stream);
+			drMediaRecorder.ondataavailable = (e) => {
+				if (e.data.size > 0) drAudioChunks.push(e.data);
+			};
+			drMediaRecorder.onstop = async () => {
+				stream.getTracks().forEach((track) => track.stop());
+				drIsTranscribing = true;
+				const audioBlob = new Blob(drAudioChunks, { type: 'audio/webm' });
+				
+				const formData = new FormData();
+				formData.append('audio', audioBlob, 'drilling.webm');
+				if (block.patterns?.[drillingIndex]?.target) {
+					formData.append('prompt', block.patterns[drillingIndex].target);
+				}
+
+				try {
+					const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
+					const j = await res.json() as any;
+					if (!res.ok) throw new Error(j.error || 'Transcription failed');
+					drTranscript = j.text;
+					// V1: Simple evaluation
+					const targetStr = (block.patterns[drillingIndex]?.target || '').toLowerCase().replace(/[^\w\s]/gi, '').trim();
+					const spokenStr = (drTranscript || '').toLowerCase().replace(/[^\w\s]/gi, '').trim();
+					// Very forgiving match:
+					if (targetStr && spokenStr && (spokenStr.includes(targetStr) || targetStr.includes(spokenStr))) {
+						drResult = 'pass';
+					} else {
+						drResult = 'fail';
+					}
+				} catch (e: any) {
+					drError = e.message;
+				} finally {
+					drIsTranscribing = false;
+				}
+			};
+			drMediaRecorder.start();
+			drIsRecording = true;
+		} catch (e) {
+			drError = 'Microphone access denied: ' + String(e);
+		}
+	}
+
+	function stopDrillingRecord() {
+		if (drMediaRecorder && drMediaRecorder.state !== 'inactive') {
+			drMediaRecorder.stop();
+			drIsRecording = false;
+		}
+	}
 
 	// ── Roleplay state ────────────────────────────────────────────────
 	type ChatMsg = { role: 'user' | 'assistant'; content: string };
@@ -145,6 +209,7 @@
 			selectedAnswer = null;
 			answered       = false;
 			drillingIndex  = 0;
+			drTranscript = null; drResult = null; drError = '';
 			rpMessages     = []; rpStarted = false;
 			rpScore = null;     rpError = ''; rpStreamText = '';
 		} else {
@@ -155,7 +220,10 @@
 
 	function nextPattern() {
 		const patterns = block.patterns ?? [];
-		if (drillingIndex < patterns.length - 1) drillingIndex++;
+		if (drillingIndex < patterns.length - 1) {
+			drillingIndex++;
+			drTranscript = null; drResult = null; drError = '';
+		}
 		else nextBlock();
 	}
 
@@ -290,10 +358,36 @@
 							</p>
 						</div>
 					</div>
-					<div class="flex gap-2.5">
-						<div class="flex-1 bg-white border border-[#1B365D]/12 rounded-xl py-3.5 flex items-center justify-center gap-2 text-[#1B365D]/50 text-sm">
-							🎙️ Ghi âm (sắp ra mắt)
-						</div>
+					<div class="flex flex-col gap-2.5">
+						{#if drIsRecording}
+							<button onclick={stopDrillingRecord} class="w-full bg-red-500 border border-red-600 rounded-xl py-3.5 flex items-center justify-center gap-2 text-white text-sm font-bold shadow-md shadow-red-500/20 active:scale-95 transition-all animate-pulse">
+								🛑 Dừng ghi âm
+							</button>
+						{:else if drIsTranscribing}
+							<div class="w-full bg-white border border-[#1B365D]/12 rounded-xl py-3.5 flex items-center justify-center gap-2 text-[#1B365D]/50 text-sm">
+								⏳ Đang phân tích...
+							</div>
+						{:else}
+							<button onclick={startDrillingRecord} class="w-full bg-white border border-[#1B365D]/20 rounded-xl py-3.5 flex items-center justify-center gap-2 text-[#1B365D] text-sm font-bold hover:bg-[#F2A906]/10 hover:border-[#F2A906]/40 active:scale-95 transition-all">
+								🎙️ Bấm để nói
+							</button>
+						{/if}
+
+						{#if drTranscript}
+							<div class="bg-white rounded-xl p-4 border border-[#1B365D]/10 mt-1">
+								<p class="text-xs text-[#1B365D]/50 mb-1">Bạn đã nói:</p>
+								<p class="text-sm font-medium {drResult === 'pass' ? 'text-green-600' : 'text-red-500'}">"{drTranscript}"</p>
+								{#if drResult === 'pass'}
+									<p class="text-xs text-green-600 mt-2 font-bold">✅ Phát âm ổn áp! Giỏi quá.</p>
+								{:else if drResult === 'fail'}
+									<p class="text-xs text-red-500 mt-2 font-bold">❌ Có vẻ Whisper nghe chưa rõ, thử nói to & rõ hơn xíu nhé!</p>
+								{/if}
+							</div>
+						{/if}
+						
+						{#if drError}
+							<p class="text-xs text-red-500 mt-1 text-center">{drError}</p>
+						{/if}
 					</div>
 				{/if}
 
