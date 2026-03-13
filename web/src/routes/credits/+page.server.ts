@@ -1,28 +1,19 @@
-import { db } from '$lib/server/db';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { MONTHLY_ALLOWANCE } from '$lib/server/credits';
+import { getCreditsRow, getCreditLedger, MONTHLY_ALLOWANCE } from '$lib/server/credits';
+import { db } from '$lib/server/db';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(302, '/login');
 	const userId = locals.user.id;
 
-	let credits = { used: 0, allowance: MONTHLY_ALLOWANCE, resetDate: '' };
-	try {
-		const rows = await db.execute({
-			sql: 'SELECT credits_used, monthly_allowance, reset_date FROM user_credits WHERE user_id = ?',
-			args: [userId]
-		});
-		if (rows.rows.length > 0) {
-			credits = {
-				used:      Number(rows.rows[0].credits_used ?? 0),
-				allowance: Number(rows.rows[0].monthly_allowance ?? MONTHLY_ALLOWANCE),
-				resetDate: String(rows.rows[0].reset_date ?? '')
-			};
-		}
-	} catch { /* ok */ }
+	// Use shared helper — eliminates duplicate query
+	const creditsRow = await getCreditsRow(userId);
 
-	// Per-lesson usage history
+	// Read the real credit_events ledger
+	const ledger = await getCreditLedger(userId, 30);
+
+	// Also load per-lesson usage history with scores for display context
 	const history: Array<{ date: string; lessonTitle: string; creditsSpent: number; score: number | null }> = [];
 	try {
 		const rows = await db.execute({
@@ -35,29 +26,30 @@ export const load: PageServerLoad = async ({ locals }) => {
 			args: [userId]
 		});
 		for (const row of rows.rows) {
-			let spent = 0;
 			let score: number | null = null;
 			try {
 				const scores = JSON.parse(String(row.simulation_scores ?? '{}'));
-				if (scores.roleplay) {
-					spent = 3;
-					score = scores.roleplay.total ?? null;
-				}
-			} catch { /* ignore */ }
+				if (scores.roleplay) score = scores.roleplay.total ?? null;
+			} catch { /* malformed scores — skip */ }
 			history.push({
 				date:         String(row.completed_at ?? '').slice(0, 10),
 				lessonTitle:  String(row.title ?? `Day ${row.day_number}`),
-				creditsSpent: spent,
+				creditsSpent: ledger.find(e => e.createdAt.slice(0, 10) === String(row.completed_at ?? '').slice(0, 10))?.delta
+					? Math.abs(ledger.find(e => e.createdAt.slice(0, 10) === String(row.completed_at ?? '').slice(0, 10))!.delta)
+					: 0,
 				score
 			});
 		}
-	} catch { /* ok */ }
+	} catch (err) {
+		console.error('[credits] Failed to load history:', err);
+	}
 
 	return {
 		credits: {
-			...credits,
-			remaining: Math.max(0, credits.allowance - credits.used)
+			...creditsRow,
+			remaining: Math.max(0, creditsRow.allowance - creditsRow.used)
 		},
+		ledger,
 		history
 	};
 };

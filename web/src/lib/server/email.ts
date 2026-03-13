@@ -3,9 +3,10 @@
  * Wraps the Resend REST API — no SDK needed (lighter bundle).
  */
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY ?? '';
-const FROM_ADDRESS   = 'VASpeak <hello@virtualassistantpro.vn>';
-const RESEND_URL     = 'https://api.resend.com/emails';
+import { RESEND_API_KEY } from '$env/static/private';
+
+const FROM_ADDRESS = 'VASpeak <hello@virtualassistantpro.vn>';
+const RESEND_URL   = 'https://api.resend.com/emails';
 
 export interface SendEmailOpts {
 	to: string;

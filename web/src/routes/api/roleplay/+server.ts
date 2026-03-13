@@ -2,12 +2,19 @@ import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 import { groq, ROLEPLAY_MODEL, buildRoleplaySystemPrompt } from '$lib/server/groq';
 import { spendCredits, getCreditsRemaining, ROLEPLAY_CREDIT_COST } from '$lib/server/credits';
+import { roleplayLimiter } from '$lib/server/rate-limit';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
-    const userId = cookies.get('session_user_id');
-    if (!userId) {
+export const POST: RequestHandler = async ({ request, locals }) => {
+    if (!locals.user) {
         return json({ error: 'Not authenticated' }, { status: 401 });
     }
+    const userId = locals.user.id;
+
+    // Burst protection — in addition to credit gating
+    if (!roleplayLimiter.allow(userId)) {
+        return json({ error: 'Too many requests. Slow down.' }, { status: 429 });
+    }
+
 
     let body: {
         scenario: string;

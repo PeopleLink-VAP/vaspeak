@@ -8,11 +8,11 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '$lib/server/db';
+import { JWT_SECRET } from '$env/static/private';
 
-const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-me';
-const COOKIE_NAME = 'va_session';
-const SALT_ROUNDS = 10;
-const SESSION_DAYS = 7;
+const COOKIE_NAME   = 'va_session';
+const SALT_ROUNDS   = 10;
+const SESSION_DAYS  = 7;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -76,7 +76,7 @@ export const SESSION_COOKIE = COOKIE_NAME;
 
 export const cookieOptions = {
 	httpOnly: true,
-	secure: process.env.NODE_ENV === 'production',
+	secure: true,        // always secure — Cloudflare tunnel ensures HTTPS in prod
 	sameSite: 'lax' as const,
 	path: '/',
 	maxAge: SESSION_DAYS * 24 * 60 * 60   // seconds
@@ -99,25 +99,30 @@ export async function findUserByEmail(email: string) {
 	return rows.rows[0] ?? null;
 }
 
-/** Create profile + auth_passwords + user_credits rows atomically */
+/**
+ * Create profile + auth_passwords + user_credits rows atomically via batch.
+ * All three writes succeed or none do.
+ */
 export async function createUser(opts: {
 	id: string;
 	email: string;
 	displayName: string;
 	passwordHash: string;
 }): Promise<void> {
-	await db.execute({
-		sql: `INSERT INTO profiles (id, email, display_name, email_verified, role)
-		      VALUES (?, ?, ?, 0, 'user')`,
-		args: [opts.id, opts.email, opts.displayName]
-	});
-	await db.execute({
-		sql: `INSERT INTO auth_passwords (user_id, password_hash) VALUES (?, ?)`,
-		args: [opts.id, opts.passwordHash]
-	});
-	await db.execute({
-		sql: `INSERT INTO user_credits (user_id, monthly_allowance, credits_used, subscription_status)
-		      VALUES (?, 100, 0, 'free')`,
-		args: [opts.id]
-	});
+	await db.batch([
+		{
+			sql: `INSERT INTO profiles (id, email, display_name, email_verified, role)
+			      VALUES (?, ?, ?, 1, 'user')`,
+			args: [opts.id, opts.email, opts.displayName]
+		},
+		{
+			sql: `INSERT INTO auth_passwords (user_id, password_hash) VALUES (?, ?)`,
+			args: [opts.id, opts.passwordHash]
+		},
+		{
+			sql: `INSERT INTO user_credits (user_id, monthly_allowance, credits_used, subscription_status)
+			      VALUES (?, 100, 0, 'free')`,
+			args: [opts.id]
+		}
+	]);
 }

@@ -1,8 +1,14 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
+import { waitlistLimiter } from '$lib/server/rate-limit';
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+	if (!waitlistLimiter.allow(getClientAddress())) {
+		return json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+	}
+
+
 	let email: string;
 
 	try {

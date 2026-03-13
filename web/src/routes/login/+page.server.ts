@@ -12,8 +12,8 @@ import {
 } from '$lib/server/auth';
 import { createMagicLink } from '$lib/server/magic-link';
 import { sendEmail, magicLinkEmail } from '$lib/server/email';
+import { PUBLIC_BASE_URL } from '$env/static/public';
 
-const BASE_URL = process.env.PUBLIC_BASE_URL ?? 'http://localhost:5173';
 const MAGIC_EXPIRY = 15; // minutes
 
 // Already logged in → go to dashboard
@@ -42,6 +42,14 @@ export const actions: Actions = {
 		const ok = await verifyPassword(password, String(row.password_hash));
 		if (!ok) {
 			return fail(401, { action: 'login', error: 'Invalid email or password.' });
+		}
+
+		// Enforce email verification — unverified users must use magic link
+		if (!row.email_verified) {
+			return fail(403, {
+				action: 'login',
+				error: 'Please verify your email before logging in. Check your inbox or use the magic link option.'
+			});
 		}
 
 		const token = signToken({
@@ -108,7 +116,7 @@ export const actions: Actions = {
 
 		// Send email only if user exists — silently skip if not
 		if (token) {
-			const origin = BASE_URL || `${url.protocol}//${url.host}`;
+			const origin = PUBLIC_BASE_URL || `${url.protocol}//${url.host}`;
 			const link = `${origin}/auth/magic?token=${token}`;
 			const emailData = magicLinkEmail({ to: email, link, expiryMinutes: MAGIC_EXPIRY });
 			await sendEmail(emailData);

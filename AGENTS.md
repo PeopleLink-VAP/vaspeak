@@ -12,17 +12,24 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 ## 2. Tech Stack & Architecture
 - **Frontend**: SvelteKit 5 (Using Runes exclusively: `$state`, `$derived`, `$props`), TypeScript, Tailwind CSS 4.
 - **Backend / DB**: Serverless SvelteKit API routes. **Local SQLite (`libsql`)** replaces SpacetimeDB. Admin Kanban board uses a remote **Turso** database.
-- **Auth**: Fully custom server-side auth. Email/password (bcrypt) + magic links (Resend). 7-day httpOnly JWT cookies. Anti-enumeration on all sensitive flows. Disposable email blocking (121K+ domains).
+- **Auth**: Fully custom server-side auth. Email/password (bcrypt) + magic links (Resend). 7-day httpOnly JWT cookies. Anti-enumeration on all sensitive flows. Email verification enforced on password login.
 - **AI Integration**: Groq API (Llama models) used for dynamic roleplay (Block 3), pronunciation scoring, and lesson content generation. Credit balance is checked before every Groq call.
 - **System Management**: Admin dashboard at `/admin` with health metrics, PM2 status, Kanban board (Turso-backed), E2E recording viewer, and settings page.
-- **Deployment**: Self-hosted via PM2. `vaspeak-prod` on port 19300 → `vaspeak.alphabits.team`. `vaspeak-dev` on port 19301 → `vaspeak-beta.alphabits.team`. Both managed by `ecosystem.config.cjs`.
+- **Deployment**: Self-hosted via PM2. `vaspeak-prod` on port 19300 → `vaspeak.alphabits.team`. `vaspeak-dev` on port 19301 → `vaspeak-beta.alphabits.team`. Both managed by `ecosystem.config.cjs`. Production uses `@sveltejs/adapter-node` (`node build/index.js`).
 
 ### Database Schema Shapes (SQLite / libsql)
-- `profiles`: id, email, display_name, current_level, native_language.
-- `user_credits`: user_id, monthly_allowance (100), credits_used, subscription_status, reset_date. *(Must check balance before Groq API calls).*
-- `lessons`: id, day_number, week_theme, niche, title, content (JSON blocks).
-- `user_progress`: user_id, lesson_id, block_completions (JSON), simulation_scores (JSON), reflection_notes.
-- `vocabulary_bank`: user_id, word, definition, context_sentence.
+- `profiles`: id, email, display_name, email_verified (0/1), role ('user'|'admin'), current_level, niche, native_language, streak_count, last_active_date, created_at, updated_at.
+- `auth_passwords`: user_id (FK→profiles), password_hash.
+- `email_verifications`: id, user_id, email, code, expires_at. *(Token for email verification flow — not yet wired to sending.)*
+- `password_resets`: id, user_id, token (unique), expires_at (1hr).
+- `magic_links`: id, user_id, token (unique), expires_at (15min). *(Single-use, consumed on verify.)*
+- `user_credits`: user_id (PK), monthly_allowance (100), credits_used, subscription_status ('free'|'pro'), reset_date. *(Check balance before every Groq call.)*
+- `credit_events`: id, user_id, delta (negative=spent, positive=earned), reason ('roleplay'|'daily_bonus'|'milestone'), created_at. *(Written by spendCredits() and earnCredits() in $lib/server/credits.ts.)*
+- `lessons`: id, day_number, week_number, week_theme, niche ('general'|'ecommerce'|'video_editor'|etc.), title, content (JSON blocks array), is_published, created_at, updated_at.
+- `user_progress`: id, user_id, lesson_id, block_completions (JSON), simulation_scores (JSON), stress_level (1-3), reflection_notes, completed_at. UNIQUE(user_id, lesson_id).
+- `vocabulary_bank`: id, user_id, word, definition, context_sentence, lesson_id, mastered (0/1), added_at.
+- `newsletter_subscribers`: id, email (unique), source ('landing'|'app'), subscribed_at.
+- `blacklisted_domains`: id, domain (unique), added_at. *(Admin-managed disposable email domain block list — not yet enforced in code.)*
 
 ### Key Routes
 - `/` — Landing page + waitlist

@@ -2,11 +2,11 @@ import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 import { groq, SCORE_MODEL, buildScoringPrompt, parseScoreResponse } from '$lib/server/groq';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
-    const userId = cookies.get('session_user_id');
-    if (!userId) {
+export const POST: RequestHandler = async ({ request, locals }) => {
+    if (!locals.user) {
         return json({ error: 'Not authenticated' }, { status: 401 });
     }
+    const userId = locals.user.id;
 
     let body: {
         scenario: string;

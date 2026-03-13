@@ -1,39 +1,44 @@
 /**
  * PM2 ecosystem config — VASpeak
- * Secrets are loaded from the system environment (set via .env or server config).
- * DO NOT commit real secrets here — use `pm2 start ecosystem.config.cjs --env production`
- * after exporting the required env vars.
+ * Production: runs the SvelteKit Node adapter build (node build/index.js).
+ * Dev: runs vite dev server.
+ *
+ * Secrets are loaded from process.env — set them on the server before
+ * starting PM2. Never commit real values here.
  */
 module.exports = {
   apps: [
     {
       name: 'vaspeak-prod',
-      script: 'npm',
-      args: 'run preview -- --port 19300 --host',
-      cwd: './web',
+      // Run the compiled SvelteKit Node adapter output
+      script: '/media/dev/PROJECTS/LAB/vaspeak/web/build/index.js',
+      cwd: '/media/dev/PROJECTS/LAB/vaspeak/web',
       watch: false,
       env: {
         NODE_ENV: 'production',
-        // ORIGIN tells SvelteKit what the real public URL is (needed behind Cloudflare tunnel)
+        PORT: '19300',
+        HOST: '0.0.0.0',
+        // ORIGIN is required by SvelteKit for CSRF checking behind a reverse proxy
         ORIGIN: 'https://vaspeak.alphabits.team',
         PUBLIC_BASE_URL: 'https://vaspeak.alphabits.team',
-        // Secrets — loaded from process environment, set these on the server:
-        // RESEND_API_KEY, GROQ_API_KEY, ADMIN_AUTH_USER, ADMIN_AUTH_PASSWORD,
-        // TURSO_DB_URL, TURSO_DB_TOKEN, JWT_SECRET, LIBSQL_DB_URL
-        RESEND_API_KEY: process.env.RESEND_API_KEY || '',
-        GROQ_API_KEY: process.env.GROQ_API_KEY || '',
-        ADMIN_AUTH_USER: process.env.ADMIN_AUTH_USER || 'admin',
-        ADMIN_AUTH_PASSWORD: process.env.ADMIN_AUTH_PASSWORD || '',
-        TURSO_DB_URL: process.env.TURSO_DB_URL || '',
-        TURSO_DB_TOKEN: process.env.TURSO_DB_TOKEN || '',
-        JWT_SECRET: process.env.JWT_SECRET || '',
+        // All secrets pulled from server environment — run:
+        //   pm2 reload ecosystem.config.cjs --update-env
+        // after setting env vars on the host.
+        RESEND_API_KEY:       process.env.RESEND_API_KEY       || '',
+        GROQ_API_KEY:         process.env.GROQ_API_KEY         || '',
+        ADMIN_AUTH_USER:      process.env.ADMIN_AUTH_USER      || 'admin',
+        ADMIN_AUTH_PASSWORD:  process.env.ADMIN_AUTH_PASSWORD  || '',
+        TURSO_DB_URL:         process.env.TURSO_DB_URL         || '',
+        TURSO_DB_TOKEN:       process.env.TURSO_DB_TOKEN       || '',
+        JWT_SECRET:           process.env.JWT_SECRET           || '',
+        LIBSQL_DB_URL:        process.env.LIBSQL_DB_URL        || 'file:../db/local.db',
       }
     },
     {
       name: 'vaspeak-dev',
       script: 'npm',
       args: 'run dev -- --port 19301 --host',
-      cwd: './web',
+      cwd: '/media/dev/PROJECTS/LAB/vaspeak/web',
       watch: false,
       env: {
         NODE_ENV: 'development',

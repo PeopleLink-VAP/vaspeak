@@ -1,8 +1,11 @@
 import { createClient } from '@libsql/client';
+import { env } from '$env/dynamic/private';
 
-const dbUrl = process.env.LIBSQL_DB_URL || 'file:../db/local.db';
+// Local SQLite for app data. Falls back to a local file if LIBSQL_DB_URL is unset.
+// Using $env/dynamic/private so this works at both build-time and runtime (adapter-node).
+const dbUrl = env.LIBSQL_DB_URL || 'file:../db/local.db';
 
 export const db = createClient({
     url: dbUrl,
-    authToken: process.env.LIBSQL_AUTH_TOKEN
+    authToken: env.LIBSQL_AUTH_TOKEN
 });

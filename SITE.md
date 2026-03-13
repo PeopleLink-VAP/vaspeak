@@ -8,7 +8,7 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 - Mobile-first users interacting through a Progressive Web App (PWA).
 
 ## 3. Stitch Project ID
-`PENDING_CREATION`
+`6048421559219016208`
 
 ## 4. Sitemap (Current)
 - `[x]` `/` — Landing page with waitlist signup CTA

@@ -2,13 +2,11 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
-	const userId = cookies.get('session_user_id');
-
-	// For dev with no session, still acknowledge
-	if (!userId) {
+export const POST: RequestHandler = async ({ request, locals }) => {
+	if (!locals.user) {
 		return json({ ok: true, note: 'No session — progress not saved' });
 	}
+	const userId = locals.user.id;
 
 	let body: {
 		lessonId: string;

@@ -1,9 +1,14 @@
 import { db } from '$lib/server/db';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { fileURLToPath } from 'url';
+import { resolve, dirname } from 'path';
 import os from 'os';
 
 const execAsync = promisify(exec);
+// Resolve repo root relative to this file (web/src/routes/admin → ../../../../)
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(__dirname, '../../../../..');
 
 export async function load() {
     // System stats
@@ -33,7 +38,7 @@ export async function load() {
     try {
         const { stdout } = await execAsync(
             'git log -1 --format="%H|%s|%ai|%an"',
-            { cwd: '/media/dev/PROJECTS/LAB/vaspeak' }
+            { cwd: REPO_ROOT }
         );
         const [hash, message, date, author] = stdout.trim().split('|');
         gitCommit = { hash: hash.slice(0, 8), message, date, author };

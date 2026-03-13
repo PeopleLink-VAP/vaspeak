@@ -1,19 +1,17 @@
 import { db } from '$lib/server/db';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { getCreditsRow } from '$lib/server/credits';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(302, '/login');
 	const userId = locals.user.id;
 
-
 	// Load today's lesson (based on user progress — find lowest incomplete day)
-	// For now, default to day 1 if no progress
 	let todayLesson = null;
 	let progress = { completedDays: 0, currentDay: 1 };
 
 	try {
-		// Find the furthest completed lesson
 		const progressRows = await db.execute({
 			sql: `SELECT l.day_number
 			      FROM user_progress up
@@ -27,7 +25,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		progress.completedDays = Number(lastCompleted);
 		progress.currentDay = Number(lastCompleted) + 1;
 
-		// Load today's lesson
 		const lessonRows = await db.execute({
 			sql: `SELECT id, day_number, week_number, week_theme, niche, title
 			      FROM lessons
@@ -38,24 +35,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 		if (lessonRows.rows.length > 0) {
 			todayLesson = lessonRows.rows[0];
 		}
-	} catch {
-		// DB not ready or user not found — that's OK for the landing experience
+	} catch (err) {
+		console.error('[dashboard] Failed to load progress/lesson:', err);
 	}
 
-	// Load credits
-	let credits = { used: 0, allowance: 100 };
-	try {
-		const creditRows = await db.execute({
-			sql: 'SELECT credits_used, monthly_allowance FROM user_credits WHERE user_id = ?',
-			args: [userId]
-		});
-		if (creditRows.rows.length > 0) {
-			credits = {
-				used: Number(creditRows.rows[0].credits_used),
-				allowance: Number(creditRows.rows[0].monthly_allowance)
-			};
-		}
-	} catch { /* ignore */ }
+	// Use shared helper — eliminates duplicated credit query
+	const creditsRow = await getCreditsRow(userId);
+	const credits = { used: creditsRow.used, allowance: creditsRow.allowance };
 
 	// Load profile
 	let profile = null;
@@ -65,7 +51,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			args: [userId]
 		});
 		profile = profileRows.rows[0] ?? null;
-	} catch { /* ignore */ }
+	} catch (err) {
+		console.error('[dashboard] Failed to load profile:', err);
+	}
 
 	return { todayLesson, progress, credits, profile };
 };

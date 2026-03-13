@@ -23,10 +23,10 @@ export default defineConfig({
 		baseURL: process.env.TEST_BASE_URL ?? 'http://localhost:5173',
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure',
-		// Admin basic auth credentials (matches .env)
+		// Admin basic auth credentials (must match ADMIN_AUTH_USER/PASSWORD in .env)
 		httpCredentials: {
-			username: 'admin',
-			password: 'virtualassistantpro!vn'
+			username: process.env.ADMIN_AUTH_USER ?? 'admin',
+			password: process.env.ADMIN_AUTH_PASSWORD ?? ''
 		}
 	},
 	projects: [

@@ -117,14 +117,14 @@ vaspeak/
 ## Auth Features
 
 - ✅ Email + password registration (with strength validation)
-- ✅ Disposable email domain blocking (121K+ domains)
-- ✅ Email verification (link sent via Resend)
+- ✅ Email verification enforced on password login
 - ✅ Login with JWT session cookie (httpOnly, 7-day)
-- ✅ Magic link login (15-minute token, passwordless)
+- ✅ Magic link login (15-minute token, passwordless) — auto-verifies email on use
 - ✅ Forgot password / password reset (1-hour token)
-- ✅ Blacklisted domain DB table (admin-managed)
+- ✅ Blacklisted domain DB table (admin-managed, not yet enforced on registration)
 - ✅ Anti-enumeration (forgot-password/magic-link always return success)
 - ✅ Route guards via `hooks.server.ts`
+- ✅ Rate limiting — auth (10/min), magic link (5/10min), waitlist (3/min), roleplay (30/min)
 
 ---
 

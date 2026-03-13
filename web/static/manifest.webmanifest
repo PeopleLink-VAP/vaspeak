@@ -8,7 +8,7 @@
   "orientation": "portrait-primary",
   "background_color": "#1B365D",
   "theme_color": "#1B365D",
-  "lang": "vi",
+  "lang": "en",
   "dir": "ltr",
   "categories": ["education", "productivity"],
   "icons": [
@@ -34,16 +34,16 @@
   "screenshots": [],
   "shortcuts": [
     {
-      "name": "Bài học hôm nay",
-      "short_name": "Học ngay",
-      "description": "Bắt đầu bài học hôm nay",
+      "name": "Today's Lesson",
+      "short_name": "Lesson",
+      "description": "Jump into today's lesson",
       "url": "/dashboard",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "AI Credits",
       "short_name": "Credits",
-      "description": "Xem số credits còn lại",
+      "description": "Check your remaining credits",
       "url": "/credits",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
