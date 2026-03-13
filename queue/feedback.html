@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Roleplay Feedback - VASpeak</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#10b77f",
+                        "background-light": "#FFFBF1",
+                        "background-dark": "#10221c",
+                        "navy": "#1B365D",
+                        "coral": "#F43F5E"
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-navy dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-10 bg-background-light/80 backdrop-blur-md px-4 pt-6 pb-2">
+<div class="flex items-center justify-between mb-4">
+<button class="text-navy dark:text-slate-100 hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-3xl">close</span>
+</button>
+<span class="text-sm font-bold uppercase tracking-widest opacity-60">Block 3: AI Roleplay</span>
+<div class="w-8"></div> <!-- Spacer for alignment -->
+</div>
+<div class="w-full bg-primary/20 h-2.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-full rounded-full"></div>
+</div>
+</header>
+<main class="flex-1 px-4 pb-32">
+<!-- Hero Section -->
+<section class="flex flex-col items-center justify-center py-8 text-center">
+<div class="bg-primary/10 p-4 rounded-full mb-4">
+<span class="material-symbols-outlined text-primary text-6xl font-bold">check_circle</span>
+</div>
+<h1 class="text-4xl font-bold text-navy dark:text-primary mb-2">Great Job!</h1>
+<p class="text-navy/60 dark:text-slate-400 font-medium">You've successfully completed the roleplay.</p>
+</section>
+<!-- Score Card -->
+<section class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-xl shadow-navy/5 mb-6 border border-primary/5">
+<div class="flex items-center justify-between mb-6">
+<div class="flex flex-col">
+<span class="text-xs font-bold uppercase tracking-wider text-navy/40 dark:text-slate-500 mb-1">Performance</span>
+<h2 class="text-2xl font-bold text-primary">85%</h2>
+<p class="text-sm font-semibold text-navy/70 dark:text-slate-300">Pronunciation Score</p>
+</div>
+<div class="h-12 w-[1px] bg-navy/10"></div>
+<div class="flex flex-col text-right">
+<span class="text-xs font-bold uppercase tracking-wider text-navy/40 dark:text-slate-500 mb-1">Status</span>
+<h2 class="text-2xl font-bold text-navy dark:text-slate-100">Good</h2>
+<p class="text-sm font-semibold text-navy/70 dark:text-slate-300">Fluency</p>
+</div>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full">
+<div class="bg-primary h-full w-[85%] rounded-full"></div>
+</div>
+</section>
+<!-- Detailed Feedback Card -->
+<section class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-xl shadow-navy/5 mb-4 border border-primary/5">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-navy/40">mic_none</span>
+<h3 class="text-lg font-bold text-navy dark:text-slate-100">Your Audio Transcript</h3>
+</div>
+<div class="bg-background-light/50 dark:bg-slate-900/50 p-4 rounded-xl border border-navy/5">
+<p class="text-lg leading-relaxed text-navy/80 dark:text-slate-300">
+                    "I am sorry for the delay, we 
+                    <span class="text-coral line-through decoration-2 decoration-coral/40 mx-1">was</span>
+<span class="text-primary font-bold">were</span> 
+                    having rendering issues."
+                </p>
+</div>
+</section>
+<!-- AI Tip Card -->
+<section class="bg-sky-50 dark:bg-sky-900/20 rounded-xl p-4 flex items-start gap-3 border border-sky-100 dark:border-sky-800">
+<span class="material-symbols-outlined text-sky-500 mt-0.5">lightbulb</span>
+<p class="text-sm font-medium text-sky-800 dark:text-sky-200">
+<span class="font-bold">Tip:</span> Use "were" for plural subjects like "we". This is a common subject-verb agreement rule in business English.
+            </p>
+</section>
+<!-- Visual Context Placeholder -->
+<div class="mt-8 rounded-2xl overflow-hidden aspect-video relative group">
+<div class="absolute inset-0 bg-gradient-to-t from-navy/60 to-transparent z-0"></div>
+<img alt="Professional virtual assistant working at a clean modern desk" class="w-full h-full object-cover" data-alt="Professional virtual assistant working at a clean modern desk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfpO9B8NRNGFGt15y0YOzHAa_yst0q2nps7hV0YpL9-oAOt-4nZrddveAAwY46vT1F9A1_yXalaOuRI6DaooRb6acjOZgF8BNEnTarJTdcVSNqO_hep1DpO2OIYLwctz_9P_7VNZ2VM5rPV7u85hj2Qacga1-E8SWDJpAx731RZD3NCV4g_wbDiSiRG0EjxniI6VbLKoPwZ32XlNULX73bO1W_Vc6zKgpxaia-pApC8O1pysqVNmSqB80BDrBHP_pEBHD0Tog1svY"/>
+<div class="absolute bottom-4 left-4 z-10">
+<span class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">Visual Reference</span>
+</div>
+</div>
+</main>
+<!-- Bottom Bar -->
+<footer class="fixed bottom-0 left-0 right-0 p-4 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-xl border-t border-navy/5">
+<button class="w-full bg-primary hover:bg-primary/90 text-navy font-bold py-5 rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+            Continue to Reflection
+            <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</footer>
+</body></html>

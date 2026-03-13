@@ -1,10 +1,30 @@
 {
   "version": 1,
   "skills": {
-    "netlify-deploy": {
-      "source": "openai/skills",
+    "SQLite Database Expert": {
+      "source": "martinholovsky/claude-skills-generator",
       "sourceType": "github",
-      "computedHash": "1c8b071c2673df67a4ed681bd5c06e236c7a9ca7265cb1088a54f2ef3b906f9e"
+      "computedHash": "0e75baa1c3159dba4c6db79330634327039c9813410256b73357dcbb0ed9d0ea"
+    },
+    "playwright-best-practices": {
+      "source": "currents-dev/playwright-best-practices-skill",
+      "sourceType": "github",
+      "computedHash": "a3a25fef9f51c15bb6c7c302ffb009a9040532bf51d999c648fcceaa9ab08841"
+    },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "computedHash": "7075ab30f588019197a2f1518bb4c9d33d69d33352af079b5f9c60303ad3886e"
+    },
+    "turso-best-practices": {
+      "source": "futuregerald/futuregerald-claude-plugin",
+      "sourceType": "github",
+      "computedHash": "e929c13ce0959a98da8d9310b36970b0bd9a189ae5d77eeb550eb39ed5ada4c4"
+    },
+    "using-superpowers": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "computedHash": "5ed84a512f8664cc440ff26b19a0087eae6b2979e9e79cb26366b7f7b134e758"
     }
   }
 }

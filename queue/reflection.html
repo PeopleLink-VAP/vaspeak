@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f4a806",
+                        "background-light": "#fffbf1",
+                        "background-dark": "#231d0f",
+                        "navy-deep": "#1c170d",
+                        "soft-navy": "#4a443a"
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<title>VASpeak - Lesson Completion</title>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-navy-deep dark:text-slate-100 min-h-screen flex justify-center">
+<div class="relative flex h-full min-h-screen w-full max-w-md flex-col bg-background-light dark:bg-background-dark overflow-x-hidden shadow-2xl">
+<!-- Top Bar -->
+<div class="flex items-center px-4 pt-4 pb-2 justify-between">
+<div class="text-navy-deep dark:text-slate-100 flex size-12 shrink-0 items-center justify-start cursor-pointer">
+<span class="material-symbols-outlined text-[28px]">close</span>
+</div>
+<h2 class="text-navy-deep dark:text-slate-100 text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-12">Lesson Progress</h2>
+</div>
+<!-- Progress Bar -->
+<div class="flex flex-col gap-2 px-6 pb-4">
+<div class="flex justify-between items-end">
+<p class="text-soft-navy dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Lesson Complete</p>
+<p class="text-primary text-sm font-extrabold">100%</p>
+</div>
+<div class="h-3 rounded-full bg-primary/20 overflow-hidden">
+<div class="h-full rounded-full bg-primary" style="width: 100%;"></div>
+</div>
+</div>
+<!-- Hero Section -->
+<div class="px-4 py-2">
+<div class="relative flex flex-col items-center justify-center overflow-hidden bg-primary/10 rounded-2xl min-h-[280px] border border-primary/20 shadow-sm" style="background-image: radial-gradient(circle at center, rgba(244, 168, 6, 0.15) 0%, transparent 70%);">
+<!-- Illustration Placeholder -->
+<div class="mb-6 flex items-center justify-center bg-white dark:bg-navy-deep w-32 h-32 rounded-full shadow-lg border-4 border-primary/30">
+<span class="material-symbols-outlined text-[80px] text-primary" style="font-variation-settings: 'FILL' 1">stars</span>
+</div>
+<h1 class="text-navy-deep dark:text-slate-100 text-3xl font-extrabold leading-tight text-center">Lesson Complete!</h1>
+<p class="text-soft-navy dark:text-slate-400 mt-2 text-center font-medium">You're mastering client communication!</p>
+</div>
+</div>
+<!-- Reflection Section -->
+<div class="px-6 pt-8 pb-4">
+<h3 class="text-navy-deep dark:text-slate-100 text-xl font-bold leading-snug">How did you feel about talking to the frustrated client today?</h3>
+</div>
+<!-- Emoji Buttons -->
+<div class="flex px-6 gap-3 mb-6">
+<!-- Anxious -->
+<label class="group flex-1 cursor-pointer">
+<input class="peer hidden" name="mood" type="radio"/>
+<div class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white dark:bg-background-dark border-2 border-transparent shadow-sm peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+<span class="text-3xl">😥</span>
+<span class="text-xs font-bold text-soft-navy dark:text-slate-400 peer-checked:text-primary">Anxious</span>
+</div>
+</label>
+<!-- Okay -->
+<label class="group flex-1 cursor-pointer">
+<input class="peer hidden" name="mood" type="radio"/>
+<div class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white dark:bg-background-dark border-2 border-transparent shadow-sm peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+<span class="text-3xl">😐</span>
+<span class="text-xs font-bold text-soft-navy dark:text-slate-400 peer-checked:text-primary">Okay</span>
+</div>
+</label>
+<!-- Confident (Selected state) -->
+<label class="group flex-1 cursor-pointer">
+<input checked="" class="peer hidden" name="mood" type="radio"/>
+<div class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-primary/10 dark:bg-primary/20 border-2 border-primary shadow-sm transition-all">
+<span class="text-3xl">😎</span>
+<span class="text-xs font-bold text-navy-deep dark:text-primary">Confident</span>
+</div>
+</label>
+</div>
+<!-- Input Section -->
+<div class="px-6 mb-24">
+<label class="block text-sm font-bold text-soft-navy dark:text-slate-400 mb-2 ml-1">Specific struggles?</label>
+<textarea class="w-full rounded-2xl border-none bg-white dark:bg-background-dark p-4 text-navy-deep dark:text-slate-100 shadow-sm focus:ring-2 focus:ring-primary/50 min-h-[100px] placeholder:text-soft-navy/40" placeholder="Any specific words you struggled with? (Optional)"></textarea>
+</div>
+<!-- Bottom Bar / CTA -->
+<div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-6 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
+<button class="flex w-full h-16 items-center justify-center gap-3 rounded-2xl bg-primary px-6 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-navy-deep font-bold" style="font-variation-settings: 'FILL' 1">featured_seasonal_and_gifts</span>
+<span class="text-navy-deep text-lg font-extrabold">Finish &amp; Claim Reward</span>
+</button>
+</div>
+</div>
+</body></html>

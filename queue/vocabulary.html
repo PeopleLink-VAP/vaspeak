@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VASpeak Vocabulary Bank</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f4a806",
+                        "background-light": "#fffbf1",
+                        "background-dark": "#1b365d",
+                        "navy": "#1b365d",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "2xl": "1rem", /* Matching the requested 16px */
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .custom-shadow {
+            box-shadow: 0 4px 14px 0 rgba(27, 54, 93, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light text-navy antialiased">
+<!-- Main Container (Phone Form Factor) -->
+<div class="relative mx-auto min-h-screen max-w-[430px] bg-background-light pb-32">
+<!-- Header Section -->
+<header class="sticky top-0 z-10 bg-background-light/95 backdrop-blur-sm px-6 pt-8 pb-4">
+<div class="flex items-center justify-between">
+<div>
+<h1 class="text-2xl font-bold text-navy tracking-tight">Vocabulary Bank</h1>
+<p class="text-navy/70 text-sm font-medium mt-1">142 Words Mastered</p>
+</div>
+<button class="flex h-12 w-12 items-center justify-center rounded-full bg-white custom-shadow">
+<span class="material-symbols-outlined text-navy">search</span>
+</button>
+</div>
+<!-- Category Tabs -->
+<div class="mt-6 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+<div class="flex h-10 shrink-0 items-center justify-center rounded-full bg-primary px-6 text-navy font-bold">
+<span class="text-sm">All</span>
+</div>
+<div class="flex h-10 shrink-0 items-center justify-center rounded-full border border-navy/10 bg-white px-6 text-navy font-semibold">
+<span class="text-sm">Ecommerce</span>
+</div>
+<div class="flex h-10 shrink-0 items-center justify-center rounded-full border border-navy/10 bg-white px-6 text-navy font-semibold">
+<span class="text-sm">Video Editing</span>
+</div>
+<div class="flex h-10 shrink-0 items-center justify-center rounded-full border border-navy/10 bg-white px-6 text-navy font-semibold">
+<span class="text-sm">General</span>
+</div>
+</div>
+</header>
+<!-- Word List -->
+<main class="px-6 space-y-4">
+<!-- Card 1: Expedite -->
+<div class="bg-white rounded-2xl p-5 custom-shadow border border-navy/5">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-navy">Expedite</h3>
+<button class="bg-primary/20 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-navy text-[20px] font-bold">volume_up</span>
+</button>
+</div>
+<p class="text-navy/80 text-sm leading-relaxed mb-3">
+                    To make an action or process happen sooner or be accomplished more quickly.
+                </p>
+<div class="bg-background-light/50 p-3 rounded-xl border-l-4 border-primary">
+<p class="text-xs italic text-navy/70">
+                        "We need to expedite the shipping process to meet the deadline."
+                    </p>
+</div>
+</div>
+<!-- Card 2: Milestone -->
+<div class="bg-white rounded-2xl p-5 custom-shadow border border-navy/5">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-navy">Milestone</h3>
+<button class="bg-primary/10 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-navy/40 text-[20px]">volume_up</span>
+</button>
+</div>
+<p class="text-navy/80 text-sm leading-relaxed mb-3">
+                    A significant stage or event in the development of something.
+                </p>
+<div class="bg-background-light/50 p-3 rounded-xl border-l-4 border-primary/30">
+<p class="text-xs italic text-navy/70">
+                        "Reaching 1,000 subscribers was a major milestone for our channel."
+                    </p>
+</div>
+</div>
+<!-- Card 3: Leverage -->
+<div class="bg-white rounded-2xl p-5 custom-shadow border border-navy/5">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-navy">Leverage</h3>
+<button class="bg-primary/10 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-navy/40 text-[20px]">volume_up</span>
+</button>
+</div>
+<p class="text-navy/80 text-sm leading-relaxed mb-3">
+                    Use something to maximum advantage.
+                </p>
+<div class="bg-background-light/50 p-3 rounded-xl border-l-4 border-primary/30">
+<p class="text-xs italic text-navy/70">
+                        "We can leverage social media to reach a wider audience."
+                    </p>
+</div>
+</div>
+<!-- Card 4: Scalability -->
+<div class="bg-white rounded-2xl p-5 custom-shadow border border-navy/5">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold text-navy">Scalability</h3>
+<button class="bg-primary/10 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-navy/40 text-[20px]">volume_up</span>
+</button>
+</div>
+<p class="text-navy/80 text-sm leading-relaxed mb-3">
+                    The capacity to be changed in size or scale.
+                </p>
+<div class="bg-background-light/50 p-3 rounded-xl border-l-4 border-primary/30">
+<p class="text-xs italic text-navy/70">
+                        "Our new infrastructure offers improved scalability for holiday sales."
+                    </p>
+</div>
+</div>
+</main>
+<!-- Bottom CTA -->
+<div class="fixed bottom-[88px] left-0 right-0 z-20 px-6 flex justify-center max-w-[430px] mx-auto">
+<button class="w-full bg-primary text-navy font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 border-b-4 border-navy/10 active:translate-y-1 active:border-b-0 transition-all">
+<span class="material-symbols-outlined">quiz</span>
+                Practice Weak Words
+            </button>
+</div>
+<!-- Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-navy/5 px-6 pb-6 pt-3 flex items-center justify-between max-w-[430px] mx-auto">
+<a class="flex flex-col items-center gap-1 text-navy/40" href="#">
+<span class="material-symbols-outlined text-[28px]">home</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined text-[28px] fill-current" style="font-variation-settings: 'FILL' 1">book_4</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Lessons</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-navy/40" href="#">
+<span class="material-symbols-outlined text-[28px]">leaderboard</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Rank</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-navy/40" href="#">
+<span class="material-symbols-outlined text-[28px]">person</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Profile</span>
+</a>
+</nav>
+</div>
+</body></html>
