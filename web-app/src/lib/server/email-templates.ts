@@ -52,7 +52,7 @@ export function emailLayout(siteUrl: string, content: string, footerNote?: strin
                       <a href="${siteUrl}" style="color: #8A491B; text-decoration: none;">VASpeak</a> · Part of <a href="https://virtualassistantpro.vn" style="color: #8A491B; text-decoration: none;">Virtual Assistant PRO</a>
                     </p>
                     <p style="margin: 6px 0 0; font-size: 11px; color: #1B365D40;">
-                      eskills.virtualassistanpro.vn
+                      vaspeak.virtualassistanpro.vn
                     </p>
                   </td>
                 </tr>

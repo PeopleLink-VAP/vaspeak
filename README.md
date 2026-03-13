@@ -2,7 +2,7 @@
 
 ## Overview
 
-**VASpeak** is a mini-app site designed to serve as an English speaking confidence trainer for Virtual Assistants (VAs). It is part of the `eskills.virtualassistanpro.vn` project and offers 50+ days of lessons carefully structured around building real-world communication confidence.
+**VASpeak** is a mini-app site designed to serve as an English speaking confidence trainer for Virtual Assistants (VAs). It is part of the `vaspeak.virtualassistanpro.vn` project and offers 50+ days of lessons carefully structured around building real-world communication confidence.
 
 ### Lesson Flow
 
