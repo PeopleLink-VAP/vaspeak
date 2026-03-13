@@ -1,8 +1,11 @@
 import { db } from '$lib/server/db';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, cookies }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
+	if (!locals.user) throw redirect(302, '/login');
+	const userId = locals.user.id;
+
 	const day = parseInt(params.day, 10);
 
 	if (isNaN(day) || day < 1) {
@@ -28,9 +31,9 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 		throw error(500, 'Lesson content is malformed');
 	}
 
-	// Load existing progress for this lesson if user is logged in
+	// Load existing progress for this lesson
 	let existingProgress = null;
-	const userId = cookies.get('session_user_id');
+
 	if (userId) {
 		try {
 			const progressRows = await db.execute({
