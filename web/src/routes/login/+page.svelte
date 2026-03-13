@@ -1,9 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/stores';
 
 	let { form } = $props();
-	let tab = $state<'login' | 'register'>('login');
+	let tab = $state<'login' | 'register' | 'magic'>('login');
 	let loading = $state(false);
+
+	// Show error from magic link redirect (?error=invalid_token etc.)
+	const errorParam = $derived($page.url.searchParams.get('error'));
+	const errorMessages: Record<string, string> = {
+		invalid_token: 'Link đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.',
+		missing_token: 'Link đăng nhập không đúng định dạng.',
+		user_not_found: 'Không tìm thấy tài khoản. Vui lòng đăng ký trước.'
+	};
 </script>
 
 <svelte:head>
@@ -23,6 +32,13 @@
 
 	<div class="w-full max-w-sm">
 
+		<!-- URL error (from magic link redirect) -->
+		{#if errorParam && errorMessages[errorParam]}
+			<div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4 text-center">
+				{errorMessages[errorParam]}
+			</div>
+		{/if}
+
 		<!-- Card -->
 		<div class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(27,54,93,0.1)] border border-[#1B365D]/6 overflow-hidden">
 
@@ -30,16 +46,25 @@
 			<div class="flex border-b border-[#1B365D]/8">
 				<button
 					onclick={() => tab = 'login'}
-					class="flex-1 py-4 text-sm font-semibold transition-colors
+					class="flex-1 py-3.5 text-xs font-semibold transition-colors
 						{tab === 'login'
 							? 'text-[#1B365D] border-b-2 border-[#F2A906] bg-[#F2A906]/4'
 							: 'text-[#1B365D]/40 hover:text-[#1B365D]/70'}"
 				>
-					Đăng Nhập
+					Mật Khẩu
+				</button>
+				<button
+					onclick={() => tab = 'magic'}
+					class="flex-1 py-3.5 text-xs font-semibold transition-colors
+						{tab === 'magic'
+							? 'text-[#1B365D] border-b-2 border-[#F2A906] bg-[#F2A906]/4'
+							: 'text-[#1B365D]/40 hover:text-[#1B365D]/70'}"
+				>
+					✉️ Magic Link
 				</button>
 				<button
 					onclick={() => tab = 'register'}
-					class="flex-1 py-4 text-sm font-semibold transition-colors
+					class="flex-1 py-3.5 text-xs font-semibold transition-colors
 						{tab === 'register'
 							? 'text-[#1B365D] border-b-2 border-[#F2A906] bg-[#F2A906]/4'
 							: 'text-[#1B365D]/40 hover:text-[#1B365D]/70'}"
@@ -50,14 +75,14 @@
 
 			<div class="p-6">
 
-				<!-- Error from server -->
+				<!-- Error from server action -->
 				{#if form?.error && form?.action === tab}
 					<div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
 						{form.error}
 					</div>
 				{/if}
 
-				<!-- ── LOGIN FORM ── -->
+				<!-- ── PASSWORD LOGIN ── -->
 				{#if tab === 'login'}
 					<form
 						method="POST"
@@ -102,15 +127,76 @@
 							{loading ? 'Đang đăng nhập...' : 'Đăng Nhập →'}
 						</button>
 
-						<p class="text-center text-xs text-[#1B365D]/40 mt-1">
-							Chưa có tài khoản?
-							<button type="button" onclick={() => tab = 'register'} class="text-[#F2A906] font-semibold hover:underline">
-								Đăng ký miễn phí
+						<div class="text-center text-xs text-[#1B365D]/40 flex items-center gap-2 justify-center">
+							<span>Không nhớ mật khẩu?</span>
+							<button type="button" onclick={() => tab = 'magic'} class="text-[#F2A906] font-semibold hover:underline">
+								Dùng magic link
 							</button>
-						</p>
+						</div>
 					</form>
 
-				<!-- ── REGISTER FORM ── -->
+				<!-- ── MAGIC LINK ── -->
+				{:else if tab === 'magic'}
+					{#if form?.action === 'magic' && form?.success}
+						<!-- Success state -->
+						<div class="text-center py-4">
+							<div class="text-5xl mb-4">📬</div>
+							<h2 class="font-heading font-bold text-[#1B365D] text-lg mb-2">Kiểm tra email của bạn!</h2>
+							<p class="text-sm text-[#1B365D]/60 leading-relaxed">{form.message}</p>
+							<button
+								onclick={() => tab = 'magic'}
+								class="mt-5 text-xs text-[#F2A906] font-semibold hover:underline"
+							>
+								Gửi lại link khác
+							</button>
+						</div>
+					{:else}
+						<form
+							method="POST"
+							action="?/magic"
+							use:enhance={() => {
+								loading = true;
+								return async ({ update }) => { loading = false; await update(); };
+							}}
+							class="flex flex-col gap-4"
+						>
+							<div class="text-center pb-1">
+								<p class="text-sm text-[#1B365D]/60 leading-relaxed">
+									Nhập email của bạn — chúng tôi sẽ gửi một link đăng nhập tức thì. Không cần mật khẩu!
+								</p>
+							</div>
+
+							<div>
+								<label for="magic-email" class="block text-xs font-semibold text-[#1B365D]/60 mb-1.5 uppercase tracking-wide">Email</label>
+								<input
+									id="magic-email"
+									name="email"
+									type="email"
+									required
+									autocomplete="email"
+									placeholder="ban@example.com"
+									class="w-full px-4 py-3 rounded-xl border border-[#1B365D]/15 bg-[#FFFBF1] text-[#1B365D] text-sm placeholder-[#1B365D]/30 focus:outline-none focus:ring-2 focus:ring-[#F2A906] focus:border-transparent transition"
+								/>
+							</div>
+
+							<button
+								type="submit"
+								disabled={loading}
+								class="w-full bg-[#1B365D] text-white font-bold py-3.5 rounded-xl text-sm hover:bg-[#142a49] active:scale-95 transition-all duration-150 disabled:opacity-60 shadow-lg shadow-[#1B365D]/20 mt-1"
+							>
+								{loading ? 'Đang gửi...' : '✉️ Gửi Magic Link'}
+							</button>
+
+							<p class="text-center text-xs text-[#1B365D]/40">
+								Chưa có tài khoản?
+								<button type="button" onclick={() => tab = 'register'} class="text-[#F2A906] font-semibold hover:underline">
+									Đăng ký miễn phí
+								</button>
+							</p>
+						</form>
+					{/if}
+
+				<!-- ── REGISTER ── -->
 				{:else}
 					<form
 						method="POST"
@@ -169,7 +255,7 @@
 							{loading ? 'Đang tạo tài khoản...' : 'Tạo Tài Khoản Miễn Phí →'}
 						</button>
 
-						<p class="text-center text-xs text-[#1B365D]/40 mt-1">
+						<p class="text-center text-xs text-[#1B365D]/40">
 							Đã có tài khoản?
 							<button type="button" onclick={() => tab = 'login'} class="text-[#F2A906] font-semibold hover:underline">
 								Đăng nhập
@@ -183,7 +269,13 @@
 						</p>
 					</form>
 				{/if}
+
 			</div>
 		</div>
+
+		<!-- Subtle login hint from landing page -->
+		<p class="text-center text-xs text-[#1B365D]/35 mt-6">
+			<a href="/" class="hover:text-[#1B365D]/60 transition-colors">← Về trang chủ</a>
+		</p>
 	</div>
 </div>

@@ -10,6 +10,11 @@ import {
 	SESSION_COOKIE,
 	cookieOptions
 } from '$lib/server/auth';
+import { createMagicLink } from '$lib/server/magic-link';
+import { sendEmail, magicLinkEmail } from '$lib/server/email';
+
+const BASE_URL = process.env.PUBLIC_BASE_URL ?? 'http://localhost:5173';
+const MAGIC_EXPIRY = 15; // minutes
 
 // Already logged in → go to dashboard
 export const load: PageServerLoad = async ({ locals }) => {
@@ -87,5 +92,33 @@ export const actions: Actions = {
 		const token = signToken({ id, email, displayName, role: 'user' });
 		cookies.set(SESSION_COOKIE, token, cookieOptions);
 		throw redirect(302, '/dashboard');
+	},
+
+	// ── MAGIC LINK ────────────────────────────────────────────────────────────
+	magic: async ({ request, url }) => {
+		const form = await request.formData();
+		const email = String(form.get('email') ?? '').trim().toLowerCase();
+
+		if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			return fail(400, { action: 'magic', error: 'Vui lòng nhập địa chỉ email hợp lệ.' });
+		}
+
+		// Generate token (returns null if email not registered — we don't reveal this)
+		const token = await createMagicLink(email);
+
+		// Send email only if user exists — silently skip if not
+		if (token) {
+			const origin = BASE_URL || `${url.protocol}//${url.host}`;
+			const link = `${origin}/auth/magic?token=${token}`;
+			const emailData = magicLinkEmail({ to: email, link, expiryMinutes: MAGIC_EXPIRY });
+			await sendEmail(emailData);
+		}
+
+		// Always return success — never reveal whether email is registered
+		return {
+			action: 'magic',
+			success: true,
+			message: `Chúng tôi đã gửi link đăng nhập tới ${email} nếu địa chỉ này đã được đăng ký. Kiểm tra hộp thư (và thư mục spam) của bạn!`
+		};
 	}
 };
