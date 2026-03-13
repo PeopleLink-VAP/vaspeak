@@ -1,11 +1,29 @@
 <script lang="ts">
     let { children } = $props();
 
-    const navItems = [
-        { href: '/admin', label: 'Dashboard', icon: '📊' },
-        { href: '/admin/kanban', label: 'Kanban Board', icon: '📋' },
-        { href: '/admin/e2e-testing', label: 'E2E Testing', icon: '🎬' },
-        { href: '/admin/settings', label: 'Settings', icon: '⚙️' }
+    const navGroups = [
+        {
+            label: 'Overview',
+            items: [
+                { href: '/admin', label: 'Dashboard', icon: '📊' },
+                { href: '/admin/kanban', label: 'Kanban Board', icon: '📋' },
+            ]
+        },
+        {
+            label: 'Content',
+            items: [
+                { href: '/admin/users', label: 'Users', icon: '👤' },
+                { href: '/admin/lessons', label: 'Lessons', icon: '📚' },
+                { href: '/admin/waitlist', label: 'Waitlist', icon: '✉️' },
+            ]
+        },
+        {
+            label: 'System',
+            items: [
+                { href: '/admin/e2e-testing', label: 'E2E Testing', icon: '🎬' },
+                { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
+            ]
+        }
     ];
 
     let currentPath = $state('');
@@ -24,15 +42,18 @@
             <span class="brand-text">VASpeak Admin</span>
         </div>
         <nav class="sidebar-nav">
-            {#each navItems as item}
-                <a
-                    href={item.href}
-                    class="nav-link"
-                    class:active={currentPath === item.href}
-                >
-                    <span class="nav-icon">{item.icon}</span>
-                    <span class="nav-label">{item.label}</span>
-                </a>
+            {#each navGroups as group}
+                <div class="nav-group-label">{group.label}</div>
+                {#each group.items as item}
+                    <a
+                        href={item.href}
+                        class="nav-link"
+                        class:active={currentPath === item.href}
+                    >
+                        <span class="nav-icon">{item.icon}</span>
+                        <span class="nav-label">{item.label}</span>
+                    </a>
+                {/each}
             {/each}
         </nav>
         <div class="sidebar-footer">
@@ -91,6 +112,16 @@
         gap: 2px;
         padding: 12px 10px;
         flex: 1;
+    }
+
+    .nav-group-label {
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #475569;
+        padding: 10px 12px 4px;
+        margin-top: 4px;
     }
 
     .nav-link {
