@@ -3,7 +3,8 @@
 
     const navItems = [
         { href: '/admin', label: 'Dashboard', icon: '📊' },
-        { href: '/admin/kanban', label: 'Kanban Board', icon: '📋' }
+        { href: '/admin/kanban', label: 'Kanban Board', icon: '📋' },
+        { href: '/admin/settings', label: 'Settings', icon: '⚙️' }
     ];
 
     let currentPath = $state('');
