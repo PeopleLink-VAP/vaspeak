@@ -107,8 +107,59 @@
 	}>(null);
 	let rpScoring     = $state(false);
 
+	// Voice input for Roleplay
+	let rpIsRecording    = $state(false);
+	let rpIsTranscribing = $state(false);
+	let rpMediaRecorder  = $state<MediaRecorder | null>(null);
+	let rpAudioChunks    = $state<Blob[]>([]);
+
 	const rpExchanges = $derived(rpMessages.filter(m => m.role === 'user').length);
 	const rpCanScore  = $derived(rpExchanges >= 2);
+
+	async function startRoleplayRecord() {
+		rpError = '';
+		rpAudioChunks = [];
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			rpMediaRecorder = new MediaRecorder(stream);
+			rpMediaRecorder.ondataavailable = (e) => {
+				if (e.data.size > 0) rpAudioChunks.push(e.data);
+			};
+			rpMediaRecorder.onstop = async () => {
+				stream.getTracks().forEach(t => t.stop());
+				rpIsTranscribing = true;
+				const audioBlob = new Blob(rpAudioChunks, { type: 'audio/webm' });
+				
+				const formData = new FormData();
+				formData.append('audio', audioBlob, 'roleplay.webm');
+				// Give the LLM context of the conversation so far for better transcription
+				const contextPrompt = rpMessages.map(m => m.content).join(' ');
+				formData.append('prompt', contextPrompt.slice(-500)); 
+
+				try {
+					const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
+					const j = await res.json() as any;
+					if (!res.ok) throw new Error(j.error || 'Lỗi nhận diện giọng nói');
+					rpUserDraft = (rpUserDraft + ' ' + (j.text || '')).trim();
+				} catch (e: any) {
+					rpError = e.message;
+				} finally {
+					rpIsTranscribing = false;
+				}
+			};
+			rpMediaRecorder.start();
+			rpIsRecording = true;
+		} catch (e) {
+			rpError = 'Không thể truy cập Micro: ' + String(e);
+		}
+	}
+
+	function stopRoleplayRecord() {
+		if (rpMediaRecorder && rpMediaRecorder.state !== 'inactive') {
+			rpMediaRecorder.stop();
+			rpIsRecording = false;
+		}
+	}
 
 	function startRoleplay() {
 		if (!block || rpStarted) return;
@@ -457,19 +508,40 @@
 							{/if}
 						</div>
 						<!-- Input row -->
-						<div class="border-t border-[#1B365D]/8 flex gap-2 p-2">
-							<textarea
-								bind:value={rpUserDraft}
-								placeholder="Nhập câu trả lời của bạn…"
-								rows="2"
-								class="flex-1 text-sm text-[#1B365D] placeholder-[#1B365D]/30 resize-none focus:outline-none p-1"
-								onkeydown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendRoleplayMessage(); } }}
-							></textarea>
-							<button
-								onclick={sendRoleplayMessage}
-								disabled={rpStreaming || !rpUserDraft.trim()}
-								class="px-3 py-1.5 rounded-xl bg-[#F2A906] text-[#1B365D] font-bold text-sm disabled:opacity-40 active:scale-95 transition-all self-end"
-							>Gửi</button>
+						<div class="border-t border-[#1B365D]/8 flex gap-2 p-2 items-end">
+							{#if rpIsRecording}
+								<div class="flex-1 flex items-center justify-center p-3 text-red-500 text-sm font-medium animate-pulse border border-red-500/20 rounded-xl bg-red-50">
+									🎤 Đang ghi âm... Nhấn Dừng để hoàn tất
+								</div>
+								<button
+									onclick={stopRoleplayRecord}
+									class="px-3 py-3 rounded-xl bg-red-500 text-white font-bold text-sm shadow-md shadow-red-500/20 active:scale-95 transition-all self-end"
+								>Dừng</button>
+							{:else}
+								<div class="flex-1 relative">
+									<textarea
+										bind:value={rpUserDraft}
+										placeholder={rpIsTranscribing ? "⏳ Đang chuyển giọng nói thành văn bản..." : "Nhập câu trả lời của bạn…"}
+										rows="2"
+										disabled={rpIsTranscribing}
+										class="w-full text-sm text-[#1B365D] placeholder-[#1B365D]/30 resize-none focus:outline-none p-2 rounded-xl bg-white border border-[#1B365D]/20 {rpIsTranscribing ? 'opacity-50' : ''}"
+										onkeydown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendRoleplayMessage(); } }}
+									></textarea>
+								</div>
+								<div class="flex flex-col gap-1">
+									<button
+										onclick={startRoleplayRecord}
+										disabled={rpStreaming || rpIsTranscribing}
+										title="Nhập bằng giọng nói"
+										class="px-3 py-1.5 rounded-xl bg-white border border-[#1B365D]/20 text-[#1B365D] font-bold text-sm hover:bg-[#F2A906]/10 active:scale-95 transition-all text-center disabled:opacity-50"
+									>🎙️</button>
+									<button
+										onclick={sendRoleplayMessage}
+										disabled={rpStreaming || rpIsTranscribing || !rpUserDraft.trim()}
+										class="px-3 py-1.5 rounded-xl bg-[#F2A906] text-[#1B365D] font-bold text-sm disabled:opacity-40 active:scale-95 transition-all self-end"
+									>Gửi</button>
+								</div>
+							{/if}
 						</div>
 					</div>
 

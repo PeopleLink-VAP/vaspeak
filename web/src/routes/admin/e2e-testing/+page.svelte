@@ -13,6 +13,20 @@
 	let runs     = $state<Run[]>(data.runs as Run[]);
 	let expanded = $state<string | null>((data.runs as Run[])[0]?.id ?? null);
 
+	// Lightbox state
+	let lightboxUrl  = $state<string | null>(null);
+	let lightboxType = $state<'video' | 'image' | null>(null);
+
+	function openLightbox(url: string, type: 'video' | 'image') {
+		lightboxUrl = url;
+		lightboxType = type;
+	}
+
+	function closeLightbox() {
+		lightboxUrl = null;
+		lightboxType = null;
+	}
+
 	// Run trigger state
 	let triggering  = $state(false);
 	let runStatus   = $state('');
@@ -97,6 +111,8 @@
 		}
 	}
 </script>
+
+<svelte:window onkeydown={e => e.key === 'Escape' && closeLightbox()} />
 
 <svelte:head>
 	<title>E2E Recordings — VASpeak Admin</title>
@@ -184,10 +200,11 @@
 								<p class="section-label">🎬 Recordings ({videos(run).length})</p>
 								<div class="video-grid">
 									{#each videos(run) as v}
-										<div class="video-card">
+										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+										<div class="video-card" onclick={() => openLightbox(v.url, 'video')} title="Click to view full screen">
+											<!-- svelte-ignore a11y_media_has_caption -->
 											<video
 												src={v.url}
-												controls
 												muted
 												preload="metadata"
 												class="video-el"
@@ -205,10 +222,10 @@
 								<p class="section-label">📸 Screenshots ({shots(run).length})</p>
 								<div class="shot-grid">
 									{#each shots(run) as s}
-										<a href={s.url} target="_blank" class="shot-link">
+										<button class="shot-link" onclick={() => openLightbox(s.url, 'image')}>
 											<img src={s.url} alt={s.name} class="shot-img" />
 											<p class="shot-name">{s.name.replace(/__/g, ' › ')}</p>
-										</a>
+										</button>
 									{/each}
 								</div>
 							{/if}
@@ -227,6 +244,21 @@
 		</div>
 	{/if}
 </div>
+
+{#if lightboxUrl}
+	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+	<div class="lightbox-overlay" onclick={closeLightbox}>
+		<div class="lightbox-content" onclick={e => e.stopPropagation()}>
+			<button class="lightbox-close" onclick={closeLightbox}>✕</button>
+			{#if lightboxType === 'video'}
+				<!-- svelte-ignore a11y_media_has_caption -->
+				<video src={lightboxUrl} controls autoplay class="lightbox-media"></video>
+			{:else}
+				<img src={lightboxUrl} alt="Screenshot" class="lightbox-media" />
+			{/if}
+		</div>
+	</div>
+{/if}
 
 <style>
 	.e2e-page { max-width: 1100px; }
@@ -329,8 +361,9 @@
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 		gap: 12px;
 	}
-	.video-card { background: #0f1729; border-radius: 8px; overflow: hidden; }
-	.video-el { width: 100%; display: block; max-height: 200px; object-fit: contain; background: #000; }
+	.video-card { background: #0f1729; border-radius: 8px; overflow: hidden; cursor: pointer; transition: opacity 0.2s; }
+	.video-card:hover { opacity: 0.85; }
+	.video-el { width: 100%; display: block; max-height: 200px; object-fit: contain; background: #000; pointer-events: none; }
 	.video-name {
 		font-size: 0.72rem; color: #64748b; padding: 4px 8px 0; white-space: nowrap;
 		overflow: hidden; text-overflow: ellipsis;
@@ -343,7 +376,8 @@
 		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 		gap: 8px;
 	}
-	.shot-link { display: block; background: #0f1729; border-radius: 6px; overflow: hidden; text-decoration: none; }
+	.shot-link { display: block; width: 100%; text-align: left; cursor: pointer; border: none; padding: 0; background: #0f1729; border-radius: 6px; overflow: hidden; text-decoration: none; transition: opacity 0.2s; }
+	.shot-link:hover { opacity: 0.85; }
 	.shot-img  { width: 100%; display: block; max-height: 140px; object-fit: cover; }
 	.shot-name { font-size: 0.68rem; color: #64748b; padding: 4px 6px 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
@@ -355,4 +389,27 @@
 		width: 100%; height: 220px; border: none; background: #0a0f1a;
 		border-radius: 6px; margin-top: 6px; font-size: 0.78rem;
 	}
+
+	/* Lightbox */
+	.lightbox-overlay {
+		position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+		z-index: 10000; display: flex; align-items: center; justify-content: center;
+		padding: 20px; backdrop-filter: blur(4px);
+	}
+	.lightbox-content {
+		position: relative; max-width: 90vw; max-height: 90vh;
+		background: #000; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+		display: flex; flex-direction: column; overflow: hidden;
+	}
+	.lightbox-media {
+		max-width: 100%; max-height: 85vh; object-fit: contain; display: block; outline: none;
+	}
+	.lightbox-close {
+		position: absolute; top: 12px; right: 12px;
+		background: rgba(0,0,0,0.6); border: none; color: #fff;
+		width: 32px; height: 32px; border-radius: 50%; font-size: 14px;
+		cursor: pointer; display: flex; align-items: center; justify-content: center;
+		z-index: 2; transition: background 0.2s;
+	}
+	.lightbox-close:hover { background: rgba(255,255,255,0.3); }
 </style>

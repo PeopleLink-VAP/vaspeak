@@ -197,6 +197,18 @@
 					{/if}
 
 				<!-- ── REGISTER ── -->
+				{:else if form?.action === 'register' && form?.success}
+					<div class="text-center py-4">
+						<div class="text-5xl mb-4">📬</div>
+						<h2 class="font-heading font-bold text-[#1B365D] text-lg mb-2">Kiểm tra email của bạn!</h2>
+						<p class="text-sm text-[#1B365D]/60 leading-relaxed text-balance">{form.message}</p>
+						<button
+							onclick={() => tab = 'login'}
+							class="mt-5 text-xs text-[#F2A906] font-semibold hover:underline"
+						>
+							Về trang Đăng nhập
+						</button>
+					</div>
 				{:else}
 					<form
 						method="POST"

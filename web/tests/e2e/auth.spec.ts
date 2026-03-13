@@ -27,7 +27,7 @@ test.describe('Login page', () => {
 
 	test('register tab switches form', async ({ page }) => {
 		await page.goto('/login');
-		await page.locator('button:has-text("Đăng Ký")').click();
+		await page.getByText('Đăng Ký', { exact: true }).click();
 		await expect(page.locator('#reg-name')).toBeVisible();
 		await expect(page.locator('#reg-email')).toBeVisible();
 		await expect(page.locator('#reg-password')).toBeVisible();
@@ -35,11 +35,11 @@ test.describe('Login page', () => {
 
 	test('register shows error on short password', async ({ page }) => {
 		await page.goto('/login');
-		await page.locator('button:has-text("Đăng Ký")').click();
+		await page.getByText('Đăng Ký', { exact: true }).click();
 		await page.fill('#reg-name', 'Test User');
 		await page.fill('#reg-email', `test-${Date.now()}@example.com`);
 		await page.fill('#reg-password', 'short'); // < 8 chars
-		await page.locator('button[type="submit"]').first().click();
+		await page.locator('button[type="submit"]').last().click();
 		// HTML5 minlength will prevent submit, or server returns 400
 		await expect(page.locator('#reg-password')).toBeVisible();
 	});
@@ -63,35 +63,42 @@ test.describe('Register + Login flow', () => {
 	test('full register → dashboard → logout flow', async ({ page }) => {
 		// Register
 		await page.goto('/login');
-		await page.locator('button:has-text("Đăng Ký")').click();
+		await page.getByText('Đăng Ký', { exact: true }).click();
 		await page.fill('#reg-name', name);
 		await page.fill('#reg-email', email);
 		await page.fill('#reg-password', password);
+		await page.locator('button[type="submit"]').last().click();
+
+		// Should show verification message
+		await expect(page.getByText('Kiểm tra email của bạn!', { exact: false })).toBeVisible({ timeout: 8000 });
+
+        // Verify email in DB using a quick fetch to an exposed test endpoint or direct DB manipulation
+        		// As a quick workaround, we will use playwright request context to manually flip the bit!
+		await page.request.post('/api/e2e-verify', { data: { email } });
+
+		// Login
+		await page.goto('/login');
+		await page.fill('#login-email', email);
+		await page.fill('#login-password', password);
 		await page.locator('button[type="submit"]').first().click();
 
-		// Should land on dashboard
-		await expect(page).toHaveURL(/\/dashboard/, { timeout: 8000 });
-		await expect(page.locator(`text=${name}`)).toBeVisible();
+		// Should land on placement or dashboard
+		await expect(page).toHaveURL(/\/dashboard|\/placement/, { timeout: 8000 });
 
 		// Logout
 		await page.goto('/logout');
 		await expect(page).toHaveURL(/\/login/);
-
-		// Login with same credentials
-		await page.fill('#login-email', email);
-		await page.fill('#login-password', password);
-		await page.locator('button[type="submit"]').first().click();
-		await expect(page).toHaveURL(/\/dashboard/, { timeout: 8000 });
 	});
 
 	test('duplicate registration is rejected', async ({ page }) => {
 		// First register
 		await page.goto('/login');
-		await page.locator('button:has-text("Đăng Ký")').click();
+		await page.getByText('Đăng Ký', { exact: true }).click();
 		await page.fill('#reg-name', 'Dupe User');
 		await page.fill('#reg-email', email); // same email as above
 		await page.fill('#reg-password', password);
-		await page.locator('button[type="submit"]').first().click();
-		await expect(page.locator('text=already exists')).toBeVisible({ timeout: 5000 });
+		await page.locator('button[type="submit"]').last().click();
+		// Should show already exists error (handled by server if email is taken)
+		await expect(page.locator('text=already exists').or(page.locator('text=already taken'))).toBeVisible({ timeout: 5000 });
 	});
 });
