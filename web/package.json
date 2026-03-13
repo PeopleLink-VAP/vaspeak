@@ -14,6 +14,9 @@
 		"test:e2e": "npx playwright test tests/e2e --reporter=list",
 		"test:api": "npx playwright test tests/api --reporter=list",
 		"test:ui": "npx playwright test --ui",
+		"db:migrate": "node scripts/init-db.js",
+		"db:seed": "node scripts/seed-lessons.js",
+		"db:setup": "node scripts/init-db.js && node scripts/seed-lessons.js",
 		"test:unit": "vitest run --config tests/unit/vitest.config.ts",
 		"test:unit:watch": "vitest --config tests/unit/vitest.config.ts",
 		"test:unit:ui": "vitest --ui --config tests/unit/vitest.config.ts"
