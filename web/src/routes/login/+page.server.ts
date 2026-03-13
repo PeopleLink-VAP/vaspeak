@@ -11,7 +11,9 @@ import {
 	cookieOptions
 } from '$lib/server/auth';
 import { createMagicLink } from '$lib/server/magic-link';
-import { sendEmail, magicLinkEmail } from '$lib/server/email';
+import { sendEmail, magicLinkEmail, verificationEmail } from '$lib/server/email';
+import { createVerificationToken, VERIFICATION_EXPIRY_MINUTES } from '$lib/server/verify-email';
+import { isDisposableEmail } from '$lib/server/disposable';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 
 const MAGIC_EXPIRY = 15; // minutes
@@ -64,7 +66,7 @@ export const actions: Actions = {
 	},
 
 	// ── REGISTER ──────────────────────────────────────────────────────────────
-	register: async ({ request, cookies }) => {
+	register: async ({ request, url }) => {
 		const form = await request.formData();
 		const email = String(form.get('email') ?? '').trim().toLowerCase();
 		const password = String(form.get('password') ?? '');
@@ -81,7 +83,15 @@ export const actions: Actions = {
 			return fail(400, { action: 'register', error: 'Password must be at least 8 characters.' });
 		}
 
-		// Check for existing account
+		// Block disposable email providers
+		if (isDisposableEmail(email)) {
+			return fail(400, {
+				action: 'register',
+				error: 'Disposable or temporary email addresses are not allowed. Please use a real email.'
+			});
+		}
+
+		// Check for existing account (anti-enumeration: same message)
 		const existing = await findUserByEmail(email);
 		if (existing) {
 			return fail(409, { action: 'register', error: 'An account with this email already exists.' });
@@ -91,15 +101,36 @@ export const actions: Actions = {
 		const passwordHash = await hashPassword(password);
 
 		try {
+			// Create user with email_verified=0 — they must click the email link
 			await createUser({ id, email, displayName, passwordHash });
 		} catch (err) {
 			console.error('[register] DB error:', err);
 			return fail(500, { action: 'register', error: 'Registration failed. Please try again.' });
 		}
 
-		const token = signToken({ id, email, displayName, role: 'user' });
-		cookies.set(SESSION_COOKIE, token, cookieOptions);
-		throw redirect(302, '/dashboard');
+		// Send verification email (fire-and-forget — don't block registration on email failure)
+		try {
+			const verifyToken = await createVerificationToken(id, email);
+			const origin = PUBLIC_BASE_URL || `${url.protocol}//${url.host}`;
+			const verifyLink = `${origin}/auth/verify-email?token=${verifyToken}`;
+			const emailData = verificationEmail({
+				to: email,
+				link: verifyLink,
+				code: verifyToken.slice(0, 6).toUpperCase(), // not shown in email, kept for future OTP support
+				expiryMinutes: VERIFICATION_EXPIRY_MINUTES
+			});
+			await sendEmail(emailData);
+		} catch (err) {
+			console.error('[register] Failed to send verification email:', err);
+			// Don't fail registration — user can request a resend later
+		}
+
+		// Don't auto-login. Show a "check your email" message.
+		return {
+			action: 'register',
+			success: true,
+			message: `Account created! We've sent a verification link to ${email}. Click it to activate your account and log in.`
+		};
 	},
 
 	// ── MAGIC LINK ────────────────────────────────────────────────────────────

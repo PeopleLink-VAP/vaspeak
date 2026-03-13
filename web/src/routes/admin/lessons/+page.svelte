@@ -139,8 +139,8 @@
                         <td class="muted">{String(lesson.updated_at ?? '').slice(0, 10)}</td>
                         <td>
                             <div class="action-row">
-                                <button class="btn-icon" title="Edit" onclick={() => startEdit(lesson)}>✏</button>
-                                <a href="/lesson/{lesson.day_number}" target="_blank" class="btn-icon" title="Preview">↗</a>
+                            <a href="/admin/lessons/{lesson.id}" class="btn-icon" title="Edit content">✏</a>
+                            <a href="/lesson/{lesson.day_number}" target="_blank" class="btn-icon" title="Preview">↗</a>
                                 {#if confirmDelete === String(lesson.id)}
                                     <form method="POST" action="?/delete" use:enhance={() => () => { confirmDelete = null; invalidateAll(); }}>
                                         <input type="hidden" name="lessonId" value={lesson.id} />

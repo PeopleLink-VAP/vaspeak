@@ -60,7 +60,7 @@ function stripHtml(html: string): string {
 export function magicLinkEmail(opts: { to: string; link: string; expiryMinutes: number }) {
 	const html = `
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -130,6 +130,82 @@ export function magicLinkEmail(opts: { to: string; link: string; expiryMinutes: 
 	return {
 		to:      opts.to,
 		subject: '⚡ Link đăng nhập VASpeak của bạn',
+		html
+	};
+}
+export function verificationEmail(opts: { to: string; link: string; code: string; expiryMinutes: number }) {
+	const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify your VASpeak email</title>
+</head>
+<body style="margin:0;padding:0;background:#FFFBF1;font-family:'Inter',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFFBF1;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width:480px;background:#fff;border-radius:16px;border:1px solid rgba(27,54,93,0.08);box-shadow:0 8px 40px rgba(27,54,93,0.1);overflow:hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:#1B365D;padding:28px 32px;text-align:center;">
+              <div style="display:inline-flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:#F2A906;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;">
+                  <span style="color:#1B365D;font-weight:900;font-size:13px;">VS</span>
+                </div>
+                <span style="color:#fff;font-size:20px;font-weight:700;">VASpeak</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:36px 32px;">
+              <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1B365D;">
+                ✉️ Verify your email
+              </h1>
+              <p style="margin:0 0 24px;color:rgba(27,54,93,0.65);font-size:15px;line-height:1.6;">
+                Welcome to VASpeak! Click the button below to verify your email address. This link expires in <strong>${opts.expiryMinutes} minutes</strong>.
+              </p>
+
+              <div style="text-align:center;margin:32px 0;">
+                <a href="${opts.link}"
+                   style="display:inline-block;background:#F2A906;color:#1B365D;font-weight:700;font-size:15px;padding:14px 36px;border-radius:10px;text-decoration:none;letter-spacing:0.01em;">
+                  Verify Email →
+                </a>
+              </div>
+
+              <p style="margin:0 0 8px;color:rgba(27,54,93,0.45);font-size:12px;line-height:1.5;">
+                Or copy and paste this link into your browser:
+              </p>
+              <p style="margin:0 0 24px;font-size:11px;word-break:break-all;color:rgba(27,54,93,0.4);">
+                ${opts.link}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#FFFBF1;padding:20px 32px;border-top:1px solid rgba(27,54,93,0.06);">
+              <p style="margin:0;font-size:11px;color:rgba(27,54,93,0.35);text-align:center;">
+                You received this because someone registered at VASpeak with <strong>${opts.to}</strong>.<br/>
+                If this wasn't you, you can safely ignore this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+	return {
+		to:      opts.to,
+		subject: '✉️ Verify your VASpeak email address',
 		html
 	};
 }

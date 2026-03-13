@@ -112,7 +112,7 @@ export async function createUser(opts: {
 	await db.batch([
 		{
 			sql: `INSERT INTO profiles (id, email, display_name, email_verified, role)
-			      VALUES (?, ?, ?, 1, 'user')`,
+			      VALUES (?, ?, ?, 0, 'user')`,
 			args: [opts.id, opts.email, opts.displayName]
 		},
 		{

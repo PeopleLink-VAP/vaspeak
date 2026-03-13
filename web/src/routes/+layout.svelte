@@ -7,10 +7,17 @@
 
 	// ── Install prompt state (browser-only) ──────────────────────────────────
 	let installPrompt = $state<BeforeInstallPromptEvent | null>(null);
-	let dismissed     = $state(false);
+	let dismissed     = $state(true); // default true until we check localStorage
+
+	const STORAGE_KEY = 'pwa-install-dismissed';
 
 	// ── Service Worker + install prompt listeners ─────────────────────────────
 	onMount(() => {
+		// Check if user has already dismissed the banner
+		if (localStorage.getItem(STORAGE_KEY) !== '1') {
+			dismissed = false;
+		}
+
 		// Register service worker
 		if ('serviceWorker' in navigator) {
 			navigator.serviceWorker.register('/service-worker.js', { type: 'module' })
@@ -19,14 +26,27 @@
 
 		// Listen for install prompt
 		const offPrompt    = onInstallPrompt((e) => { installPrompt = e; });
-		const offInstalled = onAppInstalled(() => { installPrompt = null; });
+		// When installed, mark dismissed permanently so banner never returns
+		const offInstalled = onAppInstalled(() => {
+			installPrompt = null;
+			dismissed = true;
+			localStorage.setItem(STORAGE_KEY, '1');
+		});
 
 		return () => { offPrompt(); offInstalled(); };
 	});
 
+	function handleDismiss() {
+		dismissed = true;
+		localStorage.setItem(STORAGE_KEY, '1'); // never show again
+	}
+
 	async function handleInstall() {
 		const accepted = await triggerInstall(installPrompt);
-		if (accepted) installPrompt = null;
+		if (accepted) {
+			installPrompt = null;
+			localStorage.setItem(STORAGE_KEY, '1');
+		}
 	}
 </script>
 
@@ -44,7 +64,7 @@
 			<button class="pwa-btn-install" onclick={handleInstall}>
 				Cài đặt
 			</button>
-			<button class="pwa-btn-dismiss" onclick={() => dismissed = true} aria-label="Đóng">
+			<button class="pwa-btn-dismiss" onclick={handleDismiss} aria-label="Đóng">
 				✕
 			</button>
 		</div>
@@ -52,6 +72,7 @@
 {/if}
 
 {@render children()}
+
 
 <style>
 	.pwa-banner {
