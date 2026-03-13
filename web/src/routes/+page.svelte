@@ -282,9 +282,11 @@
 			<span class="text-white font-semibold font-heading">VASpeak</span>
 		</div>
 		<p>© 2026 VASpeak by PeopleLink VAP. All rights reserved.</p>
-		<div class="flex gap-5">
+		<div class="flex gap-5 items-center">
 			<a href="/privacy" class="hover:text-white transition-colors">Privacy</a>
 			<a href="/terms" class="hover:text-white transition-colors">Terms</a>
+			<span class="w-px h-3 bg-white/20"></span>
+			<a href="/login" class="hover:text-white transition-colors text-white/35">Đăng nhập</a>
 		</div>
 	</div>
 </footer>
