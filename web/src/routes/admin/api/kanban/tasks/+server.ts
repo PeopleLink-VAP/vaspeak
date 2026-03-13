@@ -2,6 +2,12 @@ import { json } from '@sveltejs/kit';
 import { turso, ensureKanbanSchema } from '$lib/server/turso';
 import crypto from 'crypto';
 
+export async function GET() {
+    await ensureKanbanSchema();
+    const result = await turso.execute('SELECT * FROM tasks ORDER BY updated_at DESC');
+    return json(result.rows);
+}
+
 export async function POST({ request }) {
     await ensureKanbanSchema();
     const body = await request.json();

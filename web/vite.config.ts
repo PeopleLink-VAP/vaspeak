@@ -3,5 +3,17 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-	plugins: [sveltekit(), tailwindcss()]
+	plugins: [sveltekit(), tailwindcss()],
+	server: {
+		allowedHosts: [
+			'vaspeak.alphabits.team',
+			'vaspeak-beta.alphabits.team'
+		]
+	},
+	preview: {
+		allowedHosts: [
+			'vaspeak.alphabits.team',
+			'vaspeak-beta.alphabits.team'
+		]
+	}
 });
