@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { createAudioRecorder, formatRecordTime, transcribeAudio } from '$lib/audio-recorder';
 
 	let { data } = $props();
 	let lesson = $derived(data.lesson);
@@ -24,72 +25,41 @@
 	let totalBlocks = $derived(blocks.length);
 	let progressPct = $derived(Math.round((currentBlock / totalBlocks) * 100));
 
-	// ── Drilling state ────────────────────────────────────────────────
-	let drIsRecording   = $state(false);
-	let drIsTranscribing= $state(false);
-	let drTranscript    = $state<string | null>(null);
-	let drResult        = $state<'pass' | 'fail' | null>(null);
-	let drMediaRecorder = $state<MediaRecorder | null>(null);
-	let drAudioChunks   = $state<Blob[]>([]);
-	let drError         = $state('');
+	// ── Drilling state (Block 2) ──────────────────────────────────────
+	let drState: 'idle' | 'recording' | 'processing' = $state('idle');
+	let drElapsed     = $state(0);
+	let drTranscript  = $state<string | null>(null);
+	let drResult      = $state<'pass' | 'fail' | null>(null);
+	let drError       = $state('');
 
-	async function startDrillingRecord() {
-		drError = '';
-		drTranscript = null;
-		drResult = null;
-		drAudioChunks = [];
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-			drMediaRecorder = new MediaRecorder(stream);
-			drMediaRecorder.ondataavailable = (e) => {
-				if (e.data.size > 0) drAudioChunks.push(e.data);
-			};
-			drMediaRecorder.onstop = async () => {
-				stream.getTracks().forEach((track) => track.stop());
-				drIsTranscribing = true;
-				const audioBlob = new Blob(drAudioChunks, { type: 'audio/webm' });
-				
-				const formData = new FormData();
-				formData.append('audio', audioBlob, 'drilling.webm');
-				if (block.patterns?.[drillingIndex]?.target) {
-					formData.append('prompt', block.patterns[drillingIndex].target);
-				}
+	const drRecorder = createAudioRecorder({
+		maxDuration: 15,
+		onStart:  () => { drState = 'recording'; drElapsed = 0; },
+		onTick:   (s) => { drElapsed = s; },
+		onStop:   async (blob) => {
+			drState = 'processing';
+			const target = block?.patterns?.[drillingIndex]?.target || '';
+			const result = await transcribeAudio(blob, target, 'drilling.webm');
+			if ('error' in result) {
+				drError = result.error;
+				drState = 'idle';
+				return;
+			}
+			drTranscript = result.text;
+			// Forgiving match
+			const targetStr = target.toLowerCase().replace(/[^\w\s]/gi, '').trim();
+			const spokenStr = (result.text || '').toLowerCase().replace(/[^\w\s]/gi, '').trim();
+			if (targetStr && spokenStr && (spokenStr.includes(targetStr) || targetStr.includes(spokenStr))) {
+				drResult = 'pass';
+			} else {
+				drResult = 'fail';
+			}
+			drState = 'idle';
+		},
+		onError:  (msg) => { drError = msg; drState = 'idle'; }
+	});
 
-				try {
-					const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
-					const j = await res.json() as any;
-					if (!res.ok) throw new Error(j.error || 'Transcription failed');
-					drTranscript = j.text;
-					// V1: Simple evaluation
-					const targetStr = (block.patterns[drillingIndex]?.target || '').toLowerCase().replace(/[^\w\s]/gi, '').trim();
-					const spokenStr = (drTranscript || '').toLowerCase().replace(/[^\w\s]/gi, '').trim();
-					// Very forgiving match:
-					if (targetStr && spokenStr && (spokenStr.includes(targetStr) || targetStr.includes(spokenStr))) {
-						drResult = 'pass';
-					} else {
-						drResult = 'fail';
-					}
-				} catch (e: any) {
-					drError = e.message;
-				} finally {
-					drIsTranscribing = false;
-				}
-			};
-			drMediaRecorder.start();
-			drIsRecording = true;
-		} catch (e) {
-			drError = 'Microphone access denied: ' + String(e);
-		}
-	}
-
-	function stopDrillingRecord() {
-		if (drMediaRecorder && drMediaRecorder.state !== 'inactive') {
-			drMediaRecorder.stop();
-			drIsRecording = false;
-		}
-	}
-
-	// ── Roleplay state ────────────────────────────────────────────────
+	// ── Roleplay state (Block 3) ──────────────────────────────────────
 	type ChatMsg = { role: 'user' | 'assistant'; content: string };
 
 	let rpMessages    = $state<ChatMsg[]>([]);
@@ -108,58 +78,37 @@
 	let rpScoring     = $state(false);
 
 	// Voice input for Roleplay
-	let rpIsRecording    = $state(false);
-	let rpIsTranscribing = $state(false);
-	let rpMediaRecorder  = $state<MediaRecorder | null>(null);
-	let rpAudioChunks    = $state<Blob[]>([]);
+	let rpState: 'idle' | 'recording' | 'processing' = $state('idle');
+	let rpElapsed = $state(0);
+
+	const rpRecorder = createAudioRecorder({
+		maxDuration: 30,
+		onStart: () => { rpState = 'recording'; rpElapsed = 0; },
+		onTick:  (s) => { rpElapsed = s; },
+		onStop:  async (blob) => {
+			rpState = 'processing';
+			const contextPrompt = rpMessages.map(m => m.content).join(' ');
+			const result = await transcribeAudio(blob, contextPrompt, 'roleplay.webm');
+			if ('error' in result) {
+				rpError = result.error;
+			} else {
+				rpUserDraft = (rpUserDraft + ' ' + (result.text || '')).trim();
+			}
+			rpState = 'idle';
+		},
+		onError: (msg) => { rpError = msg; rpState = 'idle'; }
+	});
 
 	const rpExchanges = $derived(rpMessages.filter(m => m.role === 'user').length);
 	const rpCanScore  = $derived(rpExchanges >= 2);
 
-	async function startRoleplayRecord() {
-		rpError = '';
-		rpAudioChunks = [];
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-			rpMediaRecorder = new MediaRecorder(stream);
-			rpMediaRecorder.ondataavailable = (e) => {
-				if (e.data.size > 0) rpAudioChunks.push(e.data);
-			};
-			rpMediaRecorder.onstop = async () => {
-				stream.getTracks().forEach(t => t.stop());
-				rpIsTranscribing = true;
-				const audioBlob = new Blob(rpAudioChunks, { type: 'audio/webm' });
-				
-				const formData = new FormData();
-				formData.append('audio', audioBlob, 'roleplay.webm');
-				// Give the LLM context of the conversation so far for better transcription
-				const contextPrompt = rpMessages.map(m => m.content).join(' ');
-				formData.append('prompt', contextPrompt.slice(-500)); 
-
-				try {
-					const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
-					const j = await res.json() as any;
-					if (!res.ok) throw new Error(j.error || 'Lỗi nhận diện giọng nói');
-					rpUserDraft = (rpUserDraft + ' ' + (j.text || '')).trim();
-				} catch (e: any) {
-					rpError = e.message;
-				} finally {
-					rpIsTranscribing = false;
-				}
-			};
-			rpMediaRecorder.start();
-			rpIsRecording = true;
-		} catch (e) {
-			rpError = 'Không thể truy cập Micro: ' + String(e);
-		}
-	}
-
-	function stopRoleplayRecord() {
-		if (rpMediaRecorder && rpMediaRecorder.state !== 'inactive') {
-			rpMediaRecorder.stop();
-			rpIsRecording = false;
-		}
-	}
+	// Cleanup recorders on component destroy
+	$effect(() => {
+		return () => {
+			drRecorder.destroy();
+			rpRecorder.destroy();
+		};
+	});
 
 	function startRoleplay() {
 		if (!block || rpStarted) return;
@@ -255,14 +204,16 @@
 
 	function nextBlock() {
 		completedBlocks.add(currentBlock);
+		drRecorder.destroy();
+		rpRecorder.destroy();
 		if (currentBlock < totalBlocks - 1) {
 			currentBlock++;
 			selectedAnswer = null;
 			answered       = false;
 			drillingIndex  = 0;
-			drTranscript = null; drResult = null; drError = '';
+			drTranscript = null; drResult = null; drError = ''; drState = 'idle';
 			rpMessages     = []; rpStarted = false;
-			rpScore = null;     rpError = ''; rpStreamText = '';
+			rpScore = null;     rpError = ''; rpStreamText = ''; rpState = 'idle';
 		} else {
 			saveProgress();
 			goto('/dashboard');
@@ -271,9 +222,10 @@
 
 	function nextPattern() {
 		const patterns = block.patterns ?? [];
+		drRecorder.destroy();
 		if (drillingIndex < patterns.length - 1) {
 			drillingIndex++;
-			drTranscript = null; drResult = null; drError = '';
+			drTranscript = null; drResult = null; drError = ''; drState = 'idle';
 		}
 		else nextBlock();
 	}
@@ -410,16 +362,16 @@
 						</div>
 					</div>
 					<div class="flex flex-col gap-2.5">
-						{#if drIsRecording}
-							<button onclick={stopDrillingRecord} class="w-full bg-red-500 border border-red-600 rounded-xl py-3.5 flex items-center justify-center gap-2 text-white text-sm font-bold shadow-md shadow-red-500/20 active:scale-95 transition-all animate-pulse">
-								🛑 Dừng ghi âm
+						{#if drState === 'recording'}
+							<button onclick={() => drRecorder.stop()} class="w-full bg-red-500 border border-red-600 rounded-xl py-3.5 flex items-center justify-center gap-2 text-white text-sm font-bold shadow-md shadow-red-500/20 active:scale-95 transition-all animate-pulse">
+								🛑 Dừng ghi âm · {formatRecordTime(drElapsed)}
 							</button>
-						{:else if drIsTranscribing}
+						{:else if drState === 'processing'}
 							<div class="w-full bg-white border border-[#1B365D]/12 rounded-xl py-3.5 flex items-center justify-center gap-2 text-[#1B365D]/50 text-sm">
 								⏳ Đang phân tích...
 							</div>
 						{:else}
-							<button onclick={startDrillingRecord} class="w-full bg-white border border-[#1B365D]/20 rounded-xl py-3.5 flex items-center justify-center gap-2 text-[#1B365D] text-sm font-bold hover:bg-[#F2A906]/10 hover:border-[#F2A906]/40 active:scale-95 transition-all">
+							<button onclick={() => { drError = ''; drTranscript = null; drResult = null; drRecorder.start(); }} class="w-full bg-white border border-[#1B365D]/20 rounded-xl py-3.5 flex items-center justify-center gap-2 text-[#1B365D] text-sm font-bold hover:bg-[#F2A906]/10 hover:border-[#F2A906]/40 active:scale-95 transition-all">
 								🎙️ Bấm để nói
 							</button>
 						{/if}
@@ -509,35 +461,35 @@
 						</div>
 						<!-- Input row -->
 						<div class="border-t border-[#1B365D]/8 flex gap-2 p-2 items-end">
-							{#if rpIsRecording}
+							{#if rpState === 'recording'}
 								<div class="flex-1 flex items-center justify-center p-3 text-red-500 text-sm font-medium animate-pulse border border-red-500/20 rounded-xl bg-red-50">
-									🎤 Đang ghi âm... Nhấn Dừng để hoàn tất
+									🎤 Đang ghi âm · {formatRecordTime(rpElapsed)}
 								</div>
 								<button
-									onclick={stopRoleplayRecord}
+									onclick={() => rpRecorder.stop()}
 									class="px-3 py-3 rounded-xl bg-red-500 text-white font-bold text-sm shadow-md shadow-red-500/20 active:scale-95 transition-all self-end"
 								>Dừng</button>
 							{:else}
 								<div class="flex-1 relative">
 									<textarea
 										bind:value={rpUserDraft}
-										placeholder={rpIsTranscribing ? "⏳ Đang chuyển giọng nói thành văn bản..." : "Nhập câu trả lời của bạn…"}
+										placeholder={rpState === 'processing' ? "⏳ Đang chuyển giọng nói thành văn bản..." : "Nhập câu trả lời của bạn…"}
 										rows="2"
-										disabled={rpIsTranscribing}
-										class="w-full text-sm text-[#1B365D] placeholder-[#1B365D]/30 resize-none focus:outline-none p-2 rounded-xl bg-white border border-[#1B365D]/20 {rpIsTranscribing ? 'opacity-50' : ''}"
+										disabled={rpState === 'processing'}
+										class="w-full text-sm text-[#1B365D] placeholder-[#1B365D]/30 resize-none focus:outline-none p-2 rounded-xl bg-white border border-[#1B365D]/20 {rpState === 'processing' ? 'opacity-50' : ''}"
 										onkeydown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendRoleplayMessage(); } }}
 									></textarea>
 								</div>
 								<div class="flex flex-col gap-1">
 									<button
-										onclick={startRoleplayRecord}
-										disabled={rpStreaming || rpIsTranscribing}
+										onclick={() => rpRecorder.start()}
+										disabled={rpStreaming || rpState === 'processing'}
 										title="Nhập bằng giọng nói"
 										class="px-3 py-1.5 rounded-xl bg-white border border-[#1B365D]/20 text-[#1B365D] font-bold text-sm hover:bg-[#F2A906]/10 active:scale-95 transition-all text-center disabled:opacity-50"
 									>🎙️</button>
 									<button
 										onclick={sendRoleplayMessage}
-										disabled={rpStreaming || rpIsTranscribing || !rpUserDraft.trim()}
+										disabled={rpStreaming || rpState === 'processing' || !rpUserDraft.trim()}
 										class="px-3 py-1.5 rounded-xl bg-[#F2A906] text-[#1B365D] font-bold text-sm disabled:opacity-40 active:scale-95 transition-all self-end"
 									>Gửi</button>
 								</div>
