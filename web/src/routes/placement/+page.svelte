@@ -34,13 +34,13 @@
 	});
 
 	const niches = [
-		{ value: 'general', label: 'Tiếng Anh Giao Tiếp Cơ Bản' },
-		{ value: 'customer_support', label: 'Hỗ Trợ Khách Hàng (CS)' },
-		{ value: 'data_entry', label: 'Nhập Liệu & Hành Chính' },
-		{ value: 'social_media', label: 'Quản Lý Mạng Xã Hội' },
-		{ value: 'ecommerce', label: 'Thương Mại Điện Tử (eCom)' },
-		{ value: 'video_editor', label: 'Biên Tập Video' },
-		{ value: 'executive_assistant', label: 'Trợ Lý Giám Đốc (EA)' }
+		{ value: 'general', label: 'Tiếng Anh Giao Tiếp Cơ Bản', icon: '🌍' },
+		{ value: 'customer_support', label: 'Hỗ Trợ Khách Hàng (CS)', icon: '🎧' },
+		{ value: 'data_entry', label: 'Nhập Liệu & Hành Chính', icon: '📋' },
+		{ value: 'social_media', label: 'Quản Lý Mạng Xã Hội', icon: '📱' },
+		{ value: 'ecommerce', label: 'Thương Mại Điện Tử (eCom)', icon: '🛒' },
+		{ value: 'video_editor', label: 'Biên Tập Video', icon: '🎬' },
+		{ value: 'executive_assistant', label: 'Trợ Lý Giám Đốc (EA)', icon: '💼' }
 	];
 
 	const speakingPrompt = "Hi, my name is [your name]. I would like to apply for a Virtual Assistant position. I have experience in [your skill], and I am available to work Monday to Friday.";
@@ -150,18 +150,26 @@
 				<div class="flex-1 animate-[fadeIn_0.3s_ease-out]" data-testid="step-niche">
 					<div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-2xl mb-4">🎯</div>
 					<h2 class="font-heading font-bold text-[#1B365D] text-2xl mb-2 leading-tight">Mục tiêu công việc (Niche)<br>mà bạn hướng đến?</h2>
-					<p class="text-[#1B365D]/60 text-sm mb-6">VASpeak cung cấp nhóm từ vựng và tình huống hội thoại được tinh chỉnh riêng cho ngành của bạn.</p>
+					<p class="text-[#1B365D]/60 text-sm mb-5">VASpeak cung cấp nhóm từ vựng và tình huống hội thoại được tinh chỉnh riêng cho ngành của bạn.</p>
 					
-					<select
-						name="niche"
-						bind:value={niche}
-						class="w-full bg-[#FFFBF1] border border-[#1B365D]/10 rounded-2xl px-5 py-4 text-sm font-medium text-[#1B365D] focus:outline-none focus:border-[#F2A906] appearance-none"
-						data-testid="niche-select"
-					>
+					<div class="flex flex-col gap-2.5 max-h-[45vh] overflow-y-auto pr-1">
 						{#each niches as n}
-							<option value={n.value}>{n.label}</option>
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+							<label onclick={() => niche = n.value} class="relative flex items-center border-2 {niche === n.value ? 'border-[#F2A906] bg-[#F2A906]/10' : 'border-[#1B365D]/10 bg-white hover:border-[#1B365D]/20'} transition-all rounded-2xl p-3.5 cursor-pointer gap-3" data-testid="niche-{n.value}">
+								<input type="radio" name="niche" value={n.value} checked={niche === n.value} class="sr-only" />
+								<div class="text-xl shrink-0">{n.icon}</div>
+								<div class="flex-1">
+									<h3 class="font-bold text-[#1B365D] text-sm">{n.label}</h3>
+								</div>
+								{#if niche === n.value}
+									<div class="w-5 h-5 rounded-full bg-[#F2A906] flex items-center justify-center shrink-0">
+										<svg class="w-3 h-3 text-[#1B365D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+									</div>
+								{/if}
+							</label>
 						{/each}
-					</select>
+					</div>
 				</div>
 			{:else}
 				<!-- Step 4: Speaking Sample (Audio) -->
