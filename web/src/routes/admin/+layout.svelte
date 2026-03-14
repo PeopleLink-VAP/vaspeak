@@ -40,7 +40,11 @@
     // Reactively track the current path via SvelteKit's page store
     let currentPath = $derived($page.url.pathname);
 
-    // ── Activity panel (third column) ───────────────────────────────────
+    // ── Activity panel (third column) — only on /admin/users and /admin/kanban ──
+
+    let showPanel = $derived(
+        currentPath.startsWith('/admin/users') || currentPath.startsWith('/admin/kanban')
+    );
 
     let activityItems = $state<ActivityItem[]>([]);
     let activityInterval: ReturnType<typeof setInterval>;
@@ -132,7 +136,8 @@
         {@render children()}
     </main>
 
-    <!-- Column 3: Activity panel -->
+    <!-- Column 3: Activity panel (only on /admin/users, /admin/kanban) -->
+    {#if showPanel}
     <aside class="activity-panel" class:collapsed={!panelOpen} data-testid="activity-sidebar">
         <div class="activity-header">
             <span class="activity-title"><Activity size={14} /> Activity</span>
@@ -171,6 +176,7 @@
             </div>
         {/if}
     </aside>
+    {/if}
 </div>
 
 <style>

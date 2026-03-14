@@ -80,3 +80,9 @@ export const waitlistLimiter = new RateLimiter({ windowMs: 60_000, max: 3 });
 
 /** Roleplay API — 30 per minute per user (on top of credit gating) */
 export const roleplayLimiter = new RateLimiter({ windowMs: 60_000, max: 30 });
+
+/** TTS API — 20 per minute per user (Groq audio.speech) */
+export const ttsLimiter = new RateLimiter({ windowMs: 60_000, max: 20 });
+
+/** Transcribe API — 20 per minute per user (Groq audio.transcriptions) */
+export const sttLimiter = new RateLimiter({ windowMs: 60_000, max: 20 });

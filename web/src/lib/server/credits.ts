@@ -1,7 +1,9 @@
 import { db } from '$lib/server/db';
 import { randomBytes } from 'crypto';
+import { MONTHLY_CREDIT_ALLOWANCE } from '$lib/utils';
 
-export const MONTHLY_ALLOWANCE = 100;
+// Re-export for server callers — single source of truth is $lib/utils
+export const MONTHLY_ALLOWANCE = MONTHLY_CREDIT_ALLOWANCE;
 export const ROLEPLAY_CREDIT_COST = 3; // per turn
 
 // ---------------------------------------------------------------------------

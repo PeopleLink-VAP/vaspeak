@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import SpeakingAnxiety from '$lib/components/illustrations/SpeakingAnxiety.svelte';
+	import LostForWords from '$lib/components/illustrations/LostForWords.svelte';
+	import MissedOpportunity from '$lib/components/illustrations/MissedOpportunity.svelte';
 
 	let email = $state('');
 	let status = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -148,20 +151,44 @@
 			</p>
 		</div>
 
-		<div class="grid md:grid-cols-3 gap-x-16 gap-y-10">
-			{#each [
-				{ icon: '😰', title: 'Lo lắng khi nói tiếng Anh', desc: 'Biết từ vựng nhưng cứ đến lúc nói lại bị đơ và mất tự tin.' },
-				{ icon: '🤔', title: 'Không biết nói sao cho đúng', desc: 'Nghe hiểu khá ổn nhưng không biết cách diễn đạt đúng tông nghề nghiệp.' },
-				{ icon: '📉', title: 'Mất cơ hội vì ngôn ngữ', desc: 'Kỹ năng chuyên môn tốt nhưng kém tự tin tiếng Anh khiến mất nhiều hợp đồng.' }
-			] as p, i}
-				<div class="reveal reveal-d{i+1} flex gap-5 items-start" style:padding-left="{i * 0}px">
-					<span class="text-3xl flex-shrink-0 mt-0.5">{p.icon}</span>
-					<div>
-						<h3 class="font-heading font-semibold text-[#1A1A1A] text-base mb-1.5">{p.title}</h3>
-						<p class="text-[#6B6B6B] text-sm leading-relaxed">{p.desc}</p>
-					</div>
+		<div class="grid md:grid-cols-3 gap-x-8 gap-y-12 lg:gap-y-8">
+			<!-- Lo lắng khi nói tiếng Anh -->
+			<div class="reveal reveal-d1 relative pt-14 lg:pt-16">
+				<!-- SVG breaking out above the card -->
+				<div class="absolute -top-6 right-4 lg:right-2 z-[1] opacity-90 pointer-events-none drop-shadow-sm" style="filter: drop-shadow(0 2px 6px rgba(212,150,10,0.15))">
+					<SpeakingAnxiety size={140} />
 				</div>
-			{/each}
+				<!-- Card body -->
+				<div class="relative bg-[#F5F0E6]/60 rounded-2xl p-6 lg:p-7">
+					<div class="w-8 h-0.5 bg-[#D4960A] mb-4"></div>
+					<h3 class="font-heading font-bold text-[#1A1A1A] text-lg lg:text-xl mb-2 tracking-tight leading-snug">Lo lắng khi<br>nói tiếng Anh</h3>
+					<p class="text-[#6B6B6B] text-sm leading-relaxed">Biết từ vựng nhưng cứ đến lúc nói lại bị đơ và mất tự tin.</p>
+				</div>
+			</div>
+
+			<!-- Không biết nói sao cho đúng -->
+			<div class="reveal reveal-d2 relative pt-14 lg:pt-16">
+				<div class="absolute -top-6 right-4 lg:right-2 z-[1] opacity-90 pointer-events-none" style="filter: drop-shadow(0 2px 6px rgba(212,150,10,0.15))">
+					<LostForWords size={140} />
+				</div>
+				<div class="relative bg-[#F5F0E6]/60 rounded-2xl p-6 lg:p-7">
+					<div class="w-8 h-0.5 bg-[#D4960A] mb-4"></div>
+					<h3 class="font-heading font-bold text-[#1A1A1A] text-lg lg:text-xl mb-2 tracking-tight leading-snug">Không biết nói<br>sao cho đúng</h3>
+					<p class="text-[#6B6B6B] text-sm leading-relaxed">Nghe hiểu khá ổn nhưng không biết cách diễn đạt đúng tông nghề nghiệp.</p>
+				</div>
+			</div>
+
+			<!-- Mất cơ hội vì ngôn ngữ -->
+			<div class="reveal reveal-d3 relative pt-14 lg:pt-16">
+				<div class="absolute -top-6 right-4 lg:right-2 z-[1] opacity-90 pointer-events-none" style="filter: drop-shadow(0 2px 6px rgba(212,150,10,0.15))">
+					<MissedOpportunity size={140} />
+				</div>
+				<div class="relative bg-[#F5F0E6]/60 rounded-2xl p-6 lg:p-7">
+					<div class="w-8 h-0.5 bg-[#D4960A] mb-4"></div>
+					<h3 class="font-heading font-bold text-[#1A1A1A] text-lg lg:text-xl mb-2 tracking-tight leading-snug">Mất cơ hội<br>vì ngôn ngữ</h3>
+					<p class="text-[#6B6B6B] text-sm leading-relaxed">Kỹ năng chuyên môn tốt nhưng kém tự tin tiếng Anh khiến mất nhiều hợp đồng.</p>
+				</div>
+			</div>
 		</div>
 	</div>
 </section>

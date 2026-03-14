@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS user_credits (
 
 -- Audit log for credit spending & earning
 CREATE TABLE IF NOT EXISTS credit_events (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
     user_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     delta INTEGER NOT NULL,            -- negative = spent, positive = earned
     reason TEXT NOT NULL,             -- 'roleplay', 'daily_bonus', 'milestone', etc.
@@ -136,7 +136,46 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
 -- ADMIN
 -- =====================
 CREATE TABLE IF NOT EXISTS blacklisted_domains (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
     domain TEXT UNIQUE NOT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================
+-- TELEGRAM
+-- =====================
+CREATE TABLE IF NOT EXISTS telegram_links (
+    user_id TEXT PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+    telegram_chat_id TEXT UNIQUE,
+    telegram_username TEXT,
+    link_token TEXT UNIQUE,
+    linked_at TEXT,
+    reminder_hour INTEGER DEFAULT 8,
+    timezone TEXT DEFAULT 'Asia/Ho_Chi_Minh',
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS telegram_challenges (
+    user_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    word TEXT NOT NULL,
+    correct_index INTEGER NOT NULL,
+    options TEXT NOT NULL,
+    answered INTEGER DEFAULT 0,
+    user_answer TEXT,
+    answered_at TEXT,
+    correct INTEGER,
+    credits_earned INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, word)
+);
+
+CREATE TABLE IF NOT EXISTS telegram_messages (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+    user_id TEXT REFERENCES profiles(id) ON DELETE SET NULL,
+    telegram_chat_id TEXT NOT NULL,
+    direction TEXT NOT NULL,           -- 'in' | 'out'
+    message_text TEXT,
+    message_type TEXT,
+    metadata TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
 );

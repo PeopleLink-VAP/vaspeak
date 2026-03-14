@@ -20,274 +20,264 @@
 	<meta name="description" content="Đăng nhập vào VASpeak để tiếp tục luyện nói tiếng Anh hàng ngày." />
 </svelte:head>
 
-<div class="min-h-screen bg-[#FFFBF1] flex flex-col items-center justify-center px-4 py-12">
+<div class="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center px-5 py-12">
 
 	<!-- Logo -->
-	<a href="/" class="flex items-center gap-2.5 mb-8">
-		<div class="w-10 h-10 rounded-xl bg-[#F2A906] flex items-center justify-center shadow-lg shadow-[#F2A906]/30">
-			<span class="text-[#1B365D] font-extrabold font-heading text-sm">VS</span>
-		</div>
-		<span class="font-heading font-bold text-[#1B365D] text-xl">VASpeak</span>
+	<a href="/" class="flex items-center gap-2 mb-10">
+		<span class="font-heading font-extrabold text-[#1A1A1A] text-xl tracking-tight">VASpeak</span>
 	</a>
 
 	<div class="w-full max-w-sm">
 
 		<!-- URL error (from magic link redirect) -->
 		{#if errorParam && errorMessages[errorParam]}
-			<div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4 text-center">
+			<div class="bg-red-50 text-red-600 text-sm rounded-lg px-4 py-3 mb-5 text-center">
 				{errorMessages[errorParam]}
 			</div>
 		{/if}
 
-		<!-- Card -->
-		<div class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(27,54,93,0.1)] border border-[#1B365D]/6 overflow-hidden">
-
-			<!-- Tabs -->
-			<div class="flex border-b border-[#1B365D]/8">
-				<button
-					onclick={() => tab = 'login'}
-					class="flex-1 py-3.5 text-xs font-semibold transition-colors
-						{tab === 'login'
-							? 'text-[#1B365D] border-b-2 border-[#F2A906] bg-[#F2A906]/4'
-							: 'text-[#1B365D]/40 hover:text-[#1B365D]/70'}"
-				>
-					Mật Khẩu
-				</button>
-				<button
-					onclick={() => tab = 'magic'}
-					class="flex-1 py-3.5 text-xs font-semibold transition-colors
-						{tab === 'magic'
-							? 'text-[#1B365D] border-b-2 border-[#F2A906] bg-[#F2A906]/4'
-							: 'text-[#1B365D]/40 hover:text-[#1B365D]/70'}"
-				>
-					✉️ Magic Link
-				</button>
-				<button
-					onclick={() => tab = 'register'}
-					class="flex-1 py-3.5 text-xs font-semibold transition-colors
-						{tab === 'register'
-							? 'text-[#1B365D] border-b-2 border-[#F2A906] bg-[#F2A906]/4'
-							: 'text-[#1B365D]/40 hover:text-[#1B365D]/70'}"
-				>
-					Đăng Ký
-				</button>
-			</div>
-
-			<div class="p-6">
-
-				<!-- Error from server action -->
-				{#if form?.error && form?.action === tab}
-					<div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
-						{form.error}
-					</div>
-				{/if}
-
-				<!-- ── PASSWORD LOGIN ── -->
-				{#if tab === 'login'}
-					<form
-						method="POST"
-						action="?/login"
-						use:enhance={() => {
-							loading = true;
-							return async ({ update }) => { loading = false; await update(); };
-						}}
-						class="flex flex-col gap-4"
-					>
-						<div>
-							<label for="login-email" class="block text-xs font-semibold text-[#1B365D]/60 mb-1.5 uppercase tracking-wide">Email</label>
-							<input
-								id="login-email"
-								name="email"
-								type="email"
-								required
-								autocomplete="email"
-								placeholder="ban@example.com"
-								class="w-full px-4 py-3 rounded-xl border border-[#1B365D]/15 bg-[#FFFBF1] text-[#1B365D] text-sm placeholder-[#1B365D]/30 focus:outline-none focus:ring-2 focus:ring-[#F2A906] focus:border-transparent transition"
-							/>
-						</div>
-
-						<div>
-							<label for="login-password" class="block text-xs font-semibold text-[#1B365D]/60 mb-1.5 uppercase tracking-wide">Mật khẩu</label>
-							<input
-								id="login-password"
-								name="password"
-								type="password"
-								required
-								autocomplete="current-password"
-								placeholder="••••••••"
-								class="w-full px-4 py-3 rounded-xl border border-[#1B365D]/15 bg-[#FFFBF1] text-[#1B365D] text-sm placeholder-[#1B365D]/30 focus:outline-none focus:ring-2 focus:ring-[#F2A906] focus:border-transparent transition"
-							/>
-						</div>
-
-						<button
-							type="submit"
-							disabled={loading}
-							class="w-full bg-[#F2A906] text-[#1B365D] font-bold py-3.5 rounded-xl text-sm hover:bg-[#d99506] active:scale-95 transition-all duration-150 disabled:opacity-60 shadow-lg shadow-[#F2A906]/25 mt-1"
-						>
-							{loading ? 'Đang đăng nhập...' : 'Đăng Nhập →'}
-						</button>
-
-						<div class="text-center text-xs text-[#1B365D]/40 flex items-center gap-2 justify-center">
-							<span>Không nhớ mật khẩu?</span>
-							<button type="button" onclick={() => tab = 'magic'} class="text-[#F2A906] font-semibold hover:underline">
-								Dùng magic link
-							</button>
-						</div>
-					</form>
-
-				<!-- ── MAGIC LINK ── -->
-				{:else if tab === 'magic'}
-					{#if form?.action === 'magic' && form?.success}
-						<!-- Success state -->
-						<div class="text-center py-4">
-							<div class="text-5xl mb-4">📬</div>
-							<h2 class="font-heading font-bold text-[#1B365D] text-lg mb-2">Kiểm tra email của bạn!</h2>
-							<p class="text-sm text-[#1B365D]/60 leading-relaxed">{form.message}</p>
-							<button
-								onclick={() => tab = 'magic'}
-								class="mt-5 text-xs text-[#F2A906] font-semibold hover:underline"
-							>
-								Gửi lại link khác
-							</button>
-						</div>
-					{:else}
-						<form
-							method="POST"
-							action="?/magic"
-							use:enhance={() => {
-								loading = true;
-								return async ({ update }) => { loading = false; await update(); };
-							}}
-							class="flex flex-col gap-4"
-						>
-							<div class="text-center pb-1">
-								<p class="text-sm text-[#1B365D]/60 leading-relaxed">
-									Nhập email của bạn — chúng tôi sẽ gửi một link đăng nhập tức thì. Không cần mật khẩu!
-								</p>
-							</div>
-
-							<div>
-								<label for="magic-email" class="block text-xs font-semibold text-[#1B365D]/60 mb-1.5 uppercase tracking-wide">Email</label>
-								<input
-									id="magic-email"
-									name="email"
-									type="email"
-									required
-									autocomplete="email"
-									placeholder="ban@example.com"
-									class="w-full px-4 py-3 rounded-xl border border-[#1B365D]/15 bg-[#FFFBF1] text-[#1B365D] text-sm placeholder-[#1B365D]/30 focus:outline-none focus:ring-2 focus:ring-[#F2A906] focus:border-transparent transition"
-								/>
-							</div>
-
-							<button
-								type="submit"
-								disabled={loading}
-								class="w-full bg-[#1B365D] text-white font-bold py-3.5 rounded-xl text-sm hover:bg-[#142a49] active:scale-95 transition-all duration-150 disabled:opacity-60 shadow-lg shadow-[#1B365D]/20 mt-1"
-							>
-								{loading ? 'Đang gửi...' : '✉️ Gửi Magic Link'}
-							</button>
-
-							<p class="text-center text-xs text-[#1B365D]/40">
-								Chưa có tài khoản?
-								<button type="button" onclick={() => tab = 'register'} class="text-[#F2A906] font-semibold hover:underline">
-									Đăng ký miễn phí
-								</button>
-							</p>
-						</form>
-					{/if}
-
-				<!-- ── REGISTER ── -->
-				{:else if form?.action === 'register' && form?.success}
-					<div class="text-center py-4">
-						<div class="text-5xl mb-4">📬</div>
-						<h2 class="font-heading font-bold text-[#1B365D] text-lg mb-2">Kiểm tra email của bạn!</h2>
-						<p class="text-sm text-[#1B365D]/60 leading-relaxed text-balance">{form.message}</p>
-						<button
-							onclick={() => tab = 'login'}
-							class="mt-5 text-xs text-[#F2A906] font-semibold hover:underline"
-						>
-							Về trang Đăng nhập
-						</button>
-					</div>
-				{:else}
-					<form
-						method="POST"
-						action="?/register"
-						use:enhance={() => {
-							loading = true;
-							return async ({ update }) => { loading = false; await update(); };
-						}}
-						class="flex flex-col gap-4"
-					>
-						<div>
-							<label for="reg-name" class="block text-xs font-semibold text-[#1B365D]/60 mb-1.5 uppercase tracking-wide">Tên hiển thị</label>
-							<input
-								id="reg-name"
-								name="display_name"
-								type="text"
-								required
-								autocomplete="name"
-								placeholder="Nguyễn Thị Hoa"
-								class="w-full px-4 py-3 rounded-xl border border-[#1B365D]/15 bg-[#FFFBF1] text-[#1B365D] text-sm placeholder-[#1B365D]/30 focus:outline-none focus:ring-2 focus:ring-[#F2A906] focus:border-transparent transition"
-							/>
-						</div>
-
-						<div>
-							<label for="reg-email" class="block text-xs font-semibold text-[#1B365D]/60 mb-1.5 uppercase tracking-wide">Email</label>
-							<input
-								id="reg-email"
-								name="email"
-								type="email"
-								required
-								autocomplete="email"
-								placeholder="ban@example.com"
-								class="w-full px-4 py-3 rounded-xl border border-[#1B365D]/15 bg-[#FFFBF1] text-[#1B365D] text-sm placeholder-[#1B365D]/30 focus:outline-none focus:ring-2 focus:ring-[#F2A906] focus:border-transparent transition"
-							/>
-						</div>
-
-						<div>
-							<label for="reg-password" class="block text-xs font-semibold text-[#1B365D]/60 mb-1.5 uppercase tracking-wide">Mật khẩu</label>
-							<input
-								id="reg-password"
-								name="password"
-								type="password"
-								required
-								autocomplete="new-password"
-								placeholder="Tối thiểu 8 ký tự"
-								minlength="8"
-								class="w-full px-4 py-3 rounded-xl border border-[#1B365D]/15 bg-[#FFFBF1] text-[#1B365D] text-sm placeholder-[#1B365D]/30 focus:outline-none focus:ring-2 focus:ring-[#F2A906] focus:border-transparent transition"
-							/>
-						</div>
-
-						<button
-							type="submit"
-							disabled={loading}
-							class="w-full bg-[#F2A906] text-[#1B365D] font-bold py-3.5 rounded-xl text-sm hover:bg-[#d99506] active:scale-95 transition-all duration-150 disabled:opacity-60 shadow-lg shadow-[#F2A906]/25 mt-1"
-						>
-							{loading ? 'Đang tạo tài khoản...' : 'Tạo Tài Khoản Miễn Phí →'}
-						</button>
-
-						<p class="text-center text-xs text-[#1B365D]/40">
-							Đã có tài khoản?
-							<button type="button" onclick={() => tab = 'login'} class="text-[#F2A906] font-semibold hover:underline">
-								Đăng nhập
-							</button>
-						</p>
-
-						<p class="text-center text-[11px] text-[#1B365D]/30 leading-relaxed">
-							Bằng cách đăng ký, bạn đồng ý với<br/>
-							<a href="/terms" class="underline hover:text-[#1B365D]/60">Điều khoản</a> và
-							<a href="/privacy" class="underline hover:text-[#1B365D]/60">Chính sách bảo mật</a>
-						</p>
-					</form>
-				{/if}
-
-			</div>
+		<!-- Tabs — minimal underline style -->
+		<div class="flex gap-0 mb-8 border-b border-[#E8E8E8]">
+			<button
+				onclick={() => tab = 'login'}
+				class="flex-1 pb-3 text-xs font-semibold uppercase tracking-wider transition-colors
+					{tab === 'login'
+						? 'text-[#1A1A1A] border-b-2 border-[#D4960A]'
+						: 'text-[#A3A3A3] hover:text-[#6B6B6B]'}"
+			>
+				Mật Khẩu
+			</button>
+			<button
+				onclick={() => tab = 'magic'}
+				class="flex-1 pb-3 text-xs font-semibold uppercase tracking-wider transition-colors
+					{tab === 'magic'
+						? 'text-[#1A1A1A] border-b-2 border-[#D4960A]'
+						: 'text-[#A3A3A3] hover:text-[#6B6B6B]'}"
+			>
+				✉️ Magic Link
+			</button>
+			<button
+				onclick={() => tab = 'register'}
+				class="flex-1 pb-3 text-xs font-semibold uppercase tracking-wider transition-colors
+					{tab === 'register'
+						? 'text-[#1A1A1A] border-b-2 border-[#D4960A]'
+						: 'text-[#A3A3A3] hover:text-[#6B6B6B]'}"
+			>
+				Đăng Ký
+			</button>
 		</div>
 
-		<!-- Subtle login hint from landing page -->
-		<p class="text-center text-xs text-[#1B365D]/35 mt-6">
-			<a href="/" class="hover:text-[#1B365D]/60 transition-colors">← Về trang chủ</a>
-		</p>
+		<!-- Error from server action -->
+		{#if form?.error && form?.action === tab}
+			<div class="bg-red-50 text-red-600 text-sm rounded-lg px-4 py-3 mb-5">
+				{form.error}
+			</div>
+		{/if}
+
+		<!-- ── PASSWORD LOGIN ── -->
+		{#if tab === 'login'}
+			<form
+				method="POST"
+				action="?/login"
+				use:enhance={() => {
+					loading = true;
+					return async ({ update }) => { loading = false; await update(); };
+				}}
+				class="flex flex-col gap-5"
+			>
+				<div>
+					<label for="login-email" class="block text-xs font-semibold text-[#A3A3A3] mb-2 uppercase tracking-wider">Email</label>
+					<input
+						id="login-email"
+						name="email"
+						type="email"
+						required
+						autocomplete="email"
+						placeholder="ban@example.com"
+						class="w-full px-0 py-3 bg-transparent text-[#1A1A1A] text-sm placeholder-[#A3A3A3] border-b border-[#E8E8E8] focus:border-[#D4960A] focus:outline-none transition-colors"
+					/>
+				</div>
+
+				<div>
+					<label for="login-password" class="block text-xs font-semibold text-[#A3A3A3] mb-2 uppercase tracking-wider">Mật khẩu</label>
+					<input
+						id="login-password"
+						name="password"
+						type="password"
+						required
+						autocomplete="current-password"
+						placeholder="••••••••"
+						class="w-full px-0 py-3 bg-transparent text-[#1A1A1A] text-sm placeholder-[#A3A3A3] border-b border-[#E8E8E8] focus:border-[#D4960A] focus:outline-none transition-colors"
+					/>
+				</div>
+
+				<button
+					type="submit"
+					disabled={loading}
+					class="w-full bg-[#D4960A] text-[#1A1A1A] font-bold py-3.5 rounded-lg text-sm hover:bg-[#b07d08] active:scale-[0.97] transition-all duration-150 disabled:opacity-60 mt-2"
+				>
+					{loading ? 'Đang đăng nhập...' : 'Đăng Nhập →'}
+				</button>
+
+				<div class="text-center text-xs text-[#A3A3A3] flex items-center gap-2 justify-center">
+					<span>Không nhớ mật khẩu?</span>
+					<button type="button" onclick={() => tab = 'magic'} class="text-[#D4960A] font-semibold hover:underline">
+						Dùng magic link
+					</button>
+				</div>
+			</form>
+
+		<!-- ── MAGIC LINK ── -->
+		{:else if tab === 'magic'}
+			{#if form?.action === 'magic' && form?.success}
+				<!-- Success state -->
+				<div class="text-center py-6">
+					<div class="text-5xl mb-4">📬</div>
+					<h2 class="font-heading font-bold text-[#1A1A1A] text-lg mb-2">Kiểm tra email của bạn!</h2>
+					<p class="text-sm text-[#6B6B6B] leading-relaxed">{form.message}</p>
+					<button
+						onclick={() => tab = 'magic'}
+						class="mt-5 text-xs text-[#D4960A] font-semibold hover:underline"
+					>
+						Gửi lại link khác
+					</button>
+				</div>
+			{:else}
+				<form
+					method="POST"
+					action="?/magic"
+					use:enhance={() => {
+						loading = true;
+						return async ({ update }) => { loading = false; await update(); };
+					}}
+					class="flex flex-col gap-5"
+				>
+					<div class="text-center pb-2">
+						<p class="text-sm text-[#6B6B6B] leading-relaxed">
+							Nhập email của bạn — chúng tôi sẽ gửi một link đăng nhập tức thì. Không cần mật khẩu!
+						</p>
+					</div>
+
+					<div>
+						<label for="magic-email" class="block text-xs font-semibold text-[#A3A3A3] mb-2 uppercase tracking-wider">Email</label>
+						<input
+							id="magic-email"
+							name="email"
+							type="email"
+							required
+							autocomplete="email"
+							placeholder="ban@example.com"
+							class="w-full px-0 py-3 bg-transparent text-[#1A1A1A] text-sm placeholder-[#A3A3A3] border-b border-[#E8E8E8] focus:border-[#D4960A] focus:outline-none transition-colors"
+						/>
+					</div>
+
+					<button
+						type="submit"
+						disabled={loading}
+						class="w-full bg-[#1A1A1A] text-white font-bold py-3.5 rounded-lg text-sm hover:bg-[#333] active:scale-[0.97] transition-all duration-150 disabled:opacity-60 mt-2"
+					>
+						{loading ? 'Đang gửi...' : '✉️ Gửi Magic Link'}
+					</button>
+
+					<p class="text-center text-xs text-[#A3A3A3]">
+						Chưa có tài khoản?
+						<button type="button" onclick={() => tab = 'register'} class="text-[#D4960A] font-semibold hover:underline">
+							Đăng ký miễn phí
+						</button>
+					</p>
+				</form>
+			{/if}
+
+		<!-- ── REGISTER ── -->
+		{:else if form?.action === 'register' && form?.success}
+			<div class="text-center py-6">
+				<div class="text-5xl mb-4">📬</div>
+				<h2 class="font-heading font-bold text-[#1A1A1A] text-lg mb-2">Kiểm tra email của bạn!</h2>
+				<p class="text-sm text-[#6B6B6B] leading-relaxed text-balance">{form.message}</p>
+				<button
+					onclick={() => tab = 'login'}
+					class="mt-5 text-xs text-[#D4960A] font-semibold hover:underline"
+				>
+					Về trang Đăng nhập
+				</button>
+			</div>
+		{:else}
+			<form
+				method="POST"
+				action="?/register"
+				use:enhance={() => {
+					loading = true;
+					return async ({ update }) => { loading = false; await update(); };
+				}}
+				class="flex flex-col gap-5"
+			>
+				<div>
+					<label for="reg-name" class="block text-xs font-semibold text-[#A3A3A3] mb-2 uppercase tracking-wider">Tên hiển thị</label>
+					<input
+						id="reg-name"
+						name="display_name"
+						type="text"
+						required
+						autocomplete="name"
+						placeholder="Nguyễn Thị Hoa"
+						class="w-full px-0 py-3 bg-transparent text-[#1A1A1A] text-sm placeholder-[#A3A3A3] border-b border-[#E8E8E8] focus:border-[#D4960A] focus:outline-none transition-colors"
+					/>
+				</div>
+
+				<div>
+					<label for="reg-email" class="block text-xs font-semibold text-[#A3A3A3] mb-2 uppercase tracking-wider">Email</label>
+					<input
+						id="reg-email"
+						name="email"
+						type="email"
+						required
+						autocomplete="email"
+						placeholder="ban@example.com"
+						class="w-full px-0 py-3 bg-transparent text-[#1A1A1A] text-sm placeholder-[#A3A3A3] border-b border-[#E8E8E8] focus:border-[#D4960A] focus:outline-none transition-colors"
+					/>
+				</div>
+
+				<div>
+					<label for="reg-password" class="block text-xs font-semibold text-[#A3A3A3] mb-2 uppercase tracking-wider">Mật khẩu</label>
+					<input
+						id="reg-password"
+						name="password"
+						type="password"
+						required
+						autocomplete="new-password"
+						placeholder="Tối thiểu 8 ký tự"
+						minlength="8"
+						class="w-full px-0 py-3 bg-transparent text-[#1A1A1A] text-sm placeholder-[#A3A3A3] border-b border-[#E8E8E8] focus:border-[#D4960A] focus:outline-none transition-colors"
+					/>
+				</div>
+
+				<button
+					type="submit"
+					disabled={loading}
+					class="w-full bg-[#D4960A] text-[#1A1A1A] font-bold py-3.5 rounded-lg text-sm hover:bg-[#b07d08] active:scale-[0.97] transition-all duration-150 disabled:opacity-60 mt-2"
+				>
+					{loading ? 'Đang tạo tài khoản...' : 'Tạo Tài Khoản Miễn Phí →'}
+				</button>
+
+				<p class="text-center text-xs text-[#A3A3A3]">
+					Đã có tài khoản?
+					<button type="button" onclick={() => tab = 'login'} class="text-[#D4960A] font-semibold hover:underline">
+						Đăng nhập
+					</button>
+				</p>
+
+				<p class="text-center text-[11px] text-[#A3A3A3]/70 leading-relaxed">
+					Bằng cách đăng ký, bạn đồng ý với<br/>
+					<a href="/terms" class="underline hover:text-[#6B6B6B]">Điều khoản</a> và
+					<a href="/privacy" class="underline hover:text-[#6B6B6B]">Chính sách bảo mật</a>
+				</p>
+			</form>
+		{/if}
+
 	</div>
+
+	<!-- Back to home -->
+	<p class="text-center text-xs text-[#A3A3A3] mt-8">
+		<a href="/" class="hover:text-[#6B6B6B] transition-colors">← Về trang chủ</a>
+	</p>
 </div>

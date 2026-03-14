@@ -1,13 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { turso, ensureKanbanSchema } from '$lib/server/turso';
-
-/** Ensure timestamps are treated as UTC by appending Z if missing */
-function utc(ts: unknown): string {
-    const s = String(ts ?? '');
-    if (!s) return s;
-    if (s.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(s)) return s;
-    return s.replace(' ', 'T') + 'Z';
-}
+import { utc } from '$lib/utils';
 
 export async function GET() {
     await ensureKanbanSchema();

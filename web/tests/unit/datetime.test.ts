@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { hoursSince, formatUptime } from '$lib/utils';
+import { hoursSince, formatUptime, utc } from '$lib/utils';
 
 describe('hoursSince', () => {
 	it('returns 0 for a very recent timestamp', () => {
@@ -48,5 +48,33 @@ describe('formatUptime', () => {
 	it('formats a realistic uptime (2 days 6 hours 30 min)', () => {
 		const uptime = 2 * 86400 + 6 * 3600 + 30 * 60;
 		expect(formatUptime(uptime)).toBe('2d 6h 30m');
+	});
+});
+
+describe('utc', () => {
+	it('appends Z to a bare ISO datetime', () => {
+		expect(utc('2026-03-14T10:30:00')).toBe('2026-03-14T10:30:00Z');
+	});
+
+	it('converts SQLite space-separated datetime to ISO with Z', () => {
+		expect(utc('2026-03-14 10:30:00')).toBe('2026-03-14T10:30:00Z');
+	});
+
+	it('leaves already-UTC timestamps unchanged', () => {
+		expect(utc('2026-03-14T10:30:00Z')).toBe('2026-03-14T10:30:00Z');
+	});
+
+	it('leaves timezone-offset timestamps unchanged', () => {
+		expect(utc('2026-03-14T10:30:00+07:00')).toBe('2026-03-14T10:30:00+07:00');
+		expect(utc('2026-03-14T10:30:00-05:00')).toBe('2026-03-14T10:30:00-05:00');
+	});
+
+	it('returns empty string for null/undefined', () => {
+		expect(utc(null)).toBe('');
+		expect(utc(undefined)).toBe('');
+	});
+
+	it('returns empty string for empty string', () => {
+		expect(utc('')).toBe('');
 	});
 });

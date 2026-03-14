@@ -1,10 +1,15 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { groq, STT_MODEL } from '$lib/server/groq';
+import { sttLimiter } from '$lib/server/rate-limit';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
     if (!locals.user) {
         return json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    if (!sttLimiter.allow(locals.user.id)) {
+        return json({ error: 'Too many requests. Please slow down.' }, { status: 429 });
     }
 
     try {

@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { groq, TTS_MODEL, TTS_VOICE } from '$lib/server/groq';
+import { ttsLimiter } from '$lib/server/rate-limit';
 
 /**
  * POST /api/tts
@@ -10,6 +11,10 @@ import { groq, TTS_MODEL, TTS_VOICE } from '$lib/server/groq';
 export const POST: RequestHandler = async ({ request, locals }) => {
     if (!locals.user) {
         return json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    if (!ttsLimiter.allow(locals.user.id)) {
+        return json({ error: 'Too many requests. Please slow down.' }, { status: 429 });
     }
 
     try {

@@ -107,10 +107,10 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 12. Admin users page (tabbed profile popup: activity timeline, progress, credits)
 13. Reusable `TimeAgo` component, UTC timestamp normalization
 14. E2E carousel view for recordings/screenshots
+15. Audio recording polish (lesson page component refactor, TTS/STT rate limiting)
+16. Niche-specific lesson generation (ecommerce, video_editor, etc.)
 
 ### 🔄 In Progress
-15. Audio recording polish (Web Audio + MediaRecorder, needs E2E testing)
-16. Monetization (credit top-up, Pro plan, payment integration)
-17. Community forum (social feature for VAs)
-18. 50+ days content (extend beyond Week 7)
-19. Niche-specific lesson generation (ecommerce, video_editor, etc.)
+17. Monetization (credit top-up, Pro plan, payment integration)
+18. Community forum (social feature for VAs)
+19. 50+ days content (extend beyond Week 7)

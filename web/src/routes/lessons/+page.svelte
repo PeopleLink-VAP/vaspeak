@@ -9,73 +9,75 @@
 	<title>Lộ Trình Học — VASpeak</title>
 </svelte:head>
 
-<div class="min-h-screen bg-[#FFFBF1] pb-24 relative">
+<div class="min-h-screen bg-[#FAFAF8] pb-24">
 	<!-- Top Bar -->
-	<div class="bg-white shadow-[0_4px_14px_rgba(27,54,93,0.04)] px-4 py-4 mb-6 sticky top-0 z-10 flex items-center justify-center relative">
-		<h1 class="font-heading font-bold text-lg text-[#1B365D]">Lộ Trình Học</h1>
+	<div class="sticky top-0 z-10 bg-[#FAFAF8]/95 backdrop-blur-lg border-b border-[#E8E8E8] px-5 py-4">
+		<h1 class="font-heading font-bold text-[#1A1A1A] text-base tracking-tight">Lộ Trình Học</h1>
 	</div>
 
-	<div class="max-w-md mx-auto px-4 flex flex-col gap-6">
+	<div class="max-w-md mx-auto px-5 pt-6 flex flex-col gap-8">
 		{#if !weeks || weeks.length === 0}
-			<div class="text-center py-12 px-4 bg-white rounded-2xl border border-[#1B365D]/6 border-dashed opacity-75">
-				<div class="text-5xl mb-4">📭</div>
-				<h3 class="font-heading font-semibold text-[#1B365D] text-lg mb-2">Chưa có bài học nào</h3>
-				<p class="text-sm text-[#1B365D]/60 leading-relaxed max-w-xs mx-auto">
+			<div class="text-center py-16 px-4">
+				<p class="text-3xl mb-4">📭</p>
+				<h3 class="font-heading font-semibold text-[#1A1A1A] text-base mb-2">Chưa có bài học nào</h3>
+				<p class="text-sm text-[#6B6B6B] leading-relaxed max-w-xs mx-auto">
 					Hệ thống vẫn đang xử lý hoặc bạn chưa thuộc ngách nào.
 				</p>
 			</div>
 		{:else}
 			{#each weeks as week}
-				<div class="bg-white rounded-2xl p-5 shadow-[0_4px_14px_rgba(27,54,93,0.05)] border border-[#1B365D]/8">
+				<div>
 					<!-- Week Header -->
-					<div class="border-b border-[#1B365D]/5 pb-3 mb-3">
-						<span class="text-xs font-semibold text-[#F2A906] uppercase tracking-wider block mb-1">Tuần {week.weekNumber}</span>
-						<h2 class="font-heading font-bold text-[#1B365D] text-lg leading-tight">{week.theme}</h2>
+					<div class="flex items-baseline gap-3 mb-4">
+						<span class="text-xs font-semibold text-[#D4960A] uppercase tracking-widest">Tuần {week.weekNumber}</span>
+						<div class="flex-1 h-px bg-[#E8E8E8]"></div>
 					</div>
-					
+					<h2 class="font-heading font-bold text-[#1A1A1A] text-xl mb-4 tracking-tight leading-snug">{week.theme}</h2>
+
 					<!-- Lesson List -->
-					<div class="flex flex-col gap-3">
+					<div class="flex flex-col gap-2.5">
 						{#each week.lessons as lesson (lesson.id)}
 							{#if lesson.locked}
-								<div class="flex items-center gap-4 bg-[#FFFBF1] p-3 rounded-xl border border-[#1B365D]/5 opacity-60">
-									<div class="w-10 h-10 rounded-full bg-[#1B365D]/5 flex items-center justify-center shrink-0">
-										<span class="text-sm opacity-50">🔒</span>
+								<div class="flex items-center gap-4 p-3.5 rounded-xl opacity-40">
+									<div class="w-9 h-9 rounded-full bg-[#E8E8E8] flex items-center justify-center shrink-0">
+										<svg class="w-4 h-4 text-[#A3A3A3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
 									</div>
-									<div>
-										<h4 class="font-heading font-semibold text-[#1B365D]/60 text-sm">Day {lesson.day_number}: {lesson.title}</h4>
-										<p class="text-[10px] text-[#1B365D]/40 font-bold uppercase tracking-wide mt-0.5">Yêu cầu hoàn thành Day {lesson.day_number - 1}</p>
+									<div class="flex-1">
+										<h4 class="font-medium text-[#1A1A1A] text-sm">Day {lesson.day_number}: {lesson.title}</h4>
+										<p class="text-[10px] text-[#A3A3A3] mt-0.5">Hoàn thành Day {lesson.day_number - 1} để mở khóa</p>
 									</div>
 								</div>
 							{:else}
-								<a href="/lesson/{lesson.day_number}" class="flex items-center gap-4 bg-white p-3 rounded-xl border border-[#1B365D]/10 hover:border-[#F2A906]/60 transition-colors group">
+								<a
+									href="/lesson/{lesson.day_number}"
+									class="flex items-center gap-4 p-3.5 rounded-xl border transition-all group
+										{lesson.completed
+											? 'bg-[#F5F0E6]/50 border-[#E8E8E8]'
+											: 'bg-white border-[#E8E8E8] hover:border-[#D4960A]/40 hover:shadow-sm'}"
+								>
 									{#if lesson.completed}
-										<!-- Completed State -->
-										<div class="w-10 h-10 rounded-full bg-[#10B981]/15 text-[#10B981] flex items-center justify-center shrink-0 font-bold text-sm">
-											✓
+										<div class="w-9 h-9 rounded-full bg-[#10B981]/15 flex items-center justify-center shrink-0">
+											<svg class="w-4 h-4 text-[#10B981]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
 										</div>
 									{:else}
-										<!-- Active/Next State -->
-										<div class="w-10 h-10 rounded-full bg-[#F2A906] text-[#1B365D] flex items-center justify-center shrink-0 font-bold font-heading shadow-md shadow-[#F2A906]/30">
+										<div class="w-9 h-9 rounded-full bg-[#D4960A] flex items-center justify-center shrink-0 font-bold text-[#1A1A1A] text-sm font-heading">
 											{lesson.day_number}
 										</div>
 									{/if}
-									
-									<div class="flex-1">
-										<h4 class="font-heading font-semibold {lesson.completed ? 'text-[#1B365D]/80 line-through' : 'text-[#1B365D]'} text-sm leading-snug group-hover:text-[#F2A906] transition-colors">
+
+									<div class="flex-1 min-w-0">
+										<h4 class="font-medium text-sm leading-snug
+											{lesson.completed ? 'text-[#A3A3A3] line-through' : 'text-[#1A1A1A]'}">
 											Day {lesson.day_number}: {lesson.title}
 										</h4>
 										{#if lesson.completed}
-											<p class="text-[10px] text-[#10B981] font-bold uppercase tracking-wider mt-0.5">Đã Hoàn Thành</p>
+											<p class="text-[10px] text-[#10B981] font-semibold uppercase tracking-wider mt-0.5">Đã Hoàn Thành</p>
 										{:else}
-											<p class="text-[10px] text-[#1B365D]/50 font-medium mt-0.5">Nhấp vào để làm bài</p>
+											<p class="text-[10px] text-[#A3A3A3] mt-0.5">Nhấp để làm bài</p>
 										{/if}
 									</div>
-									
-									<div class="text-[#1B365D]/20 group-hover:text-[#F2A906] transition-colors shrink-0">
-										<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-											<path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-										</svg>
-									</div>
+
+									<svg class="w-4 h-4 shrink-0 text-[#D4D4D4] group-hover:text-[#D4960A] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
 								</a>
 							{/if}
 						{/each}

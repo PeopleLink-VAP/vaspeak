@@ -2,6 +2,7 @@
  * Shared helper: generate a vocab challenge using Groq AI.
  * Used by both the webhook (/word) and the daily cron.
  */
+import { randomBytes } from 'crypto';
 import { env } from '$env/dynamic/private';
 import { db } from '$lib/server/db';
 
@@ -97,11 +98,12 @@ export async function sendVocabChallenge(userId: string, chatId: string, display
     // Generate challenge
     const challenge = await generateVocabChallenge(level, niche, existingWords);
 
-    // Save to vocab bank
+    // Save to vocab bank (generate random id — TEXT PK has no DEFAULT)
+    const vocabId = randomBytes(8).toString('hex');
     await db.execute({
-        sql: `INSERT OR IGNORE INTO vocabulary_bank (user_id, word, definition, context_sentence, mastered)
-              VALUES (?, ?, ?, ?, 0)`,
-        args: [userId, challenge.word, challenge.definition, challenge.example]
+        sql: `INSERT OR IGNORE INTO vocabulary_bank (id, user_id, word, definition, context_sentence, mastered)
+              VALUES (?, ?, ?, ?, ?, 0)`,
+        args: [vocabId, userId, challenge.word, challenge.definition, challenge.example]
     });
 
     // Store challenge for answer verification

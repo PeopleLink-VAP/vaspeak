@@ -8,6 +8,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
+import { earnCredits } from '$lib/server/credits';
 import { sendTelegramMessage, sendVocabChallenge } from '$lib/server/telegram';
 
 async function getUserIdByChatId(chatId: string): Promise<string | null> {
@@ -168,14 +169,19 @@ export const POST: RequestHandler = async ({ request }) => {
             args: [upper, isCorrect ? 1 : 0, isCorrect ? 1 : 0, userId, word]
         });
 
+        // Send reply FIRST — credit bookkeeping is secondary and must not block the response
         if (isCorrect) {
-            await db.execute({ sql: 'UPDATE user_credits SET credits_used = credits_used - 1 WHERE user_id = ?', args: [userId] });
-            await db.execute({ sql: `INSERT INTO credit_events (user_id, delta, reason, created_at) VALUES (?, 1, 'daily_vocab_challenge', datetime('now'))`, args: [userId] });
-            await db.execute({ sql: 'UPDATE vocabulary_bank SET mastered = 1 WHERE user_id = ? AND word = ?', args: [userId, word] });
             await reply(chatId, userId,
                 `🎉 <b>Chính xác!</b> ${upper}. ${options[correctIdx]}\n\n📝 "<b>${word}</b>" → đã thuộc ✅\n⚡ <b>+1 credit!</b>\n\nGõ /word để thử từ tiếp theo!`,
                 { reply_markup: { remove_keyboard: true } }
             );
+            // Credit bookkeeping — wrapped to never crash the handler
+            try {
+                await earnCredits(userId, 1, 'daily_vocab_challenge');
+                await db.execute({ sql: 'UPDATE vocabulary_bank SET mastered = 1 WHERE user_id = ? AND word = ?', args: [userId, word] });
+            } catch (creditErr) {
+                console.error('[telegram answer] credit update failed (non-fatal):', creditErr);
+            }
         } else {
             await reply(chatId, userId,
                 `❌ Sai rồi! Đáp án: <b>${'ABCD'[correctIdx]}. ${options[correctIdx]}</b>\n\n📝 "<b>${word}</b>" → ôn tập 📖\n\n💪 Gõ /word để thử từ khác!`,

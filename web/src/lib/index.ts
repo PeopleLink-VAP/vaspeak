@@ -31,5 +31,8 @@ export {
 	// String utilities
 	truncate,
 	slugify,
-	parseJsonArray
+	parseJsonArray,
+
+	// Timestamp utilities
+	utc
 } from './utils';

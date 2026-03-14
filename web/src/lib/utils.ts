@@ -160,3 +160,19 @@ export function slugify(str: string): string {
 		.replace(/[\s_]+/g, '-')
 		.replace(/^-+|-+$/g, '');
 }
+
+// ---------------------------------------------------------------------------
+// Timestamp utilities
+// ---------------------------------------------------------------------------
+
+/**
+ * Ensure SQLite timestamps are treated as UTC by appending Z if missing.
+ * SQLite stores datetimes without timezone — this normalises them so
+ * `new Date()` in the browser parses them correctly.
+ */
+export function utc(ts: unknown): string {
+	const s = String(ts ?? '');
+	if (!s) return s;
+	if (s.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(s)) return s;
+	return s.replace(' ', 'T') + 'Z';
+}

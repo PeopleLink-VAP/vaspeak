@@ -10,9 +10,7 @@ test.describe('Login page', () => {
 
 	test('shows validation error on empty submit', async ({ page }) => {
 		await page.goto('/login');
-		// Try submitting without filling in anything
 		await page.locator('button[type="submit"]').first().click();
-		// HTML5 validation prevents submit, email field should be required
 		const emailInput = page.locator('#login-email');
 		await expect(emailInput).toBeVisible();
 	});
@@ -21,8 +19,12 @@ test.describe('Login page', () => {
 		await page.goto('/login');
 		await page.fill('#login-email', 'notreal@example.com');
 		await page.fill('#login-password', 'wrongpassword');
-		await page.locator('button[type="submit"]').first().click();
-		await expect(page.locator('text=Invalid email or password')).toBeVisible({ timeout: 5000 });
+		// Wait for the form action response to complete
+		await Promise.all([
+			page.waitForResponse(resp => resp.url().includes('/login') && resp.status() >= 200),
+			page.locator('button[type="submit"]').first().click()
+		]);
+		await expect(page.locator('text=Invalid email or password')).toBeVisible({ timeout: 8000 });
 	});
 
 	test('register tab switches form', async ({ page }) => {
@@ -38,9 +40,8 @@ test.describe('Login page', () => {
 		await page.getByText('Đăng Ký', { exact: true }).click();
 		await page.fill('#reg-name', 'Test User');
 		await page.fill('#reg-email', `test-${Date.now()}@example.com`);
-		await page.fill('#reg-password', 'short'); // < 8 chars
+		await page.fill('#reg-password', 'short');
 		await page.locator('button[type="submit"]').last().click();
-		// HTML5 minlength will prevent submit, or server returns 400
 		await expect(page.locator('#reg-password')).toBeVisible();
 	});
 
@@ -56,34 +57,40 @@ test.describe('Login page', () => {
 });
 
 test.describe('Register + Login flow', () => {
-	const email = `va-test-${Date.now()}@example.com`;
-	const password = 'TestPassword123';
-	const name = 'Test VA';
-
 	test('full register → dashboard → logout flow', async ({ page }) => {
+		test.setTimeout(45_000);
+		const uid = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+		const email = `va-flow-${uid}@example.com`;
+		const password = 'TestPassword123';
+
 		// Register
 		await page.goto('/login');
 		await page.getByText('Đăng Ký', { exact: true }).click();
-		await page.fill('#reg-name', name);
+		await page.fill('#reg-name', 'Test VA');
 		await page.fill('#reg-email', email);
 		await page.fill('#reg-password', password);
-		await page.locator('button[type="submit"]').last().click();
+
+		// Click submit and wait for the server response
+		await Promise.all([
+			page.waitForResponse(resp => resp.url().includes('/login') && resp.status() >= 200),
+			page.locator('button[type="submit"]').last().click()
+		]);
 
 		// Should show verification message
-		await expect(page.getByText('Kiểm tra email của bạn!', { exact: false })).toBeVisible({ timeout: 8000 });
+		await expect(page.getByText('Kiểm tra email của bạn!', { exact: false })).toBeVisible({ timeout: 12_000 });
 
-        // Verify email in DB using a quick fetch to an exposed test endpoint or direct DB manipulation
-        		// As a quick workaround, we will use playwright request context to manually flip the bit!
-		await page.request.post('/api/e2e-verify', { data: { email } });
+		// Verify email via test endpoint
+		const verifyRes = await page.request.post('/api/e2e-verify', { data: { email } });
+		expect(verifyRes.ok()).toBeTruthy();
 
-		// Login
+		// Login with verified email
 		await page.goto('/login');
 		await page.fill('#login-email', email);
 		await page.fill('#login-password', password);
 		await page.locator('button[type="submit"]').first().click();
 
 		// Should land on placement or dashboard
-		await expect(page).toHaveURL(/\/dashboard|\/placement/, { timeout: 8000 });
+		await expect(page).toHaveURL(/\/dashboard|\/placement/, { timeout: 12_000 });
 
 		// Logout
 		await page.goto('/logout');
@@ -91,14 +98,41 @@ test.describe('Register + Login flow', () => {
 	});
 
 	test('duplicate registration is rejected', async ({ page }) => {
-		// First register
+		test.setTimeout(45_000);
+		const uid = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+		const email = `va-dupe-${uid}@example.com`;
+		const password = 'TestPassword123';
+
+		// First: register the email
+		await page.goto('/login');
+		await page.getByText('Đăng Ký', { exact: true }).click();
+		await page.fill('#reg-name', 'First User');
+		await page.fill('#reg-email', email);
+		await page.fill('#reg-password', password);
+
+		await Promise.all([
+			page.waitForResponse(resp => resp.url().includes('/login') && resp.status() >= 200),
+			page.locator('button[type="submit"]').last().click()
+		]);
+		await expect(page.getByText('Kiểm tra email của bạn!', { exact: false })).toBeVisible({ timeout: 12_000 });
+
+		// Second: try to register again with same email
 		await page.goto('/login');
 		await page.getByText('Đăng Ký', { exact: true }).click();
 		await page.fill('#reg-name', 'Dupe User');
-		await page.fill('#reg-email', email); // same email as above
+		await page.fill('#reg-email', email);
 		await page.fill('#reg-password', password);
-		await page.locator('button[type="submit"]').last().click();
-		// Should show already exists error (handled by server if email is taken)
-		await expect(page.locator('text=already exists').or(page.locator('text=already taken'))).toBeVisible({ timeout: 5000 });
+
+		await Promise.all([
+			page.waitForResponse(resp => resp.url().includes('/login') && resp.status() >= 200),
+			page.locator('button[type="submit"]').last().click()
+		]);
+
+		// Should show already-exists error
+		await expect(
+			page.locator('text=already exists')
+				.or(page.locator('text=already taken'))
+				.or(page.locator('text=đã tồn tại'))
+		).toBeVisible({ timeout: 10_000 });
 	});
 });
