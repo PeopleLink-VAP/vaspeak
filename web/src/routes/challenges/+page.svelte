@@ -173,4 +173,4 @@
 	</div>
 </div>
 
-<BottomNav active="dashboard" />
+<BottomNav active="challenges" />

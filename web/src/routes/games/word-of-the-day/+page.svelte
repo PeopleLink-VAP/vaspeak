@@ -297,7 +297,7 @@
 	</div>
 </div>
 
-<BottomNav active="dashboard" />
+<BottomNav active="challenges" />
 
 <style>
 	@keyframes slideUp {
