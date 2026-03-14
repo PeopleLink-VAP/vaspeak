@@ -28,20 +28,69 @@
 	// ── TTS Playback state (Block 1) ──────────────────────────────────
 	let ttsState: 'idle' | 'loading' | 'speaking' | 'paused' = $state('idle');
 	let ttsAudio: HTMLAudioElement | null = null;
-	let ttsCache = new Map<string, string>(); // script hash → blob URL
+	let ttsCache = new Map<string, string>();
 	let ttsError = $state('');
+
+	// Audio visualizer
+	const BAR_COUNT = 32;
+	let barHeights = $state<number[]>(Array(BAR_COUNT).fill(0).map((_, i) => 4 + Math.sin(i * 0.6) * 3));
+	let audioCtx: AudioContext | null = null;
+	let analyser: AnalyserNode | null = null;
+	let sourceNode: MediaElementAudioSourceNode | null = null;
+	let animFrameId: number | null = null;
+
+	function startVisualizer() {
+		if (!ttsAudio || typeof window === 'undefined') return;
+		try {
+			if (!audioCtx) audioCtx = new AudioContext();
+			if (!analyser) {
+				analyser = audioCtx.createAnalyser();
+				analyser.fftSize = 128;
+				analyser.smoothingTimeConstant = 0.75;
+			}
+			if (!sourceNode) {
+				sourceNode = audioCtx.createMediaElementSource(ttsAudio);
+				sourceNode.connect(analyser);
+				analyser.connect(audioCtx.destination);
+			}
+			const dataArray = new Uint8Array(analyser.frequencyBinCount);
+			function tick() {
+				if (!analyser) return;
+				analyser.getByteFrequencyData(dataArray);
+				// Map frequency bins to bar heights (pick evenly spaced bins)
+				const step = Math.floor(dataArray.length / BAR_COUNT);
+				const newHeights: number[] = [];
+				for (let i = 0; i < BAR_COUNT; i++) {
+					const val = dataArray[i * step] || 0;
+					newHeights.push(3 + (val / 255) * 29); // 3px min, 32px max
+				}
+				barHeights = newHeights;
+				animFrameId = requestAnimationFrame(tick);
+			}
+			tick();
+		} catch {
+			// fallback: keep static bars if Web Audio fails
+		}
+	}
+
+	function stopVisualizer() {
+		if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+		// Reset to idle wave shape
+		barHeights = Array(BAR_COUNT).fill(0).map((_, i) => 4 + Math.sin(i * 0.6) * 3);
+	}
 
 	async function toggleTTS() {
 		if (typeof window === 'undefined') return;
 
-		// Pause/resume if already playing
 		if (ttsState === 'speaking' && ttsAudio) {
 			ttsAudio.pause();
+			stopVisualizer();
 			ttsState = 'paused';
 			return;
 		}
 		if (ttsState === 'paused' && ttsAudio) {
 			ttsAudio.play();
+			startVisualizer();
 			ttsState = 'speaking';
 			return;
 		}
@@ -51,7 +100,6 @@
 
 		ttsError = '';
 
-		// Check cache first
 		const cacheKey = script.slice(0, 100);
 		let blobUrl = ttsCache.get(cacheKey);
 
@@ -77,12 +125,16 @@
 			}
 		}
 
-		// Play audio
-		if (ttsAudio) { ttsAudio.pause(); ttsAudio = null; }
+		// Tear down previous audio graph if re-playing
+		if (ttsAudio) { ttsAudio.pause(); }
+		sourceNode = null; // will recreate for new Audio element
+
 		ttsAudio = new Audio(blobUrl);
-		ttsAudio.onended = () => { ttsState = 'idle'; };
-		ttsAudio.onerror = () => { ttsState = 'idle'; ttsError = 'Lỗi phát âm thanh'; };
+		ttsAudio.crossOrigin = 'anonymous';
+		ttsAudio.onended = () => { stopVisualizer(); ttsState = 'idle'; };
+		ttsAudio.onerror = () => { stopVisualizer(); ttsState = 'idle'; ttsError = 'Lỗi phát âm thanh'; };
 		ttsAudio.play();
+		startVisualizer();
 		ttsState = 'speaking';
 	}
 
@@ -92,6 +144,8 @@
 			ttsAudio.currentTime = 0;
 			ttsAudio = null;
 		}
+		sourceNode = null;
+		stopVisualizer();
 		ttsState = 'idle';
 	}
 
@@ -395,12 +449,12 @@
 							>✕</button>
 						{/if}
 					</div>
-					<!-- Waveform bars -->
-					<div class="flex items-center gap-1 h-8 mb-3">
-						{#each Array(24) as _, i}
+					<!-- Waveform visualizer -->
+					<div class="vis-container">
+						{#each barHeights as h, i}
 							<div 
-								class="flex-1 rounded-full transition-all duration-300 {ttsState === 'speaking' ? 'bg-[#F2A906]' : ttsState === 'loading' ? 'bg-[#F2A906]/25' : 'bg-[#F2A906]/40'}"
-								style="height: {ttsState === 'speaking' ? (12 + Math.random() * 20) : (20 + Math.sin(i * 0.8) * 14)}px; {ttsState === 'speaking' ? `animation: wave 0.${3 + (i % 4)}s ease-in-out infinite alternate; animation-delay: ${i * 0.04}s` : ''}"
+								class="vis-bar {ttsState === 'speaking' ? 'vis-active' : ttsState === 'loading' ? 'vis-loading' : ttsState === 'paused' ? 'vis-paused' : 'vis-idle'}"
+								style="height: {h}px; {ttsState === 'loading' ? `animation-delay: ${i * 50}ms` : ''}"
 							></div>
 						{/each}
 					</div>
@@ -704,8 +758,46 @@
 </div>
 
 <style>
-	@keyframes wave {
-		from { transform: scaleY(0.6); }
-		to   { transform: scaleY(1.2); }
+	/* Visualizer container */
+	.vis-container {
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		gap: 2px;
+		height: 36px;
+		margin-bottom: 12px;
+		padding: 0 2px;
+	}
+	.vis-bar {
+		flex: 1;
+		min-width: 3px;
+		border-radius: 3px;
+		transition: height 0.08s ease-out;
+		will-change: height;
+	}
+	/* Idle: subtle static wave */
+	.vis-idle {
+		background: rgba(242, 169, 6, 0.3);
+		transition: height 0.4s ease;
+	}
+	/* Loading: shimmer pulse animation */
+	.vis-loading {
+		background: rgba(242, 169, 6, 0.2);
+		animation: vis-shimmer 1.2s ease-in-out infinite;
+	}
+	/* Active playing: bright gold, reactive */
+	.vis-active {
+		background: linear-gradient(to top, #F2A906, #f5c342);
+		box-shadow: 0 0 4px rgba(242, 169, 6, 0.3);
+	}
+	/* Paused: dimmed gold */
+	.vis-paused {
+		background: rgba(242, 169, 6, 0.4);
+		transition: height 0.4s ease;
+	}
+
+	@keyframes vis-shimmer {
+		0%, 100% { transform: scaleY(0.5); opacity: 0.3; }
+		50% { transform: scaleY(1.5); opacity: 0.8; }
 	}
 </style>
