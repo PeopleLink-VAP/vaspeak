@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import BottomNav from '$lib/components/BottomNav.svelte';
+	import TelegramConnect from '$lib/components/TelegramConnect.svelte';
 
 	let { data, form } = $props();
 	let profile = $derived(data.profile);
@@ -108,6 +109,12 @@
 				{isSubmitting ? 'Đang lưu...' : 'Lưu Thay Đổi'}
 			</button>
 		</form>
+
+		<!-- Telegram Connection -->
+		<h3 class="font-heading font-bold text-[#1B365D] text-base mb-3 ml-1">📲 Telegram</h3>
+		<div class="mb-6">
+			<TelegramConnect />
+		</div>
 
 		<!-- Danger Zone / Log Out -->
 		<form method="POST" action="/logout">

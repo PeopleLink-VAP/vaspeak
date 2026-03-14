@@ -35,6 +35,7 @@ module.exports = {
         TURSO_DB_TOKEN:       process.env.TURSO_DB_TOKEN       || '',
         JWT_SECRET:           process.env.JWT_SECRET           || '',
         LIBSQL_DB_URL:        process.env.LIBSQL_DB_URL        || 'file:../db/local.db',
+        TELEGRAM_BOT_TOKEN:   process.env.TELEGRAM_BOT_TOKEN   || '',
       }
     },
     {
