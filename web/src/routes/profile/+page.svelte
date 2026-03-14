@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import BottomNav from '$lib/components/BottomNav.svelte';
 	import TelegramConnect from '$lib/components/TelegramConnect.svelte';
+	import NotificationPrompt from '$lib/components/NotificationPrompt.svelte';
 
 	let { data, form } = $props();
 	let profile = $derived(data.profile);
@@ -186,7 +187,14 @@
 		<!-- Divider -->
 		<div class="h-px bg-[#E8E8E8]"></div>
 
-		<!-- Help & Support -->
+		<!-- In-App Notifications -->
+		<div>
+			<p class="text-xs font-semibold text-[#A3A3A3] uppercase tracking-widest mb-4">Thông Báo</p>
+			<NotificationPrompt />
+		</div>
+
+		<!-- Divider -->
+		<div class="h-px bg-[#E8E8E8]"></div>
 		<a href="/help" class="flex flex-col gap-1 p-4 bg-white rounded-xl border border-[#E8E8E8] hover:border-[#D4960A] transition-colors group">
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-3">

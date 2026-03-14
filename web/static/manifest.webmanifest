@@ -34,6 +34,13 @@
   "screenshots": [],
   "shortcuts": [
     {
+      "name": "Từ của ngày",
+      "short_name": "Word Game",
+      "description": "Chơi từ vựng hàng ngày, kiếm credits",
+      "url": "/games/word-of-the-day",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
       "name": "Today's Lesson",
       "short_name": "Lesson",
       "description": "Jump into today's lesson",

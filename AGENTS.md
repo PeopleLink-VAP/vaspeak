@@ -34,18 +34,19 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 | `user_progress` | id, user_id, lesson_id, block_completions (JSON), simulation_scores (JSON), stress_level (1-3), completed_at |
 | `vocabulary_bank` | id, user_id, word, definition, context_sentence, lesson_id, mastered (0/1) |
 | `telegram_links` | user_id (PK), telegram_chat_id, telegram_username, reminder_hour, timezone |
-| `telegram_challenges` | id, user_id, word, correct_index, options (JSON), answered, correct, credits_earned |
+| `telegram_challenges` | id, user_id, word, correct_index, options (JSON), answered, correct, credits_earned (shared with in-app games) |
 | `telegram_messages` | id, user_id, telegram_chat_id, direction, message_text, message_type |
+| `push_subscriptions` | user_id + endpoint (PK), p256dh, auth, reminder_hour, timezone, active |
 | `newsletter_subscribers` | id, email (unique), source, subscribed_at |
 | `blacklisted_domains` | id, domain (unique) |
 | `user_feedback` | id, user_id (FK), topic, message, attachment_url, created_at |
 
 ### Key Routes
-**App pages**: `/` (landing), `/login`, `/auth/magic`, `/dashboard`, `/lessons`, `/lesson/[day]`, `/credits`, `/vocabulary`, `/challenges`, `/profile`, `/help`.
+**App pages**: `/` (landing), `/login`, `/auth/magic`, `/dashboard`, `/lessons`, `/lesson/[day]`, `/credits`, `/vocabulary`, `/challenges`, `/games/word-of-the-day`, `/profile`, `/help`.
 
 **Admin pages**: `/admin` (dashboard), `/admin/kanban`, `/admin/users`, `/admin/lessons`, `/admin/waitlist`, `/admin/e2e-testing`, `/admin/settings`.
 
-**APIs**: `/api/roleplay`, `/api/progress`, `/api/credits`, `/api/waitlist`, `/api/telegram/link`, `/api/telegram/webhook`, `/api/telegram/send-daily-challenge`, `/api/support/chat`.
+**APIs**: `/api/roleplay`, `/api/progress`, `/api/credits`, `/api/waitlist`, `/api/telegram/link`, `/api/telegram/webhook`, `/api/telegram/send-daily-challenge`, `/api/games/word-challenge`, `/api/notifications/subscribe`, `/api/notifications/send-daily`, `/api/notifications/vapid-key`, `/api/support/chat`.
 
 **Admin APIs**: `/admin/api/activity` (user signups/waitlist/progress), `/admin/api/kanban/activity` (task updates/comments), `/admin/api/kanban/tasks`, `/admin/api/users/[id]`.
 
@@ -74,6 +75,7 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 | `BottomNav.svelte` | `$lib/components/` | App bottom navigation bar |
 | `TimeAgo.svelte` | `$lib/components/` | Relative timestamp ("3m ago"), auto-updates, respects browser TZ |
 | `TelegramConnect.svelte` | `$lib/components/` | Self-contained Telegram link/unlink/QR/timezone picker |
+| `NotificationPrompt.svelte` | `$lib/components/` | Web Push subscription management: permission, subscribe/unsubscribe, reminder hour picker |
 | `AudioRecorder.svelte` | `$lib/components/` | Web Audio capture for lesson blocks |
 
 ### Shared Stores
@@ -85,6 +87,8 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 - **DB**: `$lib/server/db.ts` (SQLite via libsql), `$lib/server/turso.ts` (admin Kanban remote).
 - **Auth**: `$lib/server/auth.ts` (JWT/bcrypt), `$lib/server/email.ts` (Resend), `$lib/server/magic-link.ts`.
 - **Credits**: `$lib/server/credits.ts` — `spendCredits()`, `earnCredits()`. Check balance before every Groq call.
+- **Vocab/Games**: `$lib/server/vocab.ts` — `generateVocabChallenge()`, `createVocabChallengeForUser()`, `answerVocabChallenge()`. Shared by Telegram bot + in-app games.
+- **Push Notifications**: `web-push` npm package. VAPID keys in `.env`. Service worker already handles push+click deep-linking.
 - **Gamification**: `$lib/gamification.ts` — `checkMilestones`, `getNewMilestones`. 12 milestones defined.
 - **Timestamp convention**: SQLite stores UTC without `Z` suffix. When serving to client, use `utc()` helper to append `Z` so `new Date()` parses correctly.
 - **Svelte 5**: Runes mode only. Use `$state`, `$derived`, `$props`, `$effect`. No `<svelte:component>`, use direct `<Component />`.
@@ -112,8 +116,10 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 16. Niche-specific lesson generation (ecommerce, video_editor, etc.)
 17. Help Center (/help) with Knowledge Base, Feedback reporting with image upload, and AI Support Chat
 18. Avatar upload capability on profile settings page
+19. In-app mini games (Word of the Day at `/games/word-of-the-day`) with Web Push notifications, deep-linking, PWA shortcut
 
 ### 🔄 In Progress
-19. Monetization (credit top-up, Pro plan, payment integration)
-20. Community forum (social feature for VAs)
-21. 50+ days content (extend beyond Week 7)
+20. Monetization (credit top-up, Pro plan, payment integration)
+21. Community forum (social feature for VAs)
+22. 50+ days content (extend beyond Week 7)
+23. Additional mini games (Listening Drill, Sentence Builder, Speed Round)
