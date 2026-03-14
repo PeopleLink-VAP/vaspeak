@@ -91,5 +91,41 @@ export const actions: Actions = {
             console.error('[profile update error]', err);
             return fail(500, { error: 'Lỗi khi cập nhật hồ sơ' });
         }
+    },
+    uploadAvatar: async ({ request, locals }) => {
+        if (!locals.user) return fail(401, { error: 'Unauthorized' });
+        
+        try {
+            const data = await request.formData();
+            const file = data.get('avatar') as File | null;
+            
+            if (!file || file.size === 0) {
+                return fail(400, { error: 'Vui lòng chọn ảnh hợp lệ' });
+            }
+            
+            // Generate unique filename
+            const crypto = await import('crypto');
+            const ext = file.name.split('.').pop() || 'png';
+            const filename = `${locals.user.id}_${crypto.randomUUID()}.${ext}`;
+            const filepath = `static/uploads/avatars/${filename}`;
+            const publicUrl = `/uploads/avatars/${filename}`;
+            
+            // Ensure dir exists and save file
+            const fs = await import('fs/promises');
+            await fs.mkdir('static/uploads/avatars', { recursive: true });
+            const buffer = Buffer.from(await file.arrayBuffer());
+            await fs.writeFile(filepath, buffer);
+            
+            // Update profile
+            await db.execute({
+                sql: 'UPDATE profiles SET avatar_url = ? WHERE id = ?',
+                args: [publicUrl, locals.user.id]
+            });
+            
+            return { success: true, avatarUrl: publicUrl };
+        } catch (err) {
+            console.error('[avatar upload error]', err);
+            return fail(500, { error: 'Lỗi khi tải ảnh lên' });
+        }
     }
 };

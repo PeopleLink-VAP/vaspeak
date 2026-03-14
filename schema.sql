@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     current_level TEXT DEFAULT 'general', -- 'general' | 'working_va'
     niche TEXT,                        -- 'ecommerce' | 'video_editor' | 'operations' etc.
     native_language TEXT DEFAULT 'vi',
+    avatar_url TEXT,
     streak_count INTEGER DEFAULT 0,
     last_active_date TEXT,             -- ISO date string YYYY-MM-DD
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -139,6 +140,15 @@ CREATE TABLE IF NOT EXISTS blacklisted_domains (
     id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
     domain TEXT UNIQUE NOT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_feedback (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+    user_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    topic TEXT NOT NULL,
+    message TEXT NOT NULL,
+    attachment_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =====================
