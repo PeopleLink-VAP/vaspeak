@@ -1,5 +1,6 @@
 <script lang="ts">
     import { formatUptime } from '$lib/utils';
+    import { Download, GitBranch, Loader, CheckCircle, XCircle } from 'lucide-svelte';
 
     const { data } = $props();
     const { system, db, git, env, lastDeployISO } = data;
@@ -17,6 +18,7 @@
     }
 
     let actionStatus = $state('');
+    let actionStatusType = $state<'ok' | 'err' | 'info'>('info');
     let actionRunning = $state(false);
 
     async function runAction(action: string) {
@@ -31,7 +33,8 @@
                 });
                 if (!res.ok) {
                     const j = await res.json();
-                    actionStatus = `❌ Backup failed: ${j.error}`;
+                    actionStatus = `Backup failed: ${j.error}`;
+                    actionStatusType = 'err';
                     return;
                 }
                 const blob = await res.blob();
@@ -41,7 +44,8 @@
                 a.download = `vaspeak-${new Date().toISOString().slice(0, 10)}.db`;
                 a.click();
                 URL.revokeObjectURL(url);
-                actionStatus = '✅ Backup downloaded.';
+                actionStatus = 'Backup downloaded.';
+                actionStatusType = 'ok';
             } else if (action === 'git_pull') {
                 const res = await fetch('/admin/api/settings/action', {
                     method: 'POST',
@@ -49,10 +53,17 @@
                     body: JSON.stringify({ action: 'git_pull' })
                 });
                 const j = await res.json();
-                actionStatus = res.ok ? `✅ ${j.output?.trim() || 'Already up to date.'}` : `❌ ${j.error}`;
+                if (res.ok) {
+                    actionStatus = j.output?.trim() || 'Already up to date.';
+                    actionStatusType = 'ok';
+                } else {
+                    actionStatus = j.error;
+                    actionStatusType = 'err';
+                }
             }
         } catch (e) {
-            actionStatus = `❌ Error: ${String(e)}`;
+            actionStatus = `Error: ${String(e)}`;
+            actionStatusType = 'err';
         } finally {
             actionRunning = false;
         }
@@ -77,13 +88,13 @@
     <!-- ── Environment Badges ─────────────────────────────────────────── -->
     <div class="badge-row">
         <span class="badge" class:badge-ok={env.groqConfigured} class:badge-err={!env.groqConfigured}>
-            {env.groqConfigured ? '✓' : '✗'} Groq API
+            {#if env.groqConfigured}<CheckCircle size={12} />{:else}<XCircle size={12} />{/if} Groq API
         </span>
         <span class="badge" class:badge-ok={env.tursoConfigured} class:badge-err={!env.tursoConfigured}>
-            {env.tursoConfigured ? '✓' : '✗'} Turso DB
+            {#if env.tursoConfigured}<CheckCircle size={12} />{:else}<XCircle size={12} />{/if} Turso DB
         </span>
         <span class="badge" class:badge-ok={env.resendConfigured} class:badge-err={!env.resendConfigured}>
-            {env.resendConfigured ? '✓' : '✗'} Resend Email
+            {#if env.resendConfigured}<CheckCircle size={12} />{:else}<XCircle size={12} />{/if} Resend Email
         </span>
         <span class="badge badge-neutral">
             {env.NODE_ENV}
@@ -154,12 +165,19 @@
                 onclick={() => runAction('backup')}
                 disabled={actionRunning}
             >
-                {actionRunning ? '⏳ Working…' : '⬇ Download Backup'}
+                {#if actionRunning}
+                    <Loader size={14} class="spin-icon" /> Working…
+                {:else}
+                    <Download size={14} /> Download Backup
+                {/if}
             </button>
         </div>
 
         {#if actionStatus}
-            <p class="action-status">{actionStatus}</p>
+            <p class="action-status" class:status-ok={actionStatusType === 'ok'} class:status-err={actionStatusType === 'err'}>
+                {#if actionStatusType === 'ok'}<CheckCircle size={14} />{:else if actionStatusType === 'err'}<XCircle size={14} />{/if}
+                {actionStatus}
+            </p>
         {/if}
     </section>
 
@@ -196,7 +214,11 @@
                 onclick={() => runAction('git_pull')}
                 disabled={actionRunning}
             >
-                {actionRunning ? '⏳ Pulling…' : '↑ git pull'}
+                {#if actionRunning}
+                    <Loader size={14} class="spin-icon" /> Pulling…
+                {:else}
+                    <GitBranch size={14} /> git pull
+                {/if}
             </button>
         </div>
     </section>
@@ -233,34 +255,35 @@
 <style>
     .settings-page { max-width: 860px; }
 
-    .page-title { font-size: 1.6rem; font-weight: 700; color: #f1f5f9; margin: 0 0 4px; }
-    .page-subtitle { color: #64748b; font-size: 0.875rem; margin: 0 0 20px; }
+    .page-title { font-size: 1.6rem; font-weight: 700; color: #1e293b; margin: 0 0 4px; }
+    .page-subtitle { color: #94a3b8; font-size: 0.875rem; margin: 0 0 20px; }
 
     /* Badges */
     .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
     .badge {
         font-size: 0.75rem; font-weight: 600; padding: 4px 12px;
         border-radius: 20px; border: 1px solid transparent;
+        display: inline-flex; align-items: center; gap: 5px;
     }
-    .badge-ok  { background: #22c55e18; color: #22c55e; border-color: #22c55e40; }
-    .badge-err { background: #ef444418; color: #ef4444; border-color: #ef444440; }
-    .badge-neutral { background: #0f1729; color: #94a3b8; border-color: #2d3a4d; }
+    .badge-ok  { background: #ecfdf5; color: #16a34a; border-color: #bbf7d0; }
+    .badge-err { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    .badge-neutral { background: #f8f9fb; color: #64748b; border-color: #e8ecf1; }
 
     /* Card */
-    .card { background: #1a2332; border: 1px solid #2d3a4d; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .card { background: #ffffff; border: 1px solid #e8ecf1; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
     .card-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; margin: 0 0 14px; }
 
     /* Info grid */
     .info-grid { display: flex; flex-direction: column; gap: 0; }
-    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #2d3a4d30; }
-    .key  { font-size: 0.8rem; color: #64748b; }
-    .val  { font-size: 0.82rem; color: #cbd5e1; text-align: right; max-width: 60%; word-break: break-all; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f1f5f9; }
+    .key  { font-size: 0.8rem; color: #94a3b8; }
+    .val  { font-size: 0.82rem; color: #475569; text-align: right; max-width: 60%; word-break: break-all; }
     .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 
     /* Memory */
     .mem-block { margin-top: 14px; }
     .mem-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .bar-bg { height: 8px; background: #0f1729; border-radius: 4px; overflow: hidden; }
+    .bar-bg { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
     .bar-fill { height: 100%; background: #22c55e; border-radius: 4px; transition: width 0.4s; }
     .bar-warn { background: #f2a906; }
     .bar-crit { background: #ef4444; }
@@ -268,32 +291,41 @@
     /* DB table */
     .db-size { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .db-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
-    .db-table th { text-align: left; color: #475569; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 0; border-bottom: 1px solid #2d3a4d; }
-    .db-table td { padding: 6px 0; border-bottom: 1px solid #2d3a4d20; color: #cbd5e1; }
-    .db-table td.zero { color: #475569; }
+    .db-table th { text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 0; border-bottom: 1px solid #e8ecf1; }
+    .db-table td { padding: 6px 0; border-bottom: 1px solid #f1f5f9; color: #475569; }
+    .db-table td.zero { color: #cbd5e1; }
     .db-table th:last-child, .db-table td:last-child { text-align: right; }
 
     /* Actions */
     .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
-    .btn { padding: 8px 18px; border-radius: 6px; font-size: 0.83rem; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.15s; }
+    .btn { padding: 8px 18px; border-radius: 6px; font-size: 0.83rem; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.15s; display: inline-flex; align-items: center; gap: 6px; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-primary   { background: #f2a906; color: #1b365d; }
-    .btn-secondary { background: #243044; color: #94a3b8; border: 1px solid #2d3a4d; }
+    .btn-secondary { background: #ffffff; color: #64748b; border: 1px solid #e8ecf1; }
     .btn-primary:hover:not(:disabled)   { opacity: 0.88; }
-    .btn-secondary:hover:not(:disabled) { border-color: #475569; color: #e2e8f0; }
+    .btn-secondary:hover:not(:disabled) { border-color: #cbd5e1; color: #1e293b; }
 
-    .action-status { margin-top: 10px; font-size: 0.82rem; color: #94a3b8; }
+    :global(.spin-icon) {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .action-status { margin-top: 10px; font-size: 0.82rem; color: #64748b; display: flex; align-items: center; gap: 6px; }
+    .action-status.status-ok { color: #16a34a; }
+    .action-status.status-err { color: #dc2626; }
 
     /* Services */
     .services { display: flex; flex-direction: column; gap: 2px; }
-    .service-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #2d3a4d20; flex-wrap: wrap; }
-    .service-name  { font-size: 0.85rem; color: #e2e8f0; flex: 1; font-weight: 500; }
-    .service-model { font-size: 0.75rem; color: #475569; font-family: monospace; }
+    .service-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; }
+    .service-name  { font-size: 0.85rem; color: #1e293b; flex: 1; font-weight: 500; }
+    .service-model { font-size: 0.75rem; color: #cbd5e1; font-family: monospace; }
     .chip { font-size: 0.7rem; font-weight: 600; padding: 2px 10px; border-radius: 4px; }
-    .chip-ok  { background: #22c55e18; color: #22c55e; }
-    .chip-err { background: #ef444418; color: #ef4444; }
+    .chip-ok  { background: #ecfdf5; color: #16a34a; }
+    .chip-err { background: #fef2f2; color: #dc2626; }
 
     /* Commit hash pill in deployment */
-    .commit-hash { background: #f2a90618; color: #f2a906; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; }
-    .deploy-time { background: #22c55e18; color: #22c55e; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; }
+    .commit-hash { background: #fef8e7; color: #b07d04; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; }
+    .deploy-time { background: #ecfdf5; color: #16a34a; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; }
 </style>

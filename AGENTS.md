@@ -13,7 +13,8 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 - **Frontend**: SvelteKit 5 (Using Runes exclusively: `$state`, `$derived`, `$props`), TypeScript, Tailwind CSS 4.
 - **Backend / DB**: Serverless SvelteKit API routes. **Local SQLite (`libsql`)** replaces SpacetimeDB. Admin Kanban board uses a remote **Turso** database.
 - **Auth**: Fully custom server-side auth. Email/password (bcrypt) + magic links (Resend). 7-day httpOnly JWT cookies. Anti-enumeration on all sensitive flows. Email verification enforced on password login.
-- **AI Integration**: Groq API (Llama models) used for dynamic roleplay (Block 3), pronunciation scoring, and lesson content generation. Credit balance is checked before every Groq call.
+- **AI Integration**: Groq API (Llama models) used for dynamic roleplay (Block 3), pronunciation scoring, lesson content generation, and Telegram vocab challenges. Credit balance is checked before every Groq call.
+- **Telegram Bot**: `@vaspeak_bot` — daily vocab challenges via Telegram. Webhook at `/api/telegram/webhook`. Cron runs hourly to send timezone-aware challenges. Bot token in `TELEGRAM_BOT_TOKEN` env var.
 - **System Management**: Admin dashboard at `/admin` with health metrics, PM2 status, Kanban board (Turso-backed), E2E recording viewer, and settings page.
 - **Deployment**: Self-hosted via PM2. `vaspeak-prod` on port 19300 → `vaspeak.alphabits.team`. `vaspeak-dev` on port 19301 → `vaspeak-beta.alphabits.team`. Both managed by `ecosystem.config.cjs`. Production uses `@sveltejs/adapter-node` (`node build/index.js`).
 
@@ -28,8 +29,11 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 - `lessons`: id, day_number, week_number, week_theme, niche ('general'|'ecommerce'|'video_editor'|etc.), title, content (JSON blocks array), is_published, created_at, updated_at.
 - `user_progress`: id, user_id, lesson_id, block_completions (JSON), simulation_scores (JSON), stress_level (1-3), reflection_notes, completed_at. UNIQUE(user_id, lesson_id).
 - `vocabulary_bank`: id, user_id, word, definition, context_sentence, lesson_id, mastered (0/1), added_at.
+- `telegram_links`: user_id (PK), telegram_chat_id, telegram_username, link_token, linked_at, reminder_hour (default 8), timezone (default 'Asia/Ho_Chi_Minh'). *(User ↔ Telegram chat mapping. link_token used during QR/deep-link flow, cleared on link.)*
+- `telegram_challenges`: id, user_id, word, correct_index, options (JSON), answered (0/1), user_answer, answered_at, correct (0/1), credits_earned, created_at. *(Stores each vocab challenge for answer verification and stats.)*
+- `telegram_messages`: id, user_id, telegram_chat_id, direction ('in'|'out'), message_text, message_type, metadata (JSON), created_at. *(Full conversation log.)*
 - `newsletter_subscribers`: id, email (unique), source ('landing'|'app'), subscribed_at.
-- `blacklisted_domains`: id, domain (unique), added_at. *(Admin-managed disposable email domain block list — not yet enforced in code.)*
+- `blacklisted_domains`: id, domain (unique), added_at. *(Admin-managed disposable email domain block list.)*
 
 ### Key Routes
 - `/` — Landing page + waitlist
@@ -46,6 +50,9 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 - `/api/progress` — User progress write endpoint
 - `/api/credits` — Credits ledger API
 - `/api/waitlist` — Waitlist signup endpoint
+- `/api/telegram/link` — GET/POST/PATCH/DELETE for Telegram link management
+- `/api/telegram/webhook` — Telegram Bot webhook (commands: /start, /word, /status, /time, /stop, A/B/C/D answers)
+- `/api/telegram/send-daily-challenge` — Cron-triggered daily vocab sender (Bearer CRON_SECRET auth)
 
 ## 3. Design & Styling Rules
 **Aesthetics**: Mobile-first, friendly, rounded UI inheriting Virtual Assistant PRO's identity.
@@ -57,8 +64,10 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 
 ## 4. Development & Testing Rules
 - **DB Access**: API routes use `$lib/server/db.ts` for SQLite via `@libsql/client` and `$lib/server/turso.ts` for admin Kanban via Turso remote.
-- **Auth Helpers**: `$lib/server/auth.ts` (JWT, bcrypt), `$lib/server/email.ts` (Resend), `$lib/server/magic-link.ts` (token gen/verify), `$lib/server/credits.ts` (balance checks), `$lib/server/groq.ts` (Groq API wrapper).
-- **E2E Testing**: Playwright (`npx playwright test`). Test heavily on Mobile viewports (Pixel 5, iPhone 12 configs). E2E recordings visible in `/admin/e2e-testing`.
+- **Auth Helpers**: `$lib/server/auth.ts` (JWT, bcrypt), `$lib/server/email.ts` (Resend), `$lib/server/magic-link.ts` (token gen/verify), `$lib/server/credits.ts` (balance checks), `$lib/server/groq.ts` (Groq API wrapper), `$lib/server/telegram.ts` (Telegram bot API, vocab challenge generation, `sendVocabChallenge()`).
+- **Reusable Components**: `TelegramConnect.svelte` (self-contained Telegram link/unlink/QR/timezone picker), `BottomNav.svelte` (app navigation), `AudioRecorder.svelte` (Web Audio capture).
+- **Gamification**: `$lib/gamification.ts` — pure functions for milestone detection (`checkMilestones`, `getNewMilestones`), streak bonus calculation, reward helpers. 12 milestones defined (streak, lesson, vocab, roleplay).
+- **E2E Testing**: Playwright (`npx playwright test`). Test heavily on Mobile viewports (Pixel 5, iPhone 12 configs). E2E recordings visible in `/admin/e2e-testing`. Tests in `tests/e2e/` and `tests/telegram.spec.ts`.
 - **Audio/Web API**: Extensive reliance on Web Audio API and MediaRecorder. Pay attention to autoplay policies requiring user gestures.
 - **PWA**: `manifest.webmanifest` in `/static`, `service-worker.ts` at `src/`, install prompt logic in `src/lib/pwa.ts` (SSR-safe, client-only).
 - **Commands**: `npm run dev`, `npm run build`, `npm run test:unit`, `npx playwright test`.
@@ -66,7 +75,7 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 
 ## 5. Current Roadmap / Next Steps
 1. ✅ **Tech Stack Pivot**: Strip out SpacetimeDB, wire up SQLite (`@libsql/client`).
-2. ✅ **Schema Setup**: SQLite tables created — users, auth tokens, progress, credits, vocab, lessons (Week 1 seeded).
+2. ✅ **Schema Setup**: SQLite tables created — users, auth tokens, progress, credits, vocab, lessons, telegram.
 3. ✅ **Auth System**: Full email/password + magic link auth, JWT session cookies, route guards, disposable email blocking.
 4. ✅ **Dashboard & Lesson Pages**: `/dashboard` and `/lesson/[day]` wired to SQLite with real progress tracking.
 5. ✅ **AI Roleplay Engine**: Groq API integration for Block 3 (Guided Simulation) with credit gating.
@@ -74,9 +83,15 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 7. ✅ **PWA Mechanics**: Service worker, `manifest.webmanifest`, install prompt, VAP app icons.
 8. ✅ **Magic Link Auth**: Passwordless login via emailed token (Resend), 15-min expiry, anti-enumeration.
 9. ✅ **Credits System**: Credit ledger UI at `/credits`, API at `/api/credits`, balance checked before AI calls.
-10. ✅ **Production Deployment**: PM2 `ecosystem.config.cjs` with full env vars for both prod (19300) and dev (19301) processes.
-11. 🔄 **Gamification & Monetization**: Wire up milestone rewards, streak bonuses, and credit top-up flow.
-12. 🔄 **50+ Days of Content**: Generate and validate remaining lesson content beyond Week 1.
-13. 🔄 **Audio Recording**: Web Audio API + MediaRecorder for Block 2 (Pattern Drilling) and Block 3 (Roleplay).
-14. ✅ **Vocabulary Bank**: UI and API for user vocab at `/vocabulary`.
-15. 🔄 **Placement Test**: Assessment logic determining starting level (Beginner / Working VA / Advanced).
+10. ✅ **Production Deployment**: PM2 `ecosystem.config.cjs` with full env vars for both prod (19300) and dev (19301).
+11. ✅ **Gamification Engine**: Milestones (12 defined), streak bonuses, badges grid on profile with earned/locked states.
+12. ✅ **49 Days of Content**: Weeks 1-7 seeded (W1 manual, W2-3 manual, W4-7 AI-generated via `scripts/seed-weeks-4-7.js`).
+13. ✅ **Vocabulary Bank**: UI and API at `/vocabulary` with challenge stats banner and source badges (lesson/telegram).
+14. ✅ **Placement Test**: 4-step assessment flow with audio sample and niche selection.
+15. ✅ **Telegram Bot Integration**: `@vaspeak_bot` with QR linking, daily vocab challenges (/word), answer verification (A/B/C/D), +1 credit rewards, timezone-aware reminders, conversation logging. Cron: `0 * * * *`.
+16. ✅ **Custom Icon System**: All emoji replaced with custom PNG icons across landing, dashboard, lesson, placement, challenges, and profile pages.
+17. 🔄 **Audio Recording Polish**: Web Audio API + MediaRecorder for Block 2 and 3. Wired but needs E2E testing.
+18. 🔄 **Monetization**: Credit top-up flow, Pro plan upgrade, payment integration.
+19. 🔄 **Community Forum**: Social feature for VAs to practice together.
+20. 🔄 **50+ Days Content**: Extend to Weeks 8+ (currently 49 days, need 50+).
+21. 🔄 **Niche-Specific Lessons**: Generate lesson content for ecommerce, video_editor, and other niche tracks.

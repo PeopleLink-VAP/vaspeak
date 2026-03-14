@@ -1,6 +1,11 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
     import { isAgent, formatElapsed, getInitials, parseJsonArray } from '$lib/utils';
+    import {
+        Target, Bot, User, Clipboard, Link, Lightbulb,
+        FolderOpen, ArrowRight, MessageSquare, Paperclip,
+        Clock, X, ChevronUp, ChevronDown
+    } from 'lucide-svelte';
 
 
     let { data } = $props();
@@ -309,7 +314,7 @@
 
     <!-- ── Weekly Focus Banner ────────────────────────────────────────── -->
     <div class="focus-banner">
-        <span class="focus-icon">🎯</span>
+        <span class="focus-icon"><Target size={16} /></span>
         {#if editingFocus}
             <input
                 class="focus-input"
@@ -343,7 +348,10 @@
                 <input type="text" placeholder="Workstream" bind:value={newWorkstream} class="input" />
             </div>
             <textarea placeholder="Description…" bind:value={newDescription} class="input textarea" rows="2"></textarea>
-            <input type="text" placeholder="🎯 Expected outcome (what success looks like)" bind:value={newExpectedOutcome} class="input" />
+            <div class="outcome-input-row">
+                <Target size={14} />
+                <input type="text" placeholder="Expected outcome (what success looks like)" bind:value={newExpectedOutcome} class="input" />
+            </div>
             <button class="btn-create" onclick={createTask} disabled={isCreating || !newTitle.trim()}>
                 {isCreating ? 'Creating…' : 'Create Task'}
             </button>
@@ -382,7 +390,7 @@
                             {/if}
 
                             {#if task.expected_outcome}
-                                <p class="task-outcome">🎯 {task.expected_outcome}</p>
+                                <p class="task-outcome"><Target size={12} /> {task.expected_outcome}</p>
                             {/if}
 
                             <div class="task-footer">
@@ -430,23 +438,23 @@
         <div class="panel-header">
             <div class="panel-title-row">
                 <h2 class="panel-title">{selectedTask.title}</h2>
-                <button class="panel-close" onclick={closePanel}>✕</button>
+                <button class="panel-close" onclick={closePanel}><X size={16} /></button>
             </div>
             <div class="panel-meta">
                 {#if selectedTask.assignee}
                     <span class="meta-chip" class:meta-agent={isAgent(selectedTask.assignee)}>
-                        {#if isAgent(selectedTask.assignee)}🤖{:else}👤{/if}
+                        {#if isAgent(selectedTask.assignee)}<Bot size={12} />{:else}<User size={12} />{/if}
                         {selectedTask.assignee}
                     </span>
                 {/if}
                 {#if selectedTask.workstream}
                     <span class="meta-chip">{selectedTask.workstream}</span>
                 {/if}
-                <span class="meta-chip status-chip" style="background: {columnColors[selectedTask.status]}22; color: {columnColors[selectedTask.status]}">
+                <span class="meta-chip status-chip" style="background: {columnColors[selectedTask.status]}15; color: {columnColors[selectedTask.status]}">
                     {columnLabels[selectedTask.status]}
                 </span>
                 {#if selectedTask.status === 'in_progress'}
-                    <span class="meta-chip elapsed-chip">⏱ {elapsed(selectedTask.updated_at)}</span>
+                    <span class="meta-chip elapsed-chip"><Clock size={12} /> {elapsed(selectedTask.updated_at)}</span>
                 {/if}
             </div>
         </div>
@@ -461,21 +469,21 @@
 
             {#if selectedTask.expected_outcome}
                 <div class="panel-section outcome-section">
-                    <p class="section-label">🎯 Expected Outcome</p>
+                    <p class="section-label"><Target size={13} /> Expected Outcome</p>
                     <p class="section-text">{selectedTask.expected_outcome}</p>
                 </div>
             {/if}
 
             {#if selectedTask.work_summary}
                 <div class="panel-section">
-                    <p class="section-label">📋 Work Summary</p>
+                    <p class="section-label"><Clipboard size={13} /> Work Summary</p>
                     <p class="section-text">{selectedTask.work_summary}</p>
                 </div>
             {/if}
 
             {#if selectedTask.commit_url}
                 <div class="panel-section">
-                    <p class="section-label">🔗 Commit</p>
+                    <p class="section-label"><Link size={13} /> Commit</p>
                     <a href={selectedTask.commit_url} target="_blank" class="commit-link">
                         {selectedTask.commit_message || selectedTask.commit_url}
                     </a>
@@ -484,14 +492,14 @@
 
             {#if selectedTask.lessons_learnt}
                 <div class="panel-section">
-                    <p class="section-label">💡 Lessons Learnt</p>
+                    <p class="section-label"><Lightbulb size={13} /> Lessons Learnt</p>
                     <p class="section-text">{selectedTask.lessons_learnt}</p>
                 </div>
             {/if}
 
             {#if parseJsonArray(selectedTask.files_changed).length > 0}
                 <div class="panel-section">
-                    <p class="section-label">📁 Files Changed</p>
+                    <p class="section-label"><FolderOpen size={13} /> Files Changed</p>
                     <ul class="files-list">
                         {#each parseJsonArray(selectedTask.files_changed) as f}
                             <li><code>{f}</code></li>
@@ -502,7 +510,7 @@
 
             {#if parseJsonArray(selectedTask.follow_up_steps).length > 0}
                 <div class="panel-section">
-                    <p class="section-label">➡️ Follow-up Steps</p>
+                    <p class="section-label"><ArrowRight size={13} /> Follow-up Steps</p>
                     <ul class="files-list">
                         {#each parseJsonArray(selectedTask.follow_up_steps) as step}
                             <li>{step}</li>
@@ -531,7 +539,7 @@
 
             <!-- Comments -->
             <div class="panel-section">
-                <p class="section-label">💬 Comments</p>
+                <p class="section-label"><MessageSquare size={13} /> Comments</p>
                 {#if loadingComments}
                     <p class="loading-text">Loading…</p>
                 {:else if taskComments.length === 0}
@@ -572,7 +580,7 @@
 
             <!-- Attachment upload -->
             <div class="panel-section">
-                <p class="section-label">📎 Attach Screenshot / File</p>
+                <p class="section-label"><Paperclip size={13} /> Attach Screenshot / File</p>
                 <div class="attach-row">
                     <input
                         id="attach-input"
@@ -609,12 +617,12 @@
     .page-title {
         font-size: 1.6rem;
         font-weight: 700;
-        color: #f1f5f9;
+        color: #1e293b;
         margin: 0 0 4px;
     }
 
     .page-subtitle {
-        color: #64748b;
+        color: #94a3b8;
         font-size: 0.82rem;
         margin: 0;
     }
@@ -624,8 +632,8 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        background: #0f1729;
-        border: 1px solid #2d3a4d;
+        background: #ffffff;
+        border: 1px solid #e8ecf1;
         border-left: 3px solid #f2a906;
         border-radius: 8px;
         padding: 10px 16px;
@@ -634,22 +642,24 @@
     }
 
     .focus-icon {
-        font-size: 1rem;
+        color: #f2a906;
+        display: flex;
+        align-items: center;
         flex-shrink: 0;
     }
 
     .focus-text {
         flex: 1;
         font-size: 0.85rem;
-        color: #cbd5e1;
+        color: #475569;
         font-style: italic;
     }
 
     .focus-input {
         flex: 1;
-        background: #1a2332;
+        background: #f8f9fb;
         border: 1px solid #f2a906;
-        color: #f1f5f9;
+        color: #1e293b;
         padding: 6px 10px;
         border-radius: 6px;
         font-size: 0.85rem;
@@ -659,8 +669,8 @@
 
     .focus-edit, .focus-save, .focus-cancel {
         background: none;
-        border: 1px solid #2d3a4d;
-        color: #94a3b8;
+        border: 1px solid #e8ecf1;
+        color: #64748b;
         padding: 4px 10px;
         border-radius: 5px;
         font-size: 0.78rem;
@@ -670,11 +680,11 @@
 
     .focus-save {
         border-color: #f2a906;
-        color: #f2a906;
+        color: #b07d04;
     }
 
-    .focus-save:hover { background: #f2a90620; }
-    .focus-edit:hover, .focus-cancel:hover { border-color: #475569; color: #cbd5e1; }
+    .focus-save:hover { background: #fef8e7; }
+    .focus-edit:hover, .focus-cancel:hover { border-color: #cbd5e1; color: #475569; }
 
     /* ── Buttons ─────────────────────────────────────────────────────── */
     .btn-new {
@@ -692,8 +702,8 @@
 
     /* ── New task form ────────────────────────────────────────────────── */
     .new-task-form {
-        background: #1a2332;
-        border: 1px solid #2d3a4d;
+        background: #ffffff;
+        border: 1px solid #e8ecf1;
         border-radius: 12px;
         padding: 16px;
         display: flex;
@@ -707,11 +717,18 @@
         gap: 10px;
     }
 
+    .outcome-input-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #94a3b8;
+    }
+
     .input {
         flex: 1;
-        background: #0f1729;
-        border: 1px solid #2d3a4d;
-        color: #e2e8f0;
+        background: #f8f9fb;
+        border: 1px solid #e8ecf1;
+        color: #1e293b;
         padding: 8px 12px;
         border-radius: 6px;
         font-size: 0.85rem;
@@ -749,8 +766,8 @@
     .column {
         min-width: 250px;
         flex: 1;
-        background: #1a2332;
-        border: 1px solid #2d3a4d;
+        background: #ffffff;
+        border: 1px solid #e8ecf1;
         border-radius: 12px;
         display: flex;
         flex-direction: column;
@@ -761,7 +778,7 @@
         align-items: center;
         gap: 8px;
         padding: 14px 14px 10px;
-        border-bottom: 1px solid #2d3a4d;
+        border-bottom: 1px solid #e8ecf1;
     }
 
     .column-dot {
@@ -776,16 +793,16 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #94a3b8;
+        color: #64748b;
     }
 
     .column-count {
         margin-left: auto;
         font-size: 0.72rem;
-        background: #0f1729;
+        background: #f1f5f9;
         padding: 2px 8px;
         border-radius: 10px;
-        color: #64748b;
+        color: #94a3b8;
         font-weight: 600;
     }
 
@@ -799,15 +816,15 @@
 
     /* ── Task Cards ───────────────────────────────────────────────────── */
     .task-card {
-        background: #0f1729;
-        border: 1px solid #2d3a4d;
+        background: #f8f9fb;
+        border: 1px solid #e8ecf1;
         border-radius: 8px;
         padding: 12px;
         transition: border-color 0.15s, box-shadow 0.15s;
         cursor: pointer;
     }
 
-    .task-card:hover { border-color: #475569; box-shadow: 0 2px 8px #00000040; }
+    .task-card:hover { border-color: #cbd5e1; box-shadow: 0 2px 8px #00000008; }
 
     /* Agent-assigned tasks get a gold accent */
     .agent-card {
@@ -819,7 +836,7 @@
 
     @keyframes pulse-gold {
         0%, 100% { box-shadow: 0 0 0 0 #f2a90600; }
-        50% { box-shadow: 0 0 0 3px #f2a90630; }
+        50% { box-shadow: 0 0 0 3px #f2a90620; }
     }
 
     .task-top {
@@ -832,14 +849,14 @@
     .task-title {
         font-size: 0.85rem;
         font-weight: 600;
-        color: #e2e8f0;
+        color: #1e293b;
         line-height: 1.3;
     }
 
     .task-delete {
         background: none;
         border: none;
-        color: #475569;
+        color: #cbd5e1;
         cursor: pointer;
         font-size: 1.1rem;
         padding: 0 2px;
@@ -850,16 +867,19 @@
 
     .task-desc {
         font-size: 0.78rem;
-        color: #64748b;
+        color: #94a3b8;
         margin: 6px 0 0;
         line-height: 1.4;
     }
 
     .task-outcome {
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #64748b;
         margin: 6px 0 0;
         line-height: 1.4;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .task-footer {
@@ -874,8 +894,8 @@
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        background: #f2a90625;
-        color: #f2a906;
+        background: #fef8e7;
+        color: #b07d04;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -885,8 +905,8 @@
     }
 
     .agent-badge {
-        background: #f2a90630;
-        border: 1px solid #f2a90660;
+        background: #fef8e7;
+        border: 1px solid #fcd34d;
     }
 
     .agent-dot {
@@ -896,28 +916,28 @@
         width: 7px;
         height: 7px;
         background: #22c55e;
-        border: 1px solid #0f1729;
+        border: 1px solid #ffffff;
         border-radius: 50%;
     }
 
     .task-tag {
         font-size: 0.68rem;
-        background: #243044;
-        color: #94a3b8;
+        background: #f1f5f9;
+        color: #64748b;
         padding: 2px 8px;
         border-radius: 4px;
     }
 
     .elapsed {
         font-size: 0.68rem;
-        color: #f2a906;
+        color: #b07d04;
         margin-left: auto;
     }
 
     .status-select {
-        background: #1a2332;
-        color: #94a3b8;
-        border: 1px solid #2d3a4d;
+        background: #ffffff;
+        color: #64748b;
+        border: 1px solid #e8ecf1;
         border-radius: 4px;
         font-size: 0.7rem;
         padding: 2px 4px;
@@ -927,7 +947,7 @@
 
     .empty-col {
         text-align: center;
-        color: #475569;
+        color: #cbd5e1;
         font-size: 0.78rem;
         padding: 24px 0;
     }
@@ -936,7 +956,8 @@
     .panel-backdrop {
         position: fixed;
         inset: 0;
-        background: #00000070;
+        background: #00000015;
+        backdrop-filter: blur(2px);
         z-index: 200;
     }
 
@@ -946,18 +967,19 @@
         right: 0;
         height: 100vh;
         width: min(520px, 100vw);
-        background: #0f1729;
-        border-left: 1px solid #2d3a4d;
+        background: #ffffff;
+        border-left: 1px solid #e8ecf1;
         z-index: 201;
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        box-shadow: -4px 0 20px rgba(0,0,0,0.06);
     }
 
     .panel-header {
         padding: 20px 20px 14px;
-        border-bottom: 1px solid #2d3a4d;
-        background: #1a2332;
+        border-bottom: 1px solid #e8ecf1;
+        background: #f8f9fb;
         flex-shrink: 0;
     }
 
@@ -972,7 +994,7 @@
         flex: 1;
         font-size: 1rem;
         font-weight: 700;
-        color: #f1f5f9;
+        color: #1e293b;
         margin: 0;
         line-height: 1.4;
     }
@@ -980,14 +1002,13 @@
     .panel-close {
         background: none;
         border: none;
-        color: #64748b;
+        color: #94a3b8;
         cursor: pointer;
-        font-size: 1.1rem;
         padding: 2px;
         flex-shrink: 0;
         line-height: 1;
     }
-    .panel-close:hover { color: #e2e8f0; }
+    .panel-close:hover { color: #1e293b; }
 
     .panel-meta {
         display: flex;
@@ -997,8 +1018,8 @@
 
     .meta-chip {
         font-size: 0.72rem;
-        background: #243044;
-        color: #94a3b8;
+        background: #f1f5f9;
+        color: #64748b;
         padding: 3px 10px;
         border-radius: 20px;
         display: inline-flex;
@@ -1007,16 +1028,16 @@
     }
 
     .meta-agent {
-        background: #f2a90618;
-        color: #f2a906;
-        border: 1px solid #f2a90640;
+        background: #fef8e7;
+        color: #b07d04;
+        border: 1px solid #fcd34d;
     }
 
     .status-chip { font-weight: 600; }
 
     .elapsed-chip {
-        color: #f2a906;
-        background: #f2a90618;
+        color: #b07d04;
+        background: #fef8e7;
     }
 
     .panel-body {
@@ -1039,27 +1060,30 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #475569;
+        color: #94a3b8;
         margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 5px;
     }
 
     .section-text {
         font-size: 0.85rem;
-        color: #cbd5e1;
+        color: #475569;
         margin: 0;
         line-height: 1.5;
     }
 
     .outcome-section {
-        background: #f2a90608;
-        border: 1px solid #f2a90625;
+        background: #fef8e7;
+        border: 1px solid #fcd34d40;
         border-radius: 8px;
         padding: 10px 12px;
     }
 
     .commit-link {
         font-size: 0.82rem;
-        color: #60a5fa;
+        color: #3b82f6;
         text-decoration: none;
         word-break: break-all;
     }
@@ -1074,8 +1098,8 @@
         gap: 4px;
     }
 
-    .files-list li { font-size: 0.8rem; color: #94a3b8; }
-    .files-list code { font-size: 0.78rem; background: #1a2332; padding: 1px 5px; border-radius: 3px; color: #e2e8f0; }
+    .files-list li { font-size: 0.8rem; color: #64748b; }
+    .files-list code { font-size: 0.78rem; background: #f8f9fb; padding: 1px 5px; border-radius: 3px; color: #1e293b; }
 
     .full-select {
         max-width: 200px;
@@ -1091,44 +1115,44 @@
     }
 
     .comment {
-        background: #1a2332;
-        border: 1px solid #2d3a4d;
+        background: #f8f9fb;
+        border: 1px solid #e8ecf1;
         border-radius: 8px;
         padding: 8px 12px;
     }
 
     .agent-comment { border-left: 2px solid #f2a906; }
-    .attachment-comment { border-left: 2px solid #60a5fa; }
+    .attachment-comment { border-left: 2px solid #3b82f6; }
 
     .comment-author {
         font-size: 0.72rem;
         font-weight: 700;
-        color: #94a3b8;
+        color: #64748b;
         margin-right: 8px;
     }
 
     .comment-time {
         font-size: 0.68rem;
-        color: #475569;
+        color: #cbd5e1;
     }
 
     .comment-body {
         font-size: 0.82rem;
-        color: #cbd5e1;
+        color: #475569;
         margin: 4px 0 0;
         line-height: 1.4;
         word-break: break-word;
     }
 
     .comment-body :global(a) {
-        color: #60a5fa;
+        color: #3b82f6;
         text-decoration: none;
     }
     .comment-body :global(a:hover) { text-decoration: underline; }
 
     .loading-text, .no-comments {
         font-size: 0.8rem;
-        color: #475569;
+        color: #cbd5e1;
         font-style: italic;
     }
 
@@ -1173,14 +1197,14 @@
 
     .file-input {
         font-size: 0.8rem;
-        color: #94a3b8;
+        color: #64748b;
         flex: 1;
     }
 
     .btn-upload {
-        background: #243044;
-        color: #94a3b8;
-        border: 1px solid #2d3a4d;
+        background: #ffffff;
+        color: #64748b;
+        border: 1px solid #e8ecf1;
         padding: 6px 14px;
         border-radius: 6px;
         font-size: 0.8rem;
@@ -1188,6 +1212,6 @@
         transition: all 0.15s;
         white-space: nowrap;
     }
-    .btn-upload:hover:not(:disabled) { border-color: #f2a906; color: #f2a906; }
+    .btn-upload:hover:not(:disabled) { border-color: #f2a906; color: #b07d04; }
     .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

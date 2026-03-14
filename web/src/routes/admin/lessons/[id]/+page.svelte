@@ -1,6 +1,7 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import { invalidateAll } from '$app/navigation';
+    import { Headphones, RefreshCw, Bot, MessageCircle, Save, ExternalLink, ArrowLeft } from 'lucide-svelte';
 
     let { data, form } = $props();
 
@@ -55,11 +56,11 @@
 
     // Active tab
     let activeTab = $state<BlockType>('listening');
-    const TABS: { type: BlockType; emoji: string; label: string }[] = [
-        { type: 'listening',  emoji: '🎧', label: 'Block 1 — Listening' },
-        { type: 'drilling',   emoji: '🔄', label: 'Block 2 — Drilling' },
-        { type: 'roleplay',   emoji: '🤖', label: 'Block 3 — Roleplay' },
-        { type: 'reflection', emoji: '💭', label: 'Block 4 — Reflection' }
+    const TABS: { type: BlockType; icon: typeof Headphones; label: string }[] = [
+        { type: 'listening',  icon: Headphones, label: 'Block 1 — Listening' },
+        { type: 'drilling',   icon: RefreshCw, label: 'Block 2 — Drilling' },
+        { type: 'roleplay',   icon: Bot, label: 'Block 3 — Roleplay' },
+        { type: 'reflection', icon: MessageCircle, label: 'Block 4 — Reflection' }
     ];
 </script>
 
@@ -68,14 +69,14 @@
 {#if !lesson}
     <div class="not-found">
         <p>Lesson not found.</p>
-        <a href="/admin/lessons" class="btn btn-ghost">← Back to Lessons</a>
+        <a href="/admin/lessons" class="btn btn-ghost"><ArrowLeft size={14} /> Back to Lessons</a>
     </div>
 {:else}
 <div class="page">
     <!-- Header -->
     <div class="page-header">
         <div class="header-left">
-            <a href="/admin/lessons" class="back-link">← Lessons</a>
+            <a href="/admin/lessons" class="back-link"><ArrowLeft size={14} /> Lessons</a>
             <div>
                 <h1 class="page-title">{lesson.title}</h1>
                 <div class="page-meta">
@@ -91,7 +92,7 @@
             </div>
         </div>
         <div class="header-actions">
-            <a href="/lesson/{lesson.day_number}" target="_blank" class="btn btn-ghost">↗ Preview</a>
+            <a href="/lesson/{lesson.day_number}" target="_blank" class="btn btn-ghost"><ExternalLink size={14} /> Preview</a>
             <form method="POST" action="?/togglePublish" use:enhance={() => () => invalidateAll()}>
                 <button class="btn btn-ghost" type="submit">
                     {lesson.is_published ? 'Unpublish' : 'Publish'}
@@ -116,7 +117,7 @@
                 onclick={() => activeTab = tab.type}
                 type="button"
             >
-                <span class="tab-emoji">{tab.emoji}</span>
+                <span class="tab-icon"><tab.icon size={16} /></span>
                 <span class="tab-label">{tab.label}</span>
             </button>
         {/each}
@@ -142,7 +143,7 @@
         <!-- Block editors -->
         <div class="block-panel" class:visible={activeTab === 'listening'}>
             <div class="block-header">
-                <span class="block-emoji">🎧</span>
+                <span class="block-icon"><Headphones size={22} /></span>
                 <h2 class="block-title">Block 1 — Listening Practice</h2>
             </div>
             <p class="block-hint">Provide a transcript or key dialogue the user will listen to. Used for comprehension and shadowing.</p>
@@ -189,7 +190,7 @@
 
         <div class="block-panel" class:visible={activeTab === 'drilling'}>
             <div class="block-header">
-                <span class="block-emoji">🔄</span>
+                <span class="block-icon"><RefreshCw size={22} /></span>
                 <h2 class="block-title">Block 2 — Pattern Drilling</h2>
             </div>
             <p class="block-hint">Provide sentence patterns for the user to practise saying aloud. The app will prompt them to repeat each one.</p>
@@ -236,7 +237,7 @@
 
         <div class="block-panel" class:visible={activeTab === 'roleplay'}>
             <div class="block-header">
-                <span class="block-emoji">🤖</span>
+                <span class="block-icon"><Bot size={22} /></span>
                 <h2 class="block-title">Block 3 — AI Guided Simulation</h2>
             </div>
             <p class="block-hint">Configure the Groq AI roleplay. The system prompt shapes how the AI behaves as the client character.</p>
@@ -307,7 +308,7 @@
 
         <div class="block-panel" class:visible={activeTab === 'reflection'}>
             <div class="block-header">
-                <span class="block-emoji">💭</span>
+                <span class="block-icon"><MessageCircle size={22} /></span>
                 <h2 class="block-title">Block 4 — Emotional Reflection</h2>
             </div>
             <p class="block-hint">A journaling prompt for the user to reflect on how the session felt. Helps build speaking confidence over time.</p>
@@ -343,7 +344,7 @@
                     id="reflection-affirmation"
                     type="text"
                     class="field-input"
-                    placeholder="e.g. Every conversation makes you stronger. Keep going! 🌟"
+                    placeholder="e.g. Every conversation makes you stronger. Keep going!"
                     value={getStr('reflection', 'affirmation')}
                     oninput={(e) => setStr('reflection', 'affirmation', (e.target as HTMLInputElement).value)}
                 />
@@ -354,7 +355,11 @@
         <div class="save-bar">
             <span class="save-msg" class:visible={!!saveMsg}>{saveMsg}</span>
             <button type="submit" class="btn btn-primary" disabled={saving}>
-                {saving ? 'Saving…' : '💾 Save All Blocks'}
+                {#if saving}
+                    Saving…
+                {:else}
+                    <Save size={14} /> Save All Blocks
+                {/if}
             </button>
         </div>
     </form>
@@ -363,61 +368,61 @@
 
 <style>
     .page { max-width: 860px; }
-    .not-found { padding: 60px; text-align: center; color: #64748b; }
+    .not-found { padding: 60px; text-align: center; color: #94a3b8; }
 
     .page-header {
         display: flex; justify-content: space-between; align-items: flex-start;
         gap: 16px; margin-bottom: 24px;
     }
     .header-left { display: flex; flex-direction: column; gap: 4px; }
-    .back-link { font-size: 0.8rem; color: #64748b; text-decoration: none; margin-bottom: 4px; }
-    .back-link:hover { color: #94a3b8; }
-    .page-title { font-size: 1.4rem; font-weight: 700; color: #f1f5f9; margin: 0; }
-    .page-meta { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #64748b; flex-wrap: wrap; margin-top: 4px; }
-    .sep { color: #2d3a4d; }
-    .niche-badge { background: #1B365D30; color: #60a5fa; padding: 1px 7px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
-    .status-badge { font-size: 0.72rem; font-weight: 600; color: #64748b; }
-    .status-badge.published { color: #4ade80; }
+    .back-link { font-size: 0.8rem; color: #94a3b8; text-decoration: none; margin-bottom: 4px; display: inline-flex; align-items: center; gap: 4px; }
+    .back-link:hover { color: #64748b; }
+    .page-title { font-size: 1.4rem; font-weight: 700; color: #1e293b; margin: 0; }
+    .page-meta { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #94a3b8; flex-wrap: wrap; margin-top: 4px; }
+    .sep { color: #e8ecf1; }
+    .niche-badge { background: #eff6ff; color: #3b82f6; padding: 1px 7px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+    .status-badge { font-size: 0.72rem; font-weight: 600; color: #94a3b8; }
+    .status-badge.published { color: #16a34a; }
     .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
-    .alert-error { background: #ef44441a; border: 1px solid #ef4444; color: #fca5a5; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.875rem; }
-    .alert-success { background: #22c55e1a; border: 1px solid #22c55e; color: #4ade80; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.875rem; }
+    .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.875rem; }
+    .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.875rem; }
 
     .tabs {
         display: flex; gap: 0; margin-bottom: 0;
-        border-bottom: 1px solid #2d3a4d;
+        border-bottom: 1px solid #e8ecf1;
         overflow-x: auto;
     }
     .tab {
         display: flex; align-items: center; gap: 8px;
         padding: 10px 18px; border: none; background: transparent;
-        color: #64748b; font-size: 0.83rem; font-weight: 600;
+        color: #94a3b8; font-size: 0.83rem; font-weight: 600;
         cursor: pointer; border-bottom: 2px solid transparent;
         margin-bottom: -1px; white-space: nowrap; transition: all 0.15s;
     }
-    .tab:hover { color: #94a3b8; }
-    .tab.active { color: #f2a906; border-bottom-color: #f2a906; }
-    .tab-emoji { font-size: 1rem; }
+    .tab:hover { color: #64748b; }
+    .tab.active { color: #b07d04; border-bottom-color: #f2a906; }
+    .tab-icon { display: flex; align-items: center; }
 
     .block-panel { display: none; padding-top: 24px; }
     .block-panel.visible { display: block; }
 
     .block-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-    .block-emoji { font-size: 1.4rem; }
-    .block-title { font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin: 0; }
-    .block-hint { font-size: 0.82rem; color: #64748b; margin: 0 0 20px; line-height: 1.5; }
+    .block-icon { color: #b07d04; display: flex; align-items: center; }
+    .block-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0; }
+    .block-hint { font-size: 0.82rem; color: #94a3b8; margin: 0 0 20px; line-height: 1.5; }
 
     .field { margin-bottom: 20px; }
     .field-label {
         display: flex; align-items: center; gap: 8px;
         font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
-        letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 6px;
+        letter-spacing: 0.05em; color: #64748b; margin-bottom: 6px;
     }
-    .field-hint { font-size: 0.72rem; color: #475569; text-transform: none; letter-spacing: 0; font-weight: 400; }
+    .field-hint { font-size: 0.72rem; color: #cbd5e1; text-transform: none; letter-spacing: 0; font-weight: 400; }
     .field-input, .field-textarea {
         width: 100%; box-sizing: border-box;
-        background: #0f1729; border: 1px solid #2d3a4d;
-        color: #e2e8f0; border-radius: 8px;
+        background: #ffffff; border: 1px solid #e8ecf1;
+        color: #1e293b; border-radius: 8px;
         font-size: 0.875rem; font-family: inherit;
         padding: 10px 14px; outline: none;
         transition: border-color 0.15s;
@@ -432,10 +437,10 @@
         position: sticky; bottom: 0;
         display: flex; justify-content: flex-end; align-items: center; gap: 16px;
         padding: 14px 0; margin-top: 24px;
-        border-top: 1px solid #2d3a4d;
-        background: #0f1729;
+        border-top: 1px solid #e8ecf1;
+        background: #f8f9fb;
     }
-    .save-msg { font-size: 0.82rem; color: #4ade80; opacity: 0; transition: opacity 0.3s; }
+    .save-msg { font-size: 0.82rem; color: #16a34a; opacity: 0; transition: opacity 0.3s; }
     .save-msg.visible { opacity: 1; }
 
     .btn {
@@ -446,8 +451,8 @@
     .btn-primary { background: #f2a906; color: #1B365D; }
     .btn-primary:hover:not(:disabled) { opacity: 0.88; }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-ghost { background: transparent; border: 1px solid #2d3a4d; color: #94a3b8; }
-    .btn-ghost:hover { border-color: #94a3b8; color: #e2e8f0; }
+    .btn-ghost { background: transparent; border: 1px solid #e8ecf1; color: #64748b; }
+    .btn-ghost:hover { border-color: #cbd5e1; color: #1e293b; }
 
     @media (max-width: 600px) {
         .page-header { flex-direction: column; }

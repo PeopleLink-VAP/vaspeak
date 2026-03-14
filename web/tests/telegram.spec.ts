@@ -140,33 +140,50 @@ test.describe('Telegram Integration', () => {
     });
 
     // UI Tests - Profile page Telegram component
-    test('Profile page shows Telegram connect component', async ({ page }) => {
-        // Login first
-        await page.goto(`${BASE_URL}/login`);
-        await page.fill('input[name="email"]', 'admin@vaspeak.test');
-        await page.fill('input[name="password"]', 'admin123');
-        await page.click('button[type="submit"]');
-        await page.waitForURL('**/dashboard', { timeout: 10000 });
-        
-        // Navigate to profile
-        await page.goto(`${BASE_URL}/profile`);
-        await page.waitForSelector('[data-testid="telegram-connect"]', { timeout: 5000 });
-        
-        // Check component is visible
-        const component = page.locator('[data-testid="telegram-connect"]');
-        await expect(component).toBeVisible();
-        await expect(component).toContainText('Kết Nối Telegram');
-    });
+    test.describe('Profile UI', () => {
+        const UI_EMAIL = `tg-test-${Date.now()}@example.com`;
+        const UI_PASS = 'TestTelegram123';
 
-    test('Profile page shows badges section', async ({ page }) => {
-        await page.goto(`${BASE_URL}/login`);
-        await page.fill('input[name="email"]', 'admin@vaspeak.test');
-        await page.fill('input[name="password"]', 'admin123');
-        await page.click('button[type="submit"]');
-        await page.waitForURL('**/dashboard', { timeout: 10000 });
-        
-        await page.goto(`${BASE_URL}/profile`);
-        // Check for badges heading
-        await expect(page.getByText('🏆 Huy Hiệu')).toBeVisible({ timeout: 5000 });
+        test.beforeAll(async ({ browser }) => {
+            const page = await browser.newPage();
+            await page.goto('/login');
+            await page.locator('button:has-text("Đăng Ký")').click();
+            await page.fill('#reg-name', 'TG Test User');
+            await page.fill('#reg-email', UI_EMAIL);
+            await page.fill('#reg-password', UI_PASS);
+            await page.locator('button[type="submit"]').first().click();
+            await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
+            await page.close();
+        });
+
+        test.beforeEach(async ({ page }) => {
+            await page.goto('/login');
+            await page.fill('#login-email', UI_EMAIL);
+            await page.fill('#login-password', UI_PASS);
+            await page.locator('button[type="submit"]').first().click();
+            await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
+        });
+
+        test('Profile page shows Telegram connect component', async ({ page }) => {
+            await page.goto('/profile');
+            await page.waitForSelector('[data-testid="telegram-connect"]', { timeout: 5000 });
+            const component = page.locator('[data-testid="telegram-connect"]');
+            await expect(component).toBeVisible();
+            await expect(component).toContainText('Kết Nối Telegram');
+        });
+
+        test('Profile page shows badges section', async ({ page }) => {
+            await page.goto('/profile');
+            await expect(page.getByText('🏆 Huy Hiệu')).toBeVisible({ timeout: 5000 });
+        });
+
+        test('Telegram link button is clickable', async ({ page }) => {
+            await page.goto('/profile');
+            const linkBtn = page.locator('[data-testid="telegram-link-btn"]');
+            await expect(linkBtn).toBeVisible({ timeout: 5000 });
+            await linkBtn.click();
+            // QR modal should appear
+            await expect(page.locator('[data-testid="telegram-qr-modal"]')).toBeVisible({ timeout: 5000 });
+        });
     });
 });
