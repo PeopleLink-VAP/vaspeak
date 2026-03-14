@@ -55,7 +55,7 @@
                         class="nav-link"
                         class:active={currentPath === item.href}
                     >
-                        <span class="nav-icon"><svelte:component this={item.icon} size={16} /></span>
+                        <span class="nav-icon"><item.icon size={16} /></span>
                         <span class="nav-label">{item.label}</span>
                     </a>
                 {/each}
