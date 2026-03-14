@@ -25,6 +25,55 @@
 	let totalBlocks = $derived(blocks.length);
 	let progressPct = $derived(Math.round((currentBlock / totalBlocks) * 100));
 
+	// ── TTS Playback state (Block 1) ──────────────────────────────────
+	let ttsState: 'idle' | 'speaking' | 'paused' = $state('idle');
+
+	function toggleTTS() {
+		if (typeof window === 'undefined' || !window.speechSynthesis) return;
+		const synth = window.speechSynthesis;
+
+		if (ttsState === 'speaking') {
+			synth.pause();
+			ttsState = 'paused';
+			return;
+		}
+		if (ttsState === 'paused') {
+			synth.resume();
+			ttsState = 'speaking';
+			return;
+		}
+
+		// Start fresh
+		synth.cancel();
+		const script = block?.audio_script;
+		if (!script) return;
+
+		const utterance = new SpeechSynthesisUtterance(script);
+		utterance.lang = 'en-US';
+		utterance.rate = 0.9;
+		utterance.pitch = 1;
+
+		// Try to pick a natural English voice
+		const voices = synth.getVoices();
+		const preferred = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) 
+			|| voices.find(v => v.lang.startsWith('en-US'))
+			|| voices.find(v => v.lang.startsWith('en'));
+		if (preferred) utterance.voice = preferred;
+
+		utterance.onend = () => { ttsState = 'idle'; };
+		utterance.onerror = () => { ttsState = 'idle'; };
+
+		synth.speak(utterance);
+		ttsState = 'speaking';
+	}
+
+	function stopTTS() {
+		if (typeof window !== 'undefined' && window.speechSynthesis) {
+			window.speechSynthesis.cancel();
+		}
+		ttsState = 'idle';
+	}
+
 	// ── Drilling state (Block 2) ──────────────────────────────────────
 	let drState: 'idle' | 'recording' | 'processing' = $state('idle');
 	let drElapsed     = $state(0);
@@ -204,6 +253,7 @@
 
 	function nextBlock() {
 		completedBlocks.add(currentBlock);
+		stopTTS();
 		drRecorder.destroy();
 		rpRecorder.destroy();
 		if (currentBlock < totalBlocks - 1) {
@@ -300,22 +350,42 @@
 				<p class="text-[#1B365D]/65 text-sm mb-5">{block.instruction}</p>
 
 				<!-- Audio card -->
-				<div class="bg-white rounded-2xl p-5 shadow-[0_4px_14px_rgba(27,54,93,0.08)] border border-[#1B365D]/8 mb-5">
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div 
+					onclick={toggleTTS}
+					class="bg-white rounded-2xl p-5 shadow-[0_4px_14px_rgba(27,54,93,0.08)] border border-[#1B365D]/8 mb-5 cursor-pointer hover:shadow-[0_6px_20px_rgba(27,54,93,0.12)] transition-all active:scale-[0.98] {ttsState === 'speaking' ? 'ring-2 ring-[#F2A906]/50' : ''}"
+				>
 					<div class="flex items-center gap-3 mb-4">
-						<div class="w-12 h-12 rounded-xl bg-[#F2A906]/15 flex items-center justify-center text-2xl">🎧</div>
-						<div>
-							<p class="font-semibold text-[#1B365D] text-sm">Client Conversation</p>
-							<p class="text-[#1B365D]/40 text-xs">Nhấn để nghe</p>
+						<div class="w-12 h-12 rounded-xl {ttsState === 'speaking' ? 'bg-[#F2A906]/25' : 'bg-[#F2A906]/15'} flex items-center justify-center text-2xl transition-colors">
+							{#if ttsState === 'speaking'}⏸️{:else if ttsState === 'paused'}▶️{:else}🎧{/if}
 						</div>
+						<div class="flex-1">
+							<p class="font-semibold text-[#1B365D] text-sm">Client Conversation</p>
+							<p class="text-[#1B365D]/40 text-xs">
+								{#if ttsState === 'speaking'}Đang phát · nhấn để tạm dừng{:else if ttsState === 'paused'}Tạm dừng · nhấn để tiếp tục{:else}Nhấn để nghe{/if}
+							</p>
+						</div>
+						{#if ttsState !== 'idle'}
+							<button 
+								onclick={(e) => { e.stopPropagation(); stopTTS(); }}
+								class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:bg-red-100 transition-colors text-sm"
+								title="Dừng"
+							>✕</button>
+						{/if}
 					</div>
-					<!-- Waveform placeholder -->
+					<!-- Waveform bars -->
 					<div class="flex items-center gap-1 h-8 mb-3">
 						{#each Array(24) as _, i}
-							<div class="flex-1 bg-[#F2A906]/40 rounded-full" style="height: {20 + Math.sin(i * 0.8) * 14}px"></div>
+							<div 
+								class="flex-1 rounded-full transition-all duration-300 {ttsState === 'speaking' ? 'bg-[#F2A906]' : 'bg-[#F2A906]/40'}"
+								style="height: {ttsState === 'speaking' ? (12 + Math.random() * 20) : (20 + Math.sin(i * 0.8) * 14)}px; {ttsState === 'speaking' ? `animation: wave 0.${3 + (i % 4)}s ease-in-out infinite alternate; animation-delay: ${i * 0.04}s` : ''}"
+							></div>
 						{/each}
 					</div>
 					<!-- Script (shown as transcript) -->
-					<details class="mt-3">
+					<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+					<details class="mt-3" onclick={(e) => e.stopPropagation()}>
 						<summary class="text-xs text-[#1B365D]/40 cursor-pointer hover:text-[#1B365D]/70">Xem transcript</summary>
 						<p class="mt-2 text-[#1B365D]/70 text-sm leading-relaxed italic bg-[#FFFBF1] rounded-xl p-3">
 							{block.audio_script}
@@ -608,3 +678,10 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	@keyframes wave {
+		from { transform: scaleY(0.6); }
+		to   { transform: scaleY(1.2); }
+	}
+</style>
