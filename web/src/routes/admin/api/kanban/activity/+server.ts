@@ -7,13 +7,13 @@ export async function GET() {
 
     const tasksResult = await turso.execute(
         `SELECT id, title, status, assignee, updated_at, created_at
-         FROM tasks ORDER BY updated_at DESC LIMIT 30`
+         FROM kanban_tasks ORDER BY updated_at DESC LIMIT 30`
     );
 
     const commentsResult = await turso.execute(
         `SELECT c.id, c.task_id, c.author, c.body, c.created_at, t.title as task_title
-         FROM task_comments c
-         LEFT JOIN tasks t ON t.id = c.task_id
+         FROM kanban_comments c
+         LEFT JOIN kanban_tasks t ON t.id = c.task_id
          ORDER BY c.created_at DESC LIMIT 30`
     );
 

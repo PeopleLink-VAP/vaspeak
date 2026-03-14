@@ -9,7 +9,7 @@ export const turso = createClient({
 /** Ensure kanban tables exist on the remote Turso DB */
 export async function ensureKanbanSchema() {
     await turso.executeMultiple(`
-        CREATE TABLE IF NOT EXISTS tasks (
+        CREATE TABLE IF NOT EXISTS kanban_tasks (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             description TEXT,
@@ -28,11 +28,19 @@ export async function ensureKanbanSchema() {
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        CREATE TABLE IF NOT EXISTS task_comments (
+        CREATE TABLE IF NOT EXISTS kanban_comments (
             id TEXT PRIMARY KEY,
-            task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+            task_id TEXT NOT NULL REFERENCES kanban_tasks(id) ON DELETE CASCADE,
             author TEXT NOT NULL,
             body TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS kanban_attachments (
+            id TEXT PRIMARY KEY,
+            task_id TEXT NOT NULL REFERENCES kanban_tasks(id) ON DELETE CASCADE,
+            file_name TEXT NOT NULL,
+            file_url TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 

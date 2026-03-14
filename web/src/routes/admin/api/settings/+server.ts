@@ -22,7 +22,7 @@ export async function GET() {
 
     // DB row counts
     const counts: Record<string, number> = {};
-    const tables = ['profiles', 'lessons', 'user_progress', 'user_credits', 'vocabulary_bank', 'tasks'];
+    const tables = ['profiles', 'lessons', 'user_progress', 'user_credits', 'vocabulary_bank'];
     await Promise.all(
         tables.map(async (t) => {
             try {

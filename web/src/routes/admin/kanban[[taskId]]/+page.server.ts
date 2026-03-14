@@ -4,7 +4,7 @@ export async function load() {
     await ensureKanbanSchema();
 
     const result = await turso.execute(
-        'SELECT * FROM tasks ORDER BY updated_at DESC'
+        'SELECT * FROM kanban_tasks ORDER BY updated_at DESC'
     );
 
     const tasks = result.rows.map((row) => ({

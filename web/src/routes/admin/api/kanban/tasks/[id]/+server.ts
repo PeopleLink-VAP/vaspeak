@@ -3,7 +3,7 @@ import { turso } from '$lib/server/turso';
 
 export async function GET({ params }) {
     const rs = await turso.execute({
-        sql: 'SELECT * FROM tasks WHERE id = ?',
+        sql: 'SELECT * FROM kanban_tasks WHERE id = ?',
         args: [params.id]
     });
     if (rs.rows.length === 0) return json({ error: 'Task not found' }, { status: 404 });
@@ -38,7 +38,7 @@ export async function PATCH({ params, request }) {
     args.push(params.id);
 
     await turso.execute({
-        sql: `UPDATE tasks SET ${sets.join(', ')} WHERE id = ?`,
+        sql: `UPDATE kanban_tasks SET ${sets.join(', ')} WHERE id = ?`,
         args
     });
 
@@ -47,7 +47,7 @@ export async function PATCH({ params, request }) {
 
 export async function DELETE({ params }) {
     await turso.execute({
-        sql: 'DELETE FROM tasks WHERE id = ?',
+        sql: 'DELETE FROM kanban_tasks WHERE id = ?',
         args: [params.id]
     });
 

@@ -25,12 +25,23 @@ export async function POST({ params, request }) {
 
     // Store attachment reference in a comment
     await turso.execute({
-        sql: 'INSERT INTO task_comments (id, task_id, author, body) VALUES (?, ?, ?, ?)',
+        sql: 'INSERT INTO kanban_comments (id, task_id, author, body) VALUES (?, ?, ?, ?)',
         args: [
             nanoid(10),
             params.id,
             'attachment',
             `📎 [${file.name}](/uploads/kanban/${filename})`
+        ]
+    });
+    
+    // Also store in kanban_attachments explicitly
+    await turso.execute({
+        sql: 'INSERT INTO kanban_attachments (id, task_id, file_name, file_url) VALUES (?, ?, ?, ?)',
+        args: [
+            nanoid(10),
+            params.id,
+            file.name,
+            `/uploads/kanban/${filename}`
         ]
     });
 

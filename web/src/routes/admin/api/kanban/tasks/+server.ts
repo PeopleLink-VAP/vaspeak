@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid';
 
 export async function GET() {
     await ensureKanbanSchema();
-    const result = await turso.execute('SELECT * FROM tasks ORDER BY updated_at DESC');
+    const result = await turso.execute('SELECT * FROM kanban_tasks ORDER BY updated_at DESC');
     return json(result.rows);
 }
 
@@ -14,7 +14,7 @@ export async function POST({ request }) {
     const id = nanoid(10);
 
     await turso.execute({
-        sql: `INSERT INTO tasks (id, title, description, expected_outcome, status, assignee, workstream)
+        sql: `INSERT INTO kanban_tasks (id, title, description, expected_outcome, status, assignee, workstream)
               VALUES (?, ?, ?, ?, ?, ?, ?)`,
         args: [
             id,
