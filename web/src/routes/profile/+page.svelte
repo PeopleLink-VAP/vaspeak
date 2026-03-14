@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import BottomNav from '$lib/components/BottomNav.svelte';
-	import TelegramConnect from '$lib/components/TelegramConnect.svelte';
 	import NotificationPrompt from '$lib/components/NotificationPrompt.svelte';
 
 	let { data, form } = $props();
@@ -92,7 +91,7 @@
 				</div>
 				<div class="flex-1 py-4 text-center">
 					<p class="font-heading font-bold text-[#1A1A1A] text-2xl">{challengeStats.wins}/{challengeStats.total}</p>
-					<p class="text-[10px] text-[#A3A3A3] font-medium uppercase tracking-wide mt-0.5">TG challenges</p>
+					<p class="text-[10px] text-[#A3A3A3] font-medium uppercase tracking-wide mt-0.5">Thử thách</p>
 				</div>
 			</div>
 		{/if}
@@ -173,15 +172,6 @@
 					{isSubmitting ? 'Đang lưu...' : 'Lưu Thay Đổi'}
 				</button>
 			</form>
-		</div>
-
-		<!-- Divider -->
-		<div class="h-px bg-[#E8E8E8]"></div>
-
-		<!-- Telegram -->
-		<div>
-			<p class="text-xs font-semibold text-[#A3A3A3] uppercase tracking-widest mb-4">Telegram</p>
-			<TelegramConnect />
 		</div>
 
 		<!-- Divider -->

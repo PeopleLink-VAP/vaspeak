@@ -1,6 +1,6 @@
 /**
- * Shared vocabulary challenge generation — used by both Telegram bot and in-app games.
- * Extracted from telegram.ts for reuse.
+ * Vocabulary challenge generation for in-app mini games.
+ * Uses Groq AI to generate contextual fill-in-the-blank quizzes.
  */
 import { randomBytes } from 'crypto';
 import { env } from '$env/dynamic/private';
@@ -68,9 +68,8 @@ Shuffle the options randomly and set correctIndex to match the correct answer's 
 }
 
 /**
- * Create a new vocab challenge for a user, storing it in telegram_challenges
- * (shared table for both Telegram and in-app games) and vocabulary_bank.
- * Returns the challenge object for display.
+ * Create a new vocab challenge for a user, storing it in the challenges table
+ * and vocabulary_bank. Returns the challenge object for display.
  */
 export async function createVocabChallengeForUser(userId: string): Promise<VocabChallenge & { isNew: boolean }> {
     // Check for existing unanswered challenge
@@ -121,7 +120,7 @@ export async function createVocabChallengeForUser(userId: string): Promise<Vocab
         args: [vocabId, userId, challenge.word, challenge.definition, challenge.example]
     });
 
-    // Store challenge for answer verification (shared with Telegram)
+    // Store challenge for answer verification
     await db.execute({
         sql: `INSERT OR REPLACE INTO telegram_challenges (user_id, word, correct_index, options, answered, created_at)
               VALUES (?, ?, ?, ?, 0, datetime('now'))`,

@@ -34,14 +34,14 @@
 
 	<div class="max-w-md mx-auto px-5 pt-5 flex flex-col gap-5">
 
-		<!-- Telegram challenge stats -->
+		<!-- Challenge stats -->
 		{#if challengeStats.total > 0}
 			<div class="flex items-center gap-4 bg-white rounded-2xl border border-[#E8E8E8] p-4">
-				<div class="w-9 h-9 rounded-xl bg-[#0088cc]/10 flex items-center justify-center shrink-0">
-					<svg class="w-4 h-4 text-[#0088cc]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.95 7.23l-2.02 9.53c-.15.68-.55.85-1.12.53l-3.1-2.28-1.49 1.44c-.17.17-.3.3-.62.3l.22-3.15 5.72-5.16c.25-.22-.05-.34-.39-.13l-7.07 4.45-3.05-.95c-.66-.21-.67-.66.14-.98l11.92-4.6c.55-.2 1.03.13.86.97z"/></svg>
+				<div class="w-9 h-9 rounded-xl bg-[#D4960A]/10 flex items-center justify-center shrink-0">
+					<img src="/icons/i_abc.png" alt="" class="w-5 h-5" />
 				</div>
 				<div class="flex-1">
-					<p class="text-sm font-semibold text-[#1A1A1A]">Thử thách Telegram</p>
+					<p class="text-sm font-semibold text-[#1A1A1A]">Thử thách từ vựng</p>
 					<p class="text-xs text-[#A3A3A3]">{challengeStats.wins}/{challengeStats.total} đúng · +{challengeStats.creditsEarned} credits</p>
 				</div>
 				<div class="text-right">
@@ -82,9 +82,9 @@
 											<img src="/icons/i_lesson.png" alt="" class="w-3 h-3" /> Bài học
 										</span>
 									{:else}
-										<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0088cc]/60 uppercase tracking-wide">
-											<svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.95 7.23l-2.02 9.53c-.15.68-.55.85-1.12.53l-3.1-2.28-1.49 1.44c-.17.17-.3.3-.62.3l.22-3.15 5.72-5.16c.25-.22-.05-.34-.39-.13l-7.07 4.45-3.05-.95c-.66-.21-.67-.66.14-.98l11.92-4.6c.55-.2 1.03.13.86.97z"/></svg>
-											Telegram
+										<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-[#D4960A]/60 uppercase tracking-wide">
+											<img src="/icons/i_abc.png" alt="" class="w-2.5 h-2.5" />
+											Mini Game
 										</span>
 									{/if}
 								</div>

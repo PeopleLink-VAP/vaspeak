@@ -4,7 +4,7 @@
  * Sends Web Push notifications to all subscribed users whose reminder_hour matches
  * the current hour in their timezone. Deep-links to /games/word-of-the-day.
  * 
- * Auth: Bearer CRON_SECRET header (same as Telegram daily challenge).
+ * Auth: Bearer CRON_SECRET header.
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';

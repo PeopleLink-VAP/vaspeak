@@ -19,7 +19,7 @@ Keep your answers concise, friendly, and in Vietnamese.
 VASpeak features: 
 - 4-block daily lessons: Listening, Pronunciation Drill, AI Roleplay, Emotional Reflection.
 - Settings: Users can update Name, Niche (ecommerce, video editor, etc) and Avatar in Profile page.
-- Telegram integration (@vaspeak_bot) for daily vocab challenges and reminders. Link via Profile page.
+- In-app mini games (Word of the Day) with push notifications for daily vocab reminders. Enable via Profile > Thông Báo.
 - AI Credits: Each AI roleplay or grammar check costs credits. Free users get 100/mo. Daily challenges earn credits.
 - Feedback: Users can submit feedback or bugs via the Help Center.
 

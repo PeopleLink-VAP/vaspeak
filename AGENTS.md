@@ -14,8 +14,7 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 - **Frontend**: SvelteKit 5 (Runes: `$state`, `$derived`, `$props`, `$effect`), TypeScript, Tailwind CSS 4.
 - **Backend**: SvelteKit API routes. Local SQLite (`@libsql/client`). Admin Kanban via remote Turso.
 - **Auth**: Custom server-side. Email/password (bcrypt) + magic links (Resend). 7-day httpOnly JWT. Anti-enumeration.
-- **AI**: Groq API (Llama) for roleplay, pronunciation, content gen, Telegram vocab. Credit-gated.
-- **Telegram**: `@vaspeak_bot` — daily vocab challenges, hourly cron, webhook at `/api/telegram/webhook`.
+- **AI**: Groq API (Llama) for roleplay, pronunciation, content gen, vocab challenges. Credit-gated.
 - **Icons**: `lucide-svelte` for admin, custom PNGs (`/static/icons/`) for app pages. No emoji in UI.
 - **Admin**: 3-column layout (nav sidebar | content | activity panel). Light theme, Lucide icons.
 - **Deploy**: PM2 self-hosted. `vaspeak-prod` :19300 → `vaspeak.alphabits.team`. `vaspeak-dev` :19301 → `vaspeak-beta.alphabits.team`. Adapter: `@sveltejs/adapter-node`.
@@ -33,9 +32,7 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 | `lessons` | id, day_number, week_number, week_theme, niche, title, content (JSON), is_published |
 | `user_progress` | id, user_id, lesson_id, block_completions (JSON), simulation_scores (JSON), stress_level (1-3), completed_at |
 | `vocabulary_bank` | id, user_id, word, definition, context_sentence, lesson_id, mastered (0/1) |
-| `telegram_links` | user_id (PK), telegram_chat_id, telegram_username, reminder_hour, timezone |
-| `telegram_challenges` | id, user_id, word, correct_index, options (JSON), answered, correct, credits_earned (shared with in-app games) |
-| `telegram_messages` | id, user_id, telegram_chat_id, direction, message_text, message_type |
+| `telegram_challenges` | id, user_id, word, correct_index, options (JSON), answered, correct, credits_earned (used by in-app games) |
 | `push_subscriptions` | user_id + endpoint (PK), p256dh, auth, reminder_hour, timezone, active |
 | `newsletter_subscribers` | id, email (unique), source, subscribed_at |
 | `blacklisted_domains` | id, domain (unique) |
@@ -46,7 +43,7 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 
 **Admin pages**: `/admin` (dashboard), `/admin/kanban`, `/admin/users`, `/admin/lessons`, `/admin/waitlist`, `/admin/e2e-testing`, `/admin/settings`.
 
-**APIs**: `/api/roleplay`, `/api/progress`, `/api/credits`, `/api/waitlist`, `/api/telegram/link`, `/api/telegram/webhook`, `/api/telegram/send-daily-challenge`, `/api/games/word-challenge`, `/api/notifications/subscribe`, `/api/notifications/send-daily`, `/api/notifications/vapid-key`, `/api/support/chat`.
+**APIs**: `/api/roleplay`, `/api/progress`, `/api/credits`, `/api/waitlist`, `/api/games/word-challenge`, `/api/notifications/subscribe`, `/api/notifications/send-daily`, `/api/notifications/vapid-key`, `/api/support/chat`.
 
 **Admin APIs**: `/admin/api/activity` (user signups/waitlist/progress), `/admin/api/kanban/activity` (task updates/comments), `/admin/api/kanban/tasks`, `/admin/api/users/[id]`.
 
@@ -74,7 +71,7 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 |---|---|---|
 | `BottomNav.svelte` | `$lib/components/` | App bottom navigation bar |
 | `TimeAgo.svelte` | `$lib/components/` | Relative timestamp ("3m ago"), auto-updates, respects browser TZ |
-| `TelegramConnect.svelte` | `$lib/components/` | Self-contained Telegram link/unlink/QR/timezone picker |
+| `TelegramConnect.svelte` | `$lib/components/` | _(removed — Telegram integration deprecated)_ |
 | `NotificationPrompt.svelte` | `$lib/components/` | Web Push subscription management: permission, subscribe/unsubscribe, reminder hour picker |
 | `AudioRecorder.svelte` | `$lib/components/` | Web Audio capture for lesson blocks |
 

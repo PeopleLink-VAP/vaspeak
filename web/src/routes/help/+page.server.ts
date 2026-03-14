@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     const articles = [
         { id: '1', title: 'Làm thế nào để nhận thêm AI Credits?', content: 'Mỗi người dùng được cấp một lượng AI Credits miễn phí mỗi tháng tùy vào gói dịch vụ. Nếu bạn hết Credits, bạn có thể hoàn thành các thử thách hàng ngày, chuỗi ngày học để được tặng thêm, hoặc nâng cấp lên gói Pro.' },
         { id: '2', title: 'Cách khắc phục lỗi không thu âm được?', content: 'Rất có thể trình duyệt của bạn chưa được cấp quyền nhận diện giọng nói (Microphone). Hãy nhấn vào biểu tượng ổ khóa cạnh thanh địa chỉ trình duyệt, chọn Cài đặt trang web, và cho phép quyền truy cập Micro. Tải lại trang và thử lại.' },
-        { id: '3', title: 'Kết nối Telegram bị lỗi?', content: 'Để kết nối, bạn cần chắc chắn đã nhập đúng username Telegram của mình vào thiết lập tài khoản. Sau đó hãy vào app Telegram, tìm @vaspeak_bot, quét mã QR trên màn hình hoặc nhắn tin chứa mã kết nối.' },
+        { id: '3', title: 'Làm sao bật thông báo hàng ngày?', content: 'Vào Hồ sơ > Thông Báo, nhấn "Bật thông báo hàng ngày". Trình duyệt sẽ hỏi quyền nhận thông báo — hãy chọn Cho phép. Bạn có thể chọn khung giờ nhắc nhở phù hợp.' },
         { id: '4', title: 'Lộ trình học theo chuyên ngành (Niche)', content: 'Bạn có thể thay đổi Niche (Tiếng Anh Giao Tiếp, Thương Mại Điện Tử, Trợ Lý Giám Đốc...) trong phần Hồ sơ > Cài đặt. Các bài học và vai diễn AI sẽ được cá nhân hóa theo ngành nghề mà bạn chọn.' }
     ];
 

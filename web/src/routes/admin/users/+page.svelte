@@ -1,7 +1,7 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import { invalidateAll } from '$app/navigation';
-    import { BookOpen, Flame, BookText, Coins, User, ChevronUp, ChevronDown, MessageCircle, Zap, Clock, TrendingUp, Award, Send, Brain } from 'lucide-svelte';
+    import { BookOpen, Flame, BookText, Coins, User, ChevronUp, ChevronDown, MessageCircle, Zap, Clock, TrendingUp, Award, Brain, Gamepad2 } from 'lucide-svelte';
     let { data, form } = $props();
 
     let searchVal = $derived(data.search);
@@ -80,10 +80,6 @@
                         <span class="meta-text">{profilePopup.current_level ?? 'Beginner'}</span>
                         <span class="meta-dot">·</span>
                         <span class="meta-text">{profilePopup.niche ?? 'general'}</span>
-                        {#if profilePopup.telegram}
-                            <span class="meta-dot">·</span>
-                            <span class="badge badge-telegram"><Send size={10} /> Telegram</span>
-                        {/if}
                     </div>
                 </div>
                 <button class="modal-close" onclick={closePopup} data-testid="profile-popup-close">✕</button>
@@ -146,12 +142,7 @@
                         <span>Last lesson {fmtRelative(profilePopup.lastLessonDate)}</span>
                     </div>
                 {/if}
-                {#if profilePopup.telegram}
-                    <div class="detail-chip">
-                        <Send size={11} />
-                        <span>@{profilePopup.telegram.telegram_username ?? 'linked'}</span>
-                    </div>
-                {/if}
+
             </div>
 
             <!-- Tabs -->
@@ -182,8 +173,8 @@
                                             <Coins size={10} />
                                         {:else if ev.type === 'vocab'}
                                             <BookText size={10} />
-                                        {:else if ev.type === 'telegram'}
-                                            <Send size={10} />
+                                        {:else if ev.type === 'challenge'}
+                                            <Gamepad2 size={10} />
                                         {:else}
                                             <Zap size={10} />
                                         {/if}
@@ -235,24 +226,24 @@
                         <div class="empty-tab">No lessons completed yet</div>
                     {/if}
 
-                    <!-- Telegram Challenge Stats -->
-                    {#if profilePopup.telegramStats && Number(profilePopup.telegramStats.total_challenges) > 0}
-                        <div class="sub-section-header">Telegram Challenges</div>
+                    <!-- Challenge Stats -->
+                    {#if profilePopup.challengeStats && Number(profilePopup.challengeStats.total_challenges) > 0}
+                        <div class="sub-section-header">Vocab Challenges</div>
                         <div class="tg-stats-row">
                             <div class="tg-stat">
-                                <span class="tg-stat-val">{profilePopup.telegramStats.total_challenges}</span>
-                                <span class="tg-stat-lbl">Sent</span>
+                                <span class="tg-stat-val">{profilePopup.challengeStats.total_challenges}</span>
+                                <span class="tg-stat-lbl">Total</span>
                             </div>
                             <div class="tg-stat">
-                                <span class="tg-stat-val">{profilePopup.telegramStats.answered}</span>
+                                <span class="tg-stat-val">{profilePopup.challengeStats.answered}</span>
                                 <span class="tg-stat-lbl">Answered</span>
                             </div>
                             <div class="tg-stat">
-                                <span class="tg-stat-val">{profilePopup.telegramStats.correct}</span>
+                                <span class="tg-stat-val">{profilePopup.challengeStats.correct}</span>
                                 <span class="tg-stat-lbl">Correct</span>
                             </div>
                             <div class="tg-stat">
-                                <span class="tg-stat-val">+{profilePopup.telegramStats.total_credits_earned ?? 0}</span>
+                                <span class="tg-stat-val">+{profilePopup.challengeStats.total_credits_earned ?? 0}</span>
                                 <span class="tg-stat-lbl">Earned</span>
                             </div>
                         </div>
@@ -521,7 +512,7 @@
     .timeline-dot-lesson { background: #F5F0E6; color: #D4960A; }
     .timeline-dot-credit { background: #f5f3ff; color: #8b5cf6; }
     .timeline-dot-vocab { background: rgba(16,185,129,0.1); color: #10B981; }
-    .timeline-dot-telegram { background: rgba(0,136,204,0.1); color: #0088cc; }
+    .timeline-dot-challenge { background: rgba(212,150,10,0.1); color: #D4960A; }
     .timeline-body { flex: 1; min-width: 0; }
     .timeline-desc { font-size: 0.78rem; color: #1A1A1A; display: block; font-weight: 500; }
     .timeline-detail { font-size: 0.68rem; color: #A3A3A3; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -559,7 +550,7 @@
 
     .empty-tab { text-align: center; color: #A3A3A3; font-size: 0.82rem; padding: 28px 0; }
 
-    .badge-telegram { background: rgba(0,136,204,0.1); color: #0088cc; display: inline-flex; align-items: center; gap: 3px; }
+
 
     /* ── Mini Stats in Table ── */
     .mini-stats { display: flex; gap: 8px; flex-wrap: wrap; }

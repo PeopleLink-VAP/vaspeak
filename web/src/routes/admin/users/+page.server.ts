@@ -113,9 +113,7 @@ export const actions: Actions = {
                 { sql: `DELETE FROM user_credits WHERE user_id = ?`, args: [userId] },
                 { sql: `DELETE FROM user_progress WHERE user_id = ?`, args: [userId] },
                 { sql: `DELETE FROM vocabulary_bank WHERE user_id = ?`, args: [userId] },
-                { sql: `DELETE FROM telegram_links WHERE user_id = ?`, args: [userId] },
                 { sql: `DELETE FROM telegram_challenges WHERE user_id = ?`, args: [userId] },
-                { sql: `DELETE FROM telegram_messages WHERE user_id = ?`, args: [userId] },
                 { sql: `DELETE FROM magic_links WHERE user_id = ?`, args: [userId] },
                 { sql: `DELETE FROM password_resets WHERE user_id = ?`, args: [userId] },
                 { sql: `DELETE FROM auth_passwords WHERE user_id = ?`, args: [userId] },
@@ -133,7 +131,7 @@ export const actions: Actions = {
         const data = await request.formData();
         const userId = String(data.get('userId') ?? '');
         try {
-            const [profile, progress, vocab, creditEvents, recentProgress, telegramLink, telegramStats, activityTimeline] = await Promise.all([
+            const [profile, progress, vocab, creditEvents, recentProgress, challengeStats, activityTimeline] = await Promise.all([
                 // Basic profile + credits
                 db.execute({
                     sql: `SELECT p.*, uc.credits_used, uc.monthly_allowance, uc.subscription_status, uc.reset_date
@@ -170,13 +168,7 @@ export const actions: Actions = {
                           ORDER BY up.completed_at DESC LIMIT 8`,
                     args: [userId]
                 }),
-                // Telegram link status
-                db.execute({
-                    sql: `SELECT telegram_chat_id, telegram_username, linked_at, reminder_hour, timezone
-                          FROM telegram_links WHERE user_id = ?`,
-                    args: [userId]
-                }),
-                // Telegram challenge stats
+                // Vocab challenge stats
                 db.execute({
                     sql: `SELECT COUNT(*) as total_challenges,
                                  SUM(CASE WHEN answered = 1 THEN 1 ELSE 0 END) as answered,
@@ -202,7 +194,7 @@ export const actions: Actions = {
                                    CASE WHEN mastered = 1 THEN 'Mastered' ELSE 'Learning' END as detail, added_at as timestamp
                             FROM vocabulary_bank WHERE user_id = ?
                           UNION ALL
-                            SELECT 'telegram' as type, 'Telegram challenge' as description,
+                            SELECT 'challenge' as type, 'Vocab challenge' as description,
                                    word as detail, created_at as timestamp
                             FROM telegram_challenges WHERE user_id = ?
                           ) ORDER BY timestamp DESC LIMIT 15`,
@@ -229,8 +221,7 @@ export const actions: Actions = {
                     vocabMastered: Number(vocab.rows[0]?.mastered ?? 0),
                     recentCredits: creditEvents.rows,
                     recentProgress: recentProgress.rows,
-                    telegram: telegramLink.rows[0] ?? null,
-                    telegramStats: telegramStats.rows[0] ?? null,
+                    challengeStats: challengeStats.rows[0] ?? null,
                     activityTimeline: activityTimeline.rows
                 }
             };
