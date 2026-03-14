@@ -7,16 +7,128 @@
     let confirmDelete = $state<string | null>(null);
     let expandedUser = $state<string | null>(null);
 
+    // Profile popup state
+    let profilePopup = $state<any>(null);
+    let profileLoading = $state(false);
+
     function fmt(dateStr: unknown) {
         if (!dateStr) return '—';
         return new Date(String(dateStr)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     }
+    function fmtTime(dateStr: unknown) {
+        if (!dateStr) return '—';
+        const d = new Date(String(dateStr));
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
     function credits(used: unknown, allowance: unknown) {
         return `${Number(allowance ?? 100) - Number(used ?? 0)} / ${allowance ?? 100}`;
     }
+    function closePopup() { profilePopup = null; }
 </script>
 
 <svelte:head><title>Users — VASpeak Admin</title></svelte:head>
+
+<!-- Profile Popup Modal -->
+{#if profilePopup}
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="modal-overlay" onclick={closePopup} data-testid="profile-popup-overlay">
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="modal" onclick={(e) => e.stopPropagation()} data-testid="profile-popup">
+            <div class="modal-header">
+                <div class="modal-avatar">{String(profilePopup.display_name ?? profilePopup.email)[0].toUpperCase()}</div>
+                <div class="modal-user-info">
+                    <h2 class="modal-name">{profilePopup.display_name ?? '—'}</h2>
+                    <p class="modal-email">{profilePopup.email}</p>
+                </div>
+                <button class="modal-close" onclick={closePopup} data-testid="profile-popup-close">✕</button>
+            </div>
+
+            <!-- Mini Stats Grid -->
+            <div class="stats-grid" data-testid="profile-stats">
+                <div class="stat-card">
+                    <span class="stat-icon">📚</span>
+                    <span class="stat-value">{profilePopup.lessonsCompleted}</span>
+                    <span class="stat-label">Lessons Done</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">🔥</span>
+                    <span class="stat-value">{profilePopup.streak_count ?? 0}</span>
+                    <span class="stat-label">Streak Days</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📖</span>
+                    <span class="stat-value">{profilePopup.vocabMastered}/{profilePopup.vocabTotal}</span>
+                    <span class="stat-label">Vocab Mastered</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-value">{credits(profilePopup.credits_used, profilePopup.monthly_allowance)}</span>
+                    <span class="stat-label">Credits Left</span>
+                </div>
+            </div>
+
+            <!-- Profile Details -->
+            <div class="profile-details">
+                <div class="detail-row-item">
+                    <span class="detail-key">Level</span>
+                    <span class="detail-val">{profilePopup.current_level ?? '—'}</span>
+                </div>
+                <div class="detail-row-item">
+                    <span class="detail-key">Niche</span>
+                    <span class="detail-val">{profilePopup.niche ?? 'general'}</span>
+                </div>
+                <div class="detail-row-item">
+                    <span class="detail-key">Plan</span>
+                    <span class="badge" class:badge-pro={profilePopup.subscription_status === 'pro'}>{profilePopup.subscription_status ?? 'free'}</span>
+                </div>
+                <div class="detail-row-item">
+                    <span class="detail-key">Joined</span>
+                    <span class="detail-val">{fmt(profilePopup.created_at)}</span>
+                </div>
+                <div class="detail-row-item">
+                    <span class="detail-key">Last Lesson</span>
+                    <span class="detail-val">{fmtTime(profilePopup.lastLessonDate)}</span>
+                </div>
+                <div class="detail-row-item">
+                    <span class="detail-key">Last Active</span>
+                    <span class="detail-val">{fmtTime(profilePopup.updated_at)}</span>
+                </div>
+            </div>
+
+            <!-- Recent Credit Events -->
+            {#if profilePopup.recentCredits?.length}
+                <div class="section-header">Recent Credit Activity</div>
+                <div class="credit-list">
+                    {#each profilePopup.recentCredits as ev}
+                        <div class="credit-item">
+                            <span class="credit-reason">{ev.reason}</span>
+                            <span class="credit-delta" class:credit-spent={Number(ev.delta) < 0} class:credit-earned={Number(ev.delta) > 0}>
+                                {Number(ev.delta) > 0 ? '+' : ''}{ev.delta}
+                            </span>
+                            <span class="credit-date">{fmt(ev.created_at)}</span>
+                        </div>
+                    {/each}
+                </div>
+            {/if}
+
+            <!-- Recent Progress -->
+            {#if profilePopup.recentProgress?.length}
+                <div class="section-header">Recent Progress</div>
+                <div class="credit-list">
+                    {#each profilePopup.recentProgress as p}
+                        <div class="credit-item">
+                            <span class="credit-reason">Lesson #{p.lesson_id}</span>
+                            <span class="badge">{p.stress_level === 1 ? '😰' : p.stress_level === 2 ? '😐' : '😎'}</span>
+                            <span class="credit-date">{fmtTime(p.completed_at)}</span>
+                        </div>
+                    {/each}
+                </div>
+            {/if}
+        </div>
+    </div>
+{/if}
 
 <div class="page">
     <div class="page-header">
@@ -92,6 +204,21 @@
                         <td class="muted">{fmt(u.created_at)}</td>
                         <td>
                             <div class="action-row">
+                                <!-- Profile popup button -->
+                                <form method="POST" action="?/getUserProfile" use:enhance={() => {
+                                    profileLoading = true;
+                                    return async ({ result }) => {
+                                        profileLoading = false;
+                                        if (result.type === 'success' && result.data?.userProfile) {
+                                            profilePopup = result.data.userProfile;
+                                        }
+                                    };
+                                }}>
+                                    <input type="hidden" name="userId" value={u.id} />
+                                    <button class="btn-icon" title="View Profile" type="submit" data-testid="view-profile-{u.id}">
+                                        {profileLoading ? '…' : '👤'}
+                                    </button>
+                                </form>
                                 <button class="btn-icon" title="Expand" onclick={() => expandedUser = isExpanded ? null : String(u.id)}>
                                     {isExpanded ? '▲' : '▼'}
                                 </button>
@@ -158,6 +285,43 @@
 </div>
 
 <style>
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: #0f172a; border: 1px solid #2d3a4d; border-radius: 16px; width: 100%; max-width: 520px; max-height: 85vh; overflow-y: auto; padding: 24px; }
+    .modal-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+    .modal-avatar { width: 48px; height: 48px; border-radius: 50%; background: #f2a90620; color: #f2a906; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; flex-shrink: 0; }
+    .modal-user-info { flex: 1; }
+    .modal-name { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; margin: 0 0 2px; }
+    .modal-email { font-size: 0.8rem; color: #64748b; margin: 0; }
+    .modal-close { background: transparent; border: 1px solid #2d3a4d; color: #64748b; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 0.9rem; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .stat-card { background: #1a2332; border: 1px solid #2d3a4d; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .stat-icon { font-size: 1.4rem; }
+    .stat-value { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; font-family: monospace; }
+    .stat-label { font-size: 0.68rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Profile details */
+    .profile-details { background: #1a2332; border: 1px solid #2d3a4d; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+    .detail-row-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #2d3a4d20; }
+    .detail-row-item:last-child { border-bottom: none; }
+    .detail-key { font-size: 0.78rem; color: #64748b; }
+    .detail-val { font-size: 0.82rem; color: #cbd5e1; font-weight: 500; }
+
+    /* Sections */
+    .section-header { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 8px; }
+    .credit-list { background: #1a2332; border: 1px solid #2d3a4d; border-radius: 12px; padding: 8px 14px; margin-bottom: 16px; }
+    .credit-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #2d3a4d20; font-size: 0.8rem; }
+    .credit-item:last-child { border-bottom: none; }
+    .credit-reason { flex: 1; color: #cbd5e1; }
+    .credit-delta { font-family: monospace; font-weight: 700; }
+    .credit-spent { color: #f87171; }
+    .credit-earned { color: #4ade80; }
+    .credit-date { color: #64748b; font-size: 0.72rem; }
+
+    /* Page layout (unchanged) */
     .page { max-width: 1100px; }
     .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
     .page-title { font-size: 1.6rem; font-weight: 700; color: #f1f5f9; margin: 0 0 4px; }

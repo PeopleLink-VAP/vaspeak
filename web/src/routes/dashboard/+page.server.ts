@@ -47,12 +47,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 	let profile = null;
 	try {
 		const profileRows = await db.execute({
-			sql: 'SELECT display_name, streak_count, current_level FROM profiles WHERE id = ?',
+			sql: 'SELECT display_name, streak_count, current_level, niche FROM profiles WHERE id = ?',
 			args: [userId]
 		});
 		profile = profileRows.rows[0] ?? null;
 	} catch (err) {
 		console.error('[dashboard] Failed to load profile:', err);
+	}
+
+	// If user hasn't taken placement test, redirect them
+	if (!profile?.current_level) {
+		throw redirect(302, '/placement');
 	}
 
 	return { todayLesson, progress, credits, profile };

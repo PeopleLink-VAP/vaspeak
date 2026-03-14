@@ -1,12 +1,12 @@
 import { db } from '$lib/server/db';
 import { fail, redirect } from '@sveltejs/kit';
+import { scorePlacement, validatePlacement } from '$lib/placement';
+import type { PlacementInput } from '$lib/placement';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
 
-    // Fetch the user's current level to see if they've already taken it?
-    // We'll let them re-take it if they want.
     const res = await db.execute({
         sql: 'SELECT current_level, niche FROM profiles WHERE id = ?',
         args: [locals.user.id]
@@ -21,28 +21,23 @@ export const actions: Actions = {
         if (!locals.user) return fail(401, { error: 'Not authenticated' });
 
         const data = await request.formData();
-        const experience = data.get('experience')?.toString();
-        const speakingMatch = data.get('speaking')?.toString();
-        const niche = data.get('niche')?.toString() || 'general';
+        const input: PlacementInput = {
+            experience: (data.get('experience')?.toString() || '') as PlacementInput['experience'],
+            speaking: (data.get('speaking')?.toString() || '') as PlacementInput['speaking'],
+            niche: data.get('niche')?.toString() || 'general'
+        };
 
-        if (!speakingMatch) {
-            return fail(400, { error: 'Vui lòng chọn trình độ nói hiện tại của bạn.' });
+        const validationError = validatePlacement(input);
+        if (validationError) {
+            return fail(400, { error: validationError });
         }
 
-        // Logic determining starting level
-        /**
-         * Beginner -> 'general'
-         * Intermediate / Advanced -> 'working_va'
-         */
-        let current_level = 'general';
-        if (speakingMatch === 'intermediate' || speakingMatch === 'advanced') {
-            current_level = 'working_va';
-        }
+        const result = scorePlacement(input);
 
         try {
             await db.execute({
                 sql: 'UPDATE profiles SET current_level = ?, niche = ? WHERE id = ?',
-                args: [current_level, niche, locals.user.id]
+                args: [result.level, result.niche, locals.user.id]
             });
         } catch (err: any) {
             console.error('[placement error]', err);
