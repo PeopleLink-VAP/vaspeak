@@ -1,27 +1,32 @@
 <script lang="ts">
+    import {
+        LayoutDashboard, Kanban, Users, BookOpen, Mail,
+        Video, Settings, ArrowLeft, Zap
+    } from 'lucide-svelte';
+
     let { children } = $props();
 
     const navGroups = [
         {
             label: 'Overview',
             items: [
-                { href: '/admin', label: 'Dashboard', icon: '📊' },
-                { href: '/admin/kanban', label: 'Kanban Board', icon: '📋' },
+                { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+                { href: '/admin/kanban', label: 'Kanban Board', icon: Kanban },
             ]
         },
         {
             label: 'Content',
             items: [
-                { href: '/admin/users', label: 'Users', icon: '👤' },
-                { href: '/admin/lessons', label: 'Lessons', icon: '📚' },
-                { href: '/admin/waitlist', label: 'Waitlist', icon: '✉️' },
+                { href: '/admin/users', label: 'Users', icon: Users },
+                { href: '/admin/lessons', label: 'Lessons', icon: BookOpen },
+                { href: '/admin/waitlist', label: 'Waitlist', icon: Mail },
             ]
         },
         {
             label: 'System',
             items: [
-                { href: '/admin/e2e-testing', label: 'E2E Testing', icon: '🎬' },
-                { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
+                { href: '/admin/e2e-testing', label: 'E2E Testing', icon: Video },
+                { href: '/admin/settings', label: 'Settings', icon: Settings },
             ]
         }
     ];
@@ -38,7 +43,7 @@
 <div class="admin-shell">
     <aside class="admin-sidebar">
         <div class="sidebar-brand">
-            <span class="brand-icon">⚡</span>
+            <span class="brand-icon"><Zap size={18} /></span>
             <span class="brand-text">VASpeak Admin</span>
         </div>
         <nav class="sidebar-nav">
@@ -50,7 +55,7 @@
                         class="nav-link"
                         class:active={currentPath === item.href}
                     >
-                        <span class="nav-icon">{item.icon}</span>
+                        <span class="nav-icon"><svelte:component this={item.icon} size={16} /></span>
                         <span class="nav-label">{item.label}</span>
                     </a>
                 {/each}
@@ -58,7 +63,7 @@
         </nav>
         <div class="sidebar-footer">
             <a href="/" class="nav-link back-link">
-                <span class="nav-icon">←</span>
+                <span class="nav-icon"><ArrowLeft size={16} /></span>
                 <span class="nav-label">Back to Site</span>
             </a>
         </div>
@@ -72,15 +77,15 @@
     .admin-shell {
         display: flex;
         min-height: 100vh;
-        background: #0f1729;
-        color: #e2e8f0;
+        background: #f8f9fb;
+        color: #1e293b;
         font-family: 'Inter', system-ui, sans-serif;
     }
 
     .admin-sidebar {
         width: 240px;
-        background: #1a2332;
-        border-right: 1px solid #2d3a4d;
+        background: #ffffff;
+        border-right: 1px solid #e8ecf1;
         display: flex;
         flex-direction: column;
         padding: 0;
@@ -92,17 +97,19 @@
         align-items: center;
         gap: 10px;
         padding: 20px 18px;
-        border-bottom: 1px solid #2d3a4d;
+        border-bottom: 1px solid #e8ecf1;
     }
 
     .brand-icon {
-        font-size: 1.3rem;
+        color: #f2a906;
+        display: flex;
+        align-items: center;
     }
 
     .brand-text {
         font-size: 1rem;
         font-weight: 700;
-        color: #f2a906;
+        color: #1B365D;
         letter-spacing: 0.02em;
     }
 
@@ -119,7 +126,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: #475569;
+        color: #94a3b8;
         padding: 10px 12px 4px;
         margin-top: 4px;
     }
@@ -131,35 +138,36 @@
         padding: 10px 12px;
         border-radius: 8px;
         text-decoration: none;
-        color: #94a3b8;
+        color: #64748b;
         font-size: 0.875rem;
         font-weight: 500;
         transition: all 0.15s ease;
     }
 
     .nav-link:hover {
-        background: #243044;
-        color: #e2e8f0;
+        background: #f1f5f9;
+        color: #1e293b;
     }
 
     .nav-link.active {
-        background: #f2a90615;
-        color: #f2a906;
+        background: #fef8e7;
+        color: #b07d04;
     }
 
     .nav-icon {
-        font-size: 1.1rem;
-        width: 24px;
-        text-align: center;
+        display: flex;
+        align-items: center;
+        width: 20px;
+        justify-content: center;
     }
 
     .sidebar-footer {
         padding: 10px;
-        border-top: 1px solid #2d3a4d;
+        border-top: 1px solid #e8ecf1;
     }
 
     .back-link {
-        color: #64748b;
+        color: #94a3b8;
     }
 
     .admin-main {
@@ -176,7 +184,7 @@
             width: 100%;
             flex-direction: row;
             border-right: none;
-            border-bottom: 1px solid #2d3a4d;
+            border-bottom: 1px solid #e8ecf1;
         }
         .sidebar-brand {
             border-bottom: none;
@@ -192,6 +200,9 @@
             padding: 8px;
         }
         .nav-label {
+            display: none;
+        }
+        .nav-group-label {
             display: none;
         }
         .admin-main {

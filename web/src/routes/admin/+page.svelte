@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { Users, BookOpen, BookText, Clock } from 'lucide-svelte';
+
     let { data } = $props();
     const { system, gitCommit, dbStats } = data;
 </script>
@@ -14,28 +16,28 @@
     <!-- Quick Stats -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-icon">👤</div>
+            <div class="stat-icon stat-icon-blue"><Users size={20} /></div>
             <div class="stat-body">
                 <span class="stat-value">{dbStats.profiles}</span>
                 <span class="stat-label">Profiles</span>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon">📚</div>
+            <div class="stat-icon stat-icon-amber"><BookOpen size={20} /></div>
             <div class="stat-body">
                 <span class="stat-value">{dbStats.lessons}</span>
                 <span class="stat-label">Lessons</span>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon">📖</div>
+            <div class="stat-icon stat-icon-emerald"><BookText size={20} /></div>
             <div class="stat-body">
                 <span class="stat-value">{dbStats.vocab}</span>
                 <span class="stat-label">Vocab Words</span>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon">⏱️</div>
+            <div class="stat-icon stat-icon-purple"><Clock size={20} /></div>
             <div class="stat-body">
                 <span class="stat-value">{system.uptimeHours}h</span>
                 <span class="stat-label">Server Uptime</span>
@@ -116,12 +118,12 @@
     .page-title {
         font-size: 1.6rem;
         font-weight: 700;
-        color: #f1f5f9;
+        color: #1e293b;
         margin: 0 0 4px;
     }
 
     .page-subtitle {
-        color: #64748b;
+        color: #94a3b8;
         font-size: 0.875rem;
         margin: 0 0 28px;
     }
@@ -134,8 +136,8 @@
     }
 
     .stat-card {
-        background: #1a2332;
-        border: 1px solid #2d3a4d;
+        background: #ffffff;
+        border: 1px solid #e8ecf1;
         border-radius: 12px;
         padding: 18px;
         display: flex;
@@ -144,8 +146,19 @@
     }
 
     .stat-icon {
-        font-size: 1.6rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
     }
+
+    .stat-icon-blue { background: #eff6ff; color: #3b82f6; }
+    .stat-icon-amber { background: #fef8e7; color: #d4930a; }
+    .stat-icon-emerald { background: #ecfdf5; color: #10b981; }
+    .stat-icon-purple { background: #f5f3ff; color: #8b5cf6; }
 
     .stat-body {
         display: flex;
@@ -155,21 +168,21 @@
     .stat-value {
         font-size: 1.4rem;
         font-weight: 700;
-        color: #f2a906;
+        color: #1e293b;
         line-height: 1;
     }
 
     .stat-label {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #94a3b8;
         margin-top: 4px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
 
     .card {
-        background: #1a2332;
-        border: 1px solid #2d3a4d;
+        background: #ffffff;
+        border: 1px solid #e8ecf1;
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 16px;
@@ -198,8 +211,8 @@
 
     .commit-hash {
         font-family: 'JetBrains Mono', 'Fira Code', monospace;
-        background: #f2a90618;
-        color: #f2a906;
+        background: #fef8e7;
+        color: #b07d04;
         padding: 2px 8px;
         border-radius: 4px;
         font-size: 0.8rem;
@@ -207,20 +220,20 @@
     }
 
     .commit-message {
-        color: #e2e8f0;
+        color: #1e293b;
         font-size: 0.9rem;
     }
 
     .commit-meta {
         font-size: 0.78rem;
-        color: #64748b;
+        color: #94a3b8;
         display: flex;
         gap: 6px;
         align-items: center;
     }
 
     .dot {
-        color: #475569;
+        color: #cbd5e1;
     }
 
     .info-grid {
@@ -233,17 +246,17 @@
         display: flex;
         justify-content: space-between;
         padding: 6px 0;
-        border-bottom: 1px solid #2d3a4d20;
+        border-bottom: 1px solid #f1f5f9;
     }
 
     .info-label {
         font-size: 0.8rem;
-        color: #64748b;
+        color: #94a3b8;
     }
 
     .info-value {
         font-size: 0.8rem;
-        color: #cbd5e1;
+        color: #475569;
         text-align: right;
     }
 
@@ -259,7 +272,7 @@
 
     .mem-bar-bg {
         height: 8px;
-        background: #0f1729;
+        background: #f1f5f9;
         border-radius: 4px;
         overflow: hidden;
     }

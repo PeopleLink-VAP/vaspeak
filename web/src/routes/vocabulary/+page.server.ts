@@ -7,14 +7,31 @@ export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
     
     try {
-        const result = await db.execute({
-            sql: 'SELECT * FROM vocabulary_bank WHERE user_id = ? ORDER BY added_at DESC',
-            args: [locals.user.id]
-        });
-        return { words: result.rows };
+        const [result, challengeRes] = await Promise.all([
+            db.execute({
+                sql: 'SELECT * FROM vocabulary_bank WHERE user_id = ? ORDER BY added_at DESC',
+                args: [locals.user.id]
+            }),
+            db.execute({
+                sql: `SELECT COUNT(*) as total, 
+                      SUM(CASE WHEN correct = 1 THEN 1 ELSE 0 END) as wins,
+                      SUM(CASE WHEN credits_earned > 0 THEN credits_earned ELSE 0 END) as credits_earned
+                      FROM telegram_challenges WHERE user_id = ?`,
+                args: [locals.user.id]
+            })
+        ]);
+        const ch = challengeRes.rows[0];
+        return { 
+            words: result.rows,
+            challengeStats: {
+                total: Number(ch?.total ?? 0),
+                wins: Number(ch?.wins ?? 0),
+                creditsEarned: Number(ch?.credits_earned ?? 0)
+            }
+        };
     } catch (err) {
         console.error('[vocabulary load error]', err);
-        return { words: [] };
+        return { words: [], challengeStats: { total: 0, wins: 0, creditsEarned: 0 } };
     }
 };
 

@@ -6,6 +6,10 @@
 	let { data, form } = $props();
 	let profile = $derived(data.profile);
 	let credits = $derived(data.credits);
+	let badges = $derived(data.badges ?? []);
+	let earnedCount = $derived(data.earnedCount ?? 0);
+	let stats = $derived(data.stats);
+	let challengeStats = $derived(data.challengeStats ?? { total: 0, wins: 0 });
 
 	let isSubmitting = $state(false);
 	
@@ -43,15 +47,48 @@
 				<h2 class="font-heading font-bold text-[#1B365D] text-xl">{profile?.display_name ?? 'Học viên VASpeak'}</h2>
 				<p class="text-[#1B365D]/50 text-sm">{profile?.email}</p>
 				<div class="flex gap-2 mt-2">
-					<span class="inline-flex text-[10px] font-bold uppercase tracking-wider bg-[#1B365D]/5 text-[#1B365D]/50 px-2 py-0.5 rounded">
+					<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-[#1B365D]/5 text-[#1B365D]/50 px-2 py-0.5 rounded">
 						🔥 Streak: {profile?.streak_count ?? 0}
 					</span>
-					<span class="inline-flex text-[10px] font-bold uppercase tracking-wider bg-[#F2A906]/20 text-[#1B365D]/70 px-2 py-0.5 rounded">
-						⚡ Kế hoạch {credits?.subscription_status === 'pro' ? 'Pro' : 'Miễn phí'}
+					<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-[#F2A906]/20 text-[#1B365D]/70 px-2 py-0.5 rounded">
+						<img src="/icons/i_credit.png" alt="" class="w-3 h-3" /> {credits?.subscription_status === 'pro' ? 'Pro' : 'Miễn phí'}
 					</span>
 				</div>
 			</div>
 		</div>
+
+		<!-- Badges Section -->
+		<h3 class="font-heading font-bold text-[#1B365D] text-base mb-3 ml-1">🏆 Huy Hiệu ({earnedCount}/{badges.length})</h3>
+		<div class="bg-white rounded-2xl p-4 shadow-[0_4px_14px_rgba(27,54,93,0.07)] border border-[#1B365D]/6 mb-6">
+			<div class="grid grid-cols-4 gap-3">
+				{#each badges as badge}
+					<div class="flex flex-col items-center text-center {badge.earned ? '' : 'opacity-25'}" title={badge.label}>
+						<div class="w-10 h-10 rounded-xl {badge.earned ? 'bg-[#F2A906]/15' : 'bg-[#1B365D]/5'} flex items-center justify-center text-xl mb-1">
+							{badge.icon}
+						</div>
+						<span class="text-[9px] text-[#1B365D]/60 font-medium leading-tight">{badge.label}</span>
+					</div>
+				{/each}
+			</div>
+		</div>
+
+		<!-- Learning Stats -->
+		{#if stats}
+		<div class="grid grid-cols-3 gap-3 mb-6">
+			<div class="bg-white rounded-2xl p-3 text-center shadow-[0_2px_10px_rgba(27,54,93,0.05)] border border-[#1B365D]/6">
+				<p class="font-heading font-bold text-[#1B365D] text-xl">{stats.lessonsCompleted}</p>
+				<p class="text-[10px] text-[#1B365D]/40 font-medium">Bài học</p>
+			</div>
+			<div class="bg-white rounded-2xl p-3 text-center shadow-[0_2px_10px_rgba(27,54,93,0.05)] border border-[#1B365D]/6">
+				<p class="font-heading font-bold text-[#1B365D] text-xl">{stats.vocabMastered}</p>
+				<p class="text-[10px] text-[#1B365D]/40 font-medium">Từ thuộc</p>
+			</div>
+			<div class="bg-white rounded-2xl p-3 text-center shadow-[0_2px_10px_rgba(27,54,93,0.05)] border border-[#1B365D]/6">
+				<p class="font-heading font-bold text-[#1B365D] text-xl">{challengeStats.wins}/{challengeStats.total}</p>
+				<p class="text-[10px] text-[#1B365D]/40 font-medium">Thử thách TG</p>
+			</div>
+		</div>
+		{/if}
 
 		<!-- Settings Form -->
 		<h3 class="font-heading font-bold text-[#1B365D] text-base mb-3 ml-1">🔒 Cài Đặt Chung</h3>

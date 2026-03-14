@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import BottomNav from '$lib/components/BottomNav.svelte';
 
 	let { data, form } = $props();
 	let words = $derived(data.words as any[]);
+	let challengeStats = $derived(data.challengeStats ?? { total: 0, wins: 0, creditsEarned: 0 });
 
 	let showAddModal = $state(false);
 	let isSubmitting = $state(false);
@@ -27,6 +29,23 @@
 	</div>
 
 	<div class="max-w-md mx-auto px-4">
+		<!-- Challenge Stats Banner -->
+		{#if challengeStats.total > 0}
+		<div class="bg-white rounded-2xl p-4 shadow-[0_2px_10px_rgba(27,54,93,0.05)] border border-[#1B365D]/6 mb-4 flex items-center gap-3">
+			<div class="w-10 h-10 rounded-xl bg-[#0088cc]/10 flex items-center justify-center shrink-0">
+				<svg class="w-5 h-5 text-[#0088cc]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.95 7.23l-2.02 9.53c-.15.68-.55.85-1.12.53l-3.1-2.28-1.49 1.44c-.17.17-.3.3-.62.3l.22-3.15 5.72-5.16c.25-.22-.05-.34-.39-.13l-7.07 4.45-3.05-.95c-.66-.21-.67-.66.14-.98l11.92-4.6c.55-.2 1.03.13.86.97z"/></svg>
+			</div>
+			<div class="flex-1">
+				<p class="text-xs font-semibold text-[#1B365D]">Thử thách Telegram</p>
+				<p class="text-[10px] text-[#1B365D]/40">{challengeStats.wins}/{challengeStats.total} đúng • +{challengeStats.creditsEarned} credits</p>
+			</div>
+			<div class="text-right">
+				<p class="text-lg font-bold text-[#10B981]">{challengeStats.total > 0 ? Math.round((challengeStats.wins / challengeStats.total) * 100) : 0}%</p>
+				<p class="text-[9px] text-[#1B365D]/30 uppercase tracking-wider">độ chính xác</p>
+			</div>
+		</div>
+		{/if}
+
 		<!-- Add Button -->
 		<button
 			onclick={() => showAddModal = true}
@@ -84,9 +103,16 @@
 						{/if}
 						
 						{#if word.lesson_id}
-							<div class="mt-2 flex">
-								<span class="inline-flex text-[10px] font-bold uppercase tracking-wider bg-[#1B365D]/5 text-[#1B365D]/50 px-2 py-0.5 rounded">
-									Từ bài học
+							<div class="mt-2 flex gap-1.5">
+								<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-[#1B365D]/5 text-[#1B365D]/50 px-2 py-0.5 rounded">
+									<img src="/icons/i_lesson.png" alt="" class="w-3 h-3" /> Từ bài học
+								</span>
+							</div>
+						{:else if !word.lesson_id}
+							<div class="mt-2 flex gap-1.5">
+								<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-[#0088cc]/8 text-[#0088cc] px-2 py-0.5 rounded">
+									<svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.95 7.23l-2.02 9.53c-.15.68-.55.85-1.12.53l-3.1-2.28-1.49 1.44c-.17.17-.3.3-.62.3l.22-3.15 5.72-5.16c.25-.22-.05-.34-.39-.13l-7.07 4.45-3.05-.95c-.66-.21-.67-.66.14-.98l11.92-4.6c.55-.2 1.03.13.86.97z"/></svg>
+									Telegram
 								</span>
 							</div>
 						{/if}
@@ -169,3 +195,5 @@
 		</div>
 	</div>
 {/if}
+
+<BottomNav active="dashboard" />
