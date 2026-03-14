@@ -30,9 +30,9 @@ const WEEK_1_LESSONS = [
         content: [
             {
                 type: 'listening',
-                instruction: 'Listen to Mai introduce herself to a new client. Answer the question.',
-                audio_script: `"Hi! I'm Mai Linh, your Virtual Assistant. I'll be handling your customer support inbox and social media replies. I'm available Monday to Friday, 9 AM to 6 PM Vietnam time. Please don't hesitate to reach out if you have any questions!"`,
-                question: 'What tasks will Mai Linh be handling?',
+                instruction: 'Listen to a Virtual Assistant introduce herself to a new client. Answer the question.',
+                audio_script: `"Hi! I'm your new Virtual Assistant. I'll be handling your customer support inbox and social media replies. I'm available Monday to Friday, 9 AM to 6 PM Vietnam time. Please don't hesitate to reach out if you have any questions!"`,
+                question: 'What tasks will the VA be handling?',
                 options: [
                     'Customer support inbox and social media',
                     'Accounting and payroll',

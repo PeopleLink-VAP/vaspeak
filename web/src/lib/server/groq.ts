@@ -6,6 +6,8 @@ export const groq = new Groq({ apiKey: GROQ_API_KEY });
 export const ROLEPLAY_MODEL = 'llama-3.3-70b-versatile';
 export const SCORE_MODEL    = 'llama-3.1-8b-instant'; // fast, cheap for scoring
 export const STT_MODEL      = 'whisper-large-v3-turbo'; // for ASR
+export const TTS_MODEL      = 'canopylabs/orpheus-v1-english';
+export const TTS_VOICE      = 'hannah'; // natural female voice — others: autumn, diana, austin, daniel, troy
 
 /**
  * Builds the system prompt for an AI roleplay client character.
