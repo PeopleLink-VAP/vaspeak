@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { createAudioRecorder, formatRecordTime, transcribeAudio } from '$lib/audio-recorder';
+	import AudioPlayer from '$lib/components/AudioPlayer.svelte';
 
 	let { data } = $props();
 	let lesson = $derived(data.lesson);
@@ -24,130 +25,6 @@
 	let block       = $derived(blocks[currentBlock]);
 	let totalBlocks = $derived(blocks.length);
 	let progressPct = $derived(Math.round((currentBlock / totalBlocks) * 100));
-
-	// ── TTS Playback state (Block 1) ──────────────────────────────────
-	let ttsState: 'idle' | 'loading' | 'speaking' | 'paused' = $state('idle');
-	let ttsAudio: HTMLAudioElement | null = null;
-	let ttsCache = new Map<string, string>();
-	let ttsError = $state('');
-
-	// Audio visualizer
-	const BAR_COUNT = 32;
-	let barHeights = $state<number[]>(Array(BAR_COUNT).fill(0).map((_, i) => 4 + Math.sin(i * 0.6) * 3));
-	let audioCtx: AudioContext | null = null;
-	let analyser: AnalyserNode | null = null;
-	let sourceNode: MediaElementAudioSourceNode | null = null;
-	let animFrameId: number | null = null;
-
-	function startVisualizer() {
-		if (!ttsAudio || typeof window === 'undefined') return;
-		try {
-			if (!audioCtx) audioCtx = new AudioContext();
-			if (!analyser) {
-				analyser = audioCtx.createAnalyser();
-				analyser.fftSize = 128;
-				analyser.smoothingTimeConstant = 0.75;
-			}
-			if (!sourceNode) {
-				sourceNode = audioCtx.createMediaElementSource(ttsAudio);
-				sourceNode.connect(analyser);
-				analyser.connect(audioCtx.destination);
-			}
-			const dataArray = new Uint8Array(analyser.frequencyBinCount);
-			function tick() {
-				if (!analyser) return;
-				analyser.getByteFrequencyData(dataArray);
-				// Map frequency bins to bar heights (pick evenly spaced bins)
-				const step = Math.floor(dataArray.length / BAR_COUNT);
-				const newHeights: number[] = [];
-				for (let i = 0; i < BAR_COUNT; i++) {
-					const val = dataArray[i * step] || 0;
-					newHeights.push(3 + (val / 255) * 29); // 3px min, 32px max
-				}
-				barHeights = newHeights;
-				animFrameId = requestAnimationFrame(tick);
-			}
-			tick();
-		} catch {
-			// fallback: keep static bars if Web Audio fails
-		}
-	}
-
-	function stopVisualizer() {
-		if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
-		// Reset to idle wave shape
-		barHeights = Array(BAR_COUNT).fill(0).map((_, i) => 4 + Math.sin(i * 0.6) * 3);
-	}
-
-	async function toggleTTS() {
-		if (typeof window === 'undefined') return;
-
-		if (ttsState === 'speaking' && ttsAudio) {
-			ttsAudio.pause();
-			stopVisualizer();
-			ttsState = 'paused';
-			return;
-		}
-		if (ttsState === 'paused' && ttsAudio) {
-			ttsAudio.play();
-			startVisualizer();
-			ttsState = 'speaking';
-			return;
-		}
-
-		const script = block?.audio_script;
-		if (!script) return;
-
-		ttsError = '';
-
-		const cacheKey = script.slice(0, 100);
-		let blobUrl = ttsCache.get(cacheKey);
-
-		if (!blobUrl) {
-			ttsState = 'loading';
-			try {
-				const res = await fetch('/api/tts', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ text: script })
-				});
-				if (!res.ok) {
-					const j = await res.json().catch(() => ({})) as any;
-					throw new Error(j.error || 'TTS failed');
-				}
-				const blob = await res.blob();
-				blobUrl = URL.createObjectURL(blob);
-				ttsCache.set(cacheKey, blobUrl);
-			} catch (e: any) {
-				ttsError = e.message;
-				ttsState = 'idle';
-				return;
-			}
-		}
-
-		// Tear down previous audio graph if re-playing
-		if (ttsAudio) { ttsAudio.pause(); }
-		sourceNode = null; // will recreate for new Audio element
-
-		ttsAudio = new Audio(blobUrl);
-		ttsAudio.crossOrigin = 'anonymous';
-		ttsAudio.onended = () => { stopVisualizer(); ttsState = 'idle'; };
-		ttsAudio.onerror = () => { stopVisualizer(); ttsState = 'idle'; ttsError = 'Lỗi phát âm thanh'; };
-		ttsAudio.play();
-		startVisualizer();
-		ttsState = 'speaking';
-	}
-
-	function stopTTS() {
-		if (ttsAudio) {
-			ttsAudio.pause();
-			ttsAudio.currentTime = 0;
-			ttsAudio = null;
-		}
-		sourceNode = null;
-		stopVisualizer();
-		ttsState = 'idle';
-	}
 
 	// ── Drilling state (Block 2) ──────────────────────────────────────
 	let drState: 'idle' | 'recording' | 'processing' = $state('idle');
@@ -328,7 +205,6 @@
 
 	function nextBlock() {
 		completedBlocks.add(currentBlock);
-		stopTTS();
 		drRecorder.destroy();
 		rpRecorder.destroy();
 		if (currentBlock < totalBlocks - 1) {
@@ -424,52 +300,16 @@
 			{#if block.type === 'listening'}
 				<p class="text-[#1B365D]/65 text-sm mb-5">{block.instruction}</p>
 
-				<!-- Audio card -->
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<div 
-					onclick={toggleTTS}
-					class="bg-white rounded-2xl p-5 shadow-[0_4px_14px_rgba(27,54,93,0.08)] border border-[#1B365D]/8 mb-5 cursor-pointer hover:shadow-[0_6px_20px_rgba(27,54,93,0.12)] transition-all active:scale-[0.98] {ttsState === 'speaking' ? 'ring-2 ring-[#F2A906]/50' : ''} {ttsState === 'loading' ? 'pointer-events-none opacity-80' : ''}"
-				>
-					<div class="flex items-center gap-3 mb-4">
-						<div class="w-12 h-12 rounded-xl {ttsState === 'speaking' ? 'bg-[#F2A906]/25' : 'bg-[#F2A906]/15'} flex items-center justify-center text-2xl transition-colors">
-							{#if ttsState === 'loading'}⏳{:else if ttsState === 'speaking'}⏸️{:else if ttsState === 'paused'}▶️{:else}🎧{/if}
-						</div>
-						<div class="flex-1">
-							<p class="font-semibold text-[#1B365D] text-sm">Client Conversation</p>
-							<p class="text-[#1B365D]/40 text-xs">
-								{#if ttsState === 'loading'}Đang tạo giọng nói AI...{:else if ttsState === 'speaking'}Đang phát · nhấn để tạm dừng{:else if ttsState === 'paused'}Tạm dừng · nhấn để tiếp tục{:else}Nhấn để nghe{/if}
-							</p>
-						</div>
-						{#if ttsState !== 'idle' && ttsState !== 'loading'}
-							<button 
-								onclick={(e) => { e.stopPropagation(); stopTTS(); }}
-								class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:bg-red-100 transition-colors text-sm"
-								title="Dừng"
-							>✕</button>
-						{/if}
-					</div>
-					<!-- Waveform visualizer -->
-					<div class="vis-container">
-						{#each barHeights as h, i}
-							<div 
-								class="vis-bar {ttsState === 'speaking' ? 'vis-active' : ttsState === 'loading' ? 'vis-loading' : ttsState === 'paused' ? 'vis-paused' : 'vis-idle'}"
-								style="height: {h}px; {ttsState === 'loading' ? `animation-delay: ${i * 50}ms` : ''}"
-							></div>
-						{/each}
-					</div>
-					{#if ttsError}
-						<p class="text-xs text-red-500 mb-2">⚠️ {ttsError}</p>
-					{/if}
-					<!-- Script (shown as transcript) -->
-					<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-					<details class="mt-3" onclick={(e) => e.stopPropagation()}>
-						<summary class="text-xs text-[#1B365D]/40 cursor-pointer hover:text-[#1B365D]/70">Xem transcript</summary>
-						<p class="mt-2 text-[#1B365D]/70 text-sm leading-relaxed italic bg-[#FFFBF1] rounded-xl p-3">
-							{block.audio_script}
-						</p>
-					</details>
+				<div class="mb-5">
+					<AudioPlayer text={block.audio_script} title="Client Conversation" />
 				</div>
+				<!-- Transcript -->
+				<details class="mb-5">
+					<summary class="text-xs text-[#1B365D]/40 cursor-pointer hover:text-[#1B365D]/70">Xem transcript</summary>
+					<p class="mt-2 text-[#1B365D]/70 text-sm leading-relaxed italic bg-[#FFFBF1] rounded-xl p-3">
+						{block.audio_script}
+					</p>
+				</details>
 
 				<!-- MCQ -->
 				<p class="font-heading font-semibold text-[#1B365D] mb-3">{block.question}</p>
@@ -756,48 +596,3 @@
 		</div>
 	</div>
 </div>
-
-<style>
-	/* Visualizer container */
-	.vis-container {
-		display: flex;
-		align-items: flex-end;
-		justify-content: center;
-		gap: 2px;
-		height: 36px;
-		margin-bottom: 12px;
-		padding: 0 2px;
-	}
-	.vis-bar {
-		flex: 1;
-		min-width: 3px;
-		border-radius: 3px;
-		transition: height 0.08s ease-out;
-		will-change: height;
-	}
-	/* Idle: subtle static wave */
-	.vis-idle {
-		background: rgba(242, 169, 6, 0.3);
-		transition: height 0.4s ease;
-	}
-	/* Loading: shimmer pulse animation */
-	.vis-loading {
-		background: rgba(242, 169, 6, 0.2);
-		animation: vis-shimmer 1.2s ease-in-out infinite;
-	}
-	/* Active playing: bright gold, reactive */
-	.vis-active {
-		background: linear-gradient(to top, #F2A906, #f5c342);
-		box-shadow: 0 0 4px rgba(242, 169, 6, 0.3);
-	}
-	/* Paused: dimmed gold */
-	.vis-paused {
-		background: rgba(242, 169, 6, 0.4);
-		transition: height 0.4s ease;
-	}
-
-	@keyframes vis-shimmer {
-		0%, 100% { transform: scaleY(0.5); opacity: 0.3; }
-		50% { transform: scaleY(1.5); opacity: 0.8; }
-	}
-</style>
