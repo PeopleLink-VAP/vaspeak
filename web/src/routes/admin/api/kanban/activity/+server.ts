@@ -1,31 +1,27 @@
 import { json } from '@sveltejs/kit';
 import { turso, ensureKanbanSchema } from '$lib/server/turso';
 
-/**
- * GET /admin/api/kanban/activity
- * Returns a merged, chronologically-sorted feed of recent board events:
- *   - Task status changes (from tasks table, using updated_at)
- *   - Comments (from task_comments table)
- * Limited to the most recent 50 events.
- */
+/** Ensure timestamps are treated as UTC by appending Z if missing */
+function utc(ts: unknown): string {
+    const s = String(ts ?? '');
+    if (!s) return s;
+    if (s.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(s)) return s;
+    return s.replace(' ', 'T') + 'Z';
+}
+
 export async function GET() {
     await ensureKanbanSchema();
 
-    // Fetch recent tasks (sorted by updated_at) as "status" events
     const tasksResult = await turso.execute(
         `SELECT id, title, status, assignee, updated_at, created_at
-         FROM tasks
-         ORDER BY updated_at DESC
-         LIMIT 30`
+         FROM tasks ORDER BY updated_at DESC LIMIT 30`
     );
 
-    // Fetch recent comments as "comment" events
     const commentsResult = await turso.execute(
         `SELECT c.id, c.task_id, c.author, c.body, c.created_at, t.title as task_title
          FROM task_comments c
          LEFT JOIN tasks t ON t.id = c.task_id
-         ORDER BY c.created_at DESC
-         LIMIT 30`
+         ORDER BY c.created_at DESC LIMIT 30`
     );
 
     type ActivityItem = {
@@ -40,7 +36,6 @@ export async function GET() {
 
     const activities: ActivityItem[] = [];
 
-    // Map tasks → activity items
     for (const t of tasksResult.rows) {
         const created = String(t.created_at ?? '');
         const updated = String(t.updated_at ?? '');
@@ -49,7 +44,7 @@ export async function GET() {
         activities.push({
             id: `task-${t.id}`,
             type: isNew ? 'task_created' : 'task_update',
-            timestamp: updated,
+            timestamp: utc(updated),
             title: String(t.title ?? ''),
             detail: String(t.status ?? ''),
             actor: String(t.assignee ?? ''),
@@ -57,13 +52,12 @@ export async function GET() {
         });
     }
 
-    // Map comments → activity items  
     for (const c of commentsResult.rows) {
         const body = String(c.body ?? '');
         activities.push({
             id: `comment-${c.id}`,
             type: 'comment',
-            timestamp: String(c.created_at ?? ''),
+            timestamp: utc(c.created_at),
             title: String(c.task_title ?? 'Unknown task'),
             detail: body.length > 80 ? body.slice(0, 80) + '…' : body,
             actor: String(c.author ?? ''),
@@ -71,9 +65,6 @@ export async function GET() {
         });
     }
 
-    // Sort by timestamp descending
     activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-    // Return top 50
     return json(activities.slice(0, 50));
 }

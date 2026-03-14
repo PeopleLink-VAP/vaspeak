@@ -41,16 +41,8 @@
 </svelte:head>
 
 <div class="dashboard">
-    <div class="dashboard-header">
-        <div>
-            <h1 class="page-title">Dashboard</h1>
-            <p class="page-subtitle">VASpeak project overview and server health</p>
-        </div>
-        <button class="btn-activity" class:active={activityOpen} onclick={() => (activityOpen = !activityOpen)} title="Toggle activity feed">
-            {#if activityOpen}<PanelRightClose size={16} />{:else}<PanelRightOpen size={16} />{/if}
-            Activity
-        </button>
-    </div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">VASpeak project overview and server health</p>
 
     <!-- Quick Stats -->
     <div class="stats-grid">

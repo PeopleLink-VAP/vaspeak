@@ -1,14 +1,14 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 
-/**
- * GET /admin/api/activity
- * Returns a merged feed of recent user-facing activity:
- *   - User signups (profiles.created_at)
- *   - Waitlist entries (newsletter_subscribers.subscribed_at)
- *   - Lesson completions (user_progress.completed_at)
- * Limited to the most recent 50 events, sorted newest first.
- */
+/** Ensure SQLite timestamps are treated as UTC by appending Z if missing */
+function utc(ts: unknown): string {
+    const s = String(ts ?? '');
+    if (!s) return s;
+    if (s.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(s)) return s;
+    return s.replace(' ', 'T') + 'Z';
+}
+
 export async function GET() {
     type ActivityItem = {
         id: string;
@@ -21,7 +21,6 @@ export async function GET() {
     const activities: ActivityItem[] = [];
 
     try {
-        // Recent signups
         const signups = await db.execute(
             `SELECT id, display_name, email, created_at FROM profiles ORDER BY created_at DESC LIMIT 20`
         );
@@ -29,7 +28,7 @@ export async function GET() {
             activities.push({
                 id: `signup-${r.id}`,
                 type: 'signup',
-                timestamp: String(r.created_at ?? ''),
+                timestamp: utc(r.created_at),
                 title: String(r.display_name || r.email || 'New user'),
                 detail: String(r.email ?? '')
             });
@@ -37,7 +36,6 @@ export async function GET() {
     } catch { /* table may not exist */ }
 
     try {
-        // Recent waitlist entries
         const waitlist = await db.execute(
             `SELECT id, email, source, subscribed_at FROM newsletter_subscribers ORDER BY subscribed_at DESC LIMIT 20`
         );
@@ -45,7 +43,7 @@ export async function GET() {
             activities.push({
                 id: `waitlist-${r.id}`,
                 type: 'waitlist',
-                timestamp: String(r.subscribed_at ?? ''),
+                timestamp: utc(r.subscribed_at),
                 title: String(r.email ?? ''),
                 detail: String(r.source ?? 'landing')
             });
@@ -53,7 +51,6 @@ export async function GET() {
     } catch { /* table may not exist */ }
 
     try {
-        // Recent lesson completions
         const progress = await db.execute(
             `SELECT up.id, up.user_id, up.lesson_id, up.completed_at,
                     p.display_name, p.email,
@@ -70,15 +67,13 @@ export async function GET() {
             activities.push({
                 id: `progress-${r.id}`,
                 type: 'progress',
-                timestamp: String(r.completed_at ?? ''),
+                timestamp: utc(r.completed_at),
                 title: userName,
                 detail: `Completed: ${lessonTitle}`
             });
         }
     } catch { /* table may not exist */ }
 
-    // Sort by timestamp descending
     activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
     return json(activities.slice(0, 50));
 }
