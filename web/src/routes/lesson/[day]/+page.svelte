@@ -7,10 +7,10 @@
 	let lesson = $derived(data.lesson);
 	let blocks = $derived(lesson.content as any[]);
 	const blockMeta = [
-		{ label: 'Nghe & Giải Mã', icon: '🎧' },
-		{ label: 'Luyện Mẫu Câu', icon: '💬' },
-		{ label: 'Hội Thoại AI',   icon: '🎙️' },
-		{ label: 'Phản Hồi',       icon: '⭐' }
+		{ label: 'Nghe & Giải Mã', icon: '/icons/i_listen.png' },
+		{ label: 'Luyện Mẫu Câu', icon: '/icons/i_speaking.png' },
+		{ label: 'Hội Thoại AI',   icon: '/icons/i_microphone.png' },
+		{ label: 'Phản Hồi',       icon: '/icons/i_writing.png' }
 	];
 
 	// ── Core state ────────────────────────────────────────────────────
@@ -292,7 +292,7 @@
 						completedBlocks.has(i) ? 'bg-[#10B981]/15 border-[#10B981]/30 text-[#10B981]' :
 						'bg-white border-[#1B365D]/10 text-[#1B365D]/40'}"
 				>
-					{meta.icon}
+					<img src={meta.icon} alt={meta.label} class="w-5 h-5" />
 				</button>
 			{/each}
 		</div>
@@ -303,7 +303,7 @@
 		{#if block}
 			<div class="mb-4">
 				<span class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#1B365D]/50">
-					{blockMeta[currentBlock]?.icon} Block {currentBlock + 1} — {blockMeta[currentBlock]?.label}
+					<img src={blockMeta[currentBlock]?.icon} alt="" class="w-4 h-4" /> Block {currentBlock + 1} — {blockMeta[currentBlock]?.label}
 				</span>
 				<h2 class="font-heading font-bold text-[#1B365D] text-xl mt-1 leading-tight">{lesson.title}</h2>
 			</div>

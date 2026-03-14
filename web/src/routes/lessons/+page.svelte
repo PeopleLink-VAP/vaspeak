@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BottomNav from '$lib/components/BottomNav.svelte';
 	let { data } = $props();
 	const weeks = $derived(data.weeks);
 	const highestUnlockedDay = $derived(data.highestUnlockedDay);
@@ -85,19 +86,4 @@
 	</div>
 </div>
 
-<!-- Bottom Nav -->
-<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#1B365D]/8 px-6 py-3 z-50">
-	<div class="flex justify-around max-w-lg mx-auto">
-		{#each [
-			{ href: '/dashboard', icon: '🏠', label: 'Trang Chủ', active: false },
-			{ href: '/lessons',   icon: '📖', label: 'Bài Học',   active: true },
-			{ href: '/credits',   icon: '⚡', label: 'Credits',   active: false },
-			{ href: '/profile',   icon: '👤', label: 'Cá Nhân',   active: false }
-		] as nav}
-			<a href={nav.href} class="flex flex-col items-center gap-1 {nav.active ? 'text-[#F2A906]' : 'text-[#1B365D]/40'} hover:text-[#1B365D] transition-colors">
-				<span class="text-xl">{nav.icon}</span>
-				<span class="text-[10px] font-medium">{nav.label}</span>
-			</a>
-		{/each}
-	</div>
-</nav>
+<BottomNav active="lessons" />

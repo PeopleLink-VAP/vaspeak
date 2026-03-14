@@ -1,11 +1,23 @@
 <script lang="ts">
+	import BottomNav from '$lib/components/BottomNav.svelte';
 	let { data } = $props();
-	const { todayLesson, progress, credits, profile } = data;
 
-	const creditsRemaining = credits.allowance - credits.used;
-	const creditsPercent = Math.round((creditsRemaining / credits.allowance) * 100);
-	const displayName = profile?.display_name ?? 'Bạn';
-	const streak = profile?.streak_count ?? 0;
+	const todayLesson = $derived(data.todayLesson);
+	const progress = $derived(data.progress);
+	const credits = $derived(data.credits);
+	const profile = $derived(data.profile);
+	const creditsRemaining = $derived(credits.allowance - credits.used);
+	const creditsPercent = $derived(Math.round((creditsRemaining / credits.allowance) * 100));
+	const displayName = $derived(String(profile?.display_name ?? 'Bạn'));
+	const streak = $derived(profile?.streak_count ?? 0);
+
+	// Block icons using custom icon set
+	const blockIcons = [
+		'/icons/i_listen.png',
+		'/icons/i_speaking.png',
+		'/icons/i_microphone.png',
+		'/icons/i_writing.png'
+	];
 </script>
 
 <svelte:head>
@@ -43,7 +55,7 @@
 			class="bg-white rounded-2xl p-4 shadow-[0_4px_14px_rgba(27,54,93,0.07)] border border-[#1B365D]/6 hover:border-[#F2A906]/40 transition-colors"
 		>
 			<div class="flex items-center gap-2 mb-1">
-				<span class="text-xl">⚡</span>
+				<img src="/icons/i_credit.png" alt="Credits" class="w-6 h-6" />
 				<span id="credits-remaining-value" class="font-heading font-bold text-[#1B365D] text-2xl">{creditsRemaining}</span>
 				<span class="text-[#1B365D]/40 text-sm">/ {credits.allowance}</span>
 			</div>
@@ -82,11 +94,11 @@
 					<h2 class="font-heading font-bold text-[#1B365D] text-lg mt-1 leading-tight">{todayLesson.title}</h2>
 					<p class="text-[#1B365D]/50 text-sm mt-1">Week {todayLesson.week_number}: {todayLesson.week_theme}</p>
 				</div>
-				<!-- Block completion circles -->
+				<!-- Block completion circles with custom icons -->
 				<div class="flex gap-1.5 mt-1">
-					{#each ['🎧','💬','🎙️','⭐'] as icon, i}
-						<div class="w-7 h-7 rounded-full {i < 0 ? 'bg-[#F2A906]' : 'bg-[#1B365D]/8'} flex items-center justify-center text-xs" title="Block {i+1}">
-							{icon}
+					{#each blockIcons as iconSrc, i}
+						<div class="w-8 h-8 rounded-full {i < 0 ? 'bg-[#F2A906]' : 'bg-[#1B365D]/6'} flex items-center justify-center p-1.5" title="Block {i+1}">
+							<img src={iconSrc} alt="Block {i+1}" class="w-full h-full object-contain" />
 						</div>
 					{/each}
 				</div>
@@ -97,7 +109,7 @@
 				<span>·</span>
 				<span>4 blocks</span>
 				<span>·</span>
-				<span>⚡ 1 credit</span>
+				<span class="flex items-center gap-1"><img src="/icons/i_credit.png" alt="" class="w-3.5 h-3.5" /> 1 credit</span>
 			</div>
 
 			<a
@@ -121,32 +133,16 @@
 	<!-- Quick links -->
 	<div class="grid grid-cols-2 gap-3">
 		<a href="/vocabulary" class="bg-white rounded-2xl p-4 shadow-[0_4px_14px_rgba(27,54,93,0.07)] border border-[#1B365D]/6 hover:border-[#F2A906]/50 transition-colors">
-			<div class="text-2xl mb-2">📚</div>
+			<img src="/icons/i_abc.png" alt="Vocabulary" class="w-8 h-8 mb-2" />
 			<p class="font-heading font-semibold text-[#1B365D] text-sm">Kho Từ Vựng</p>
 			<p class="text-[#1B365D]/45 text-xs mt-0.5">Ôn lại từ đã học</p>
 		</a>
 		<a href="/challenges" class="bg-white rounded-2xl p-4 shadow-[0_4px_14px_rgba(27,54,93,0.07)] border border-[#1B365D]/6 hover:border-[#F2A906]/50 transition-colors">
-			<div class="text-2xl mb-2">⚡</div>
+			<img src="/icons/i_challenge.png" alt="Challenges" class="w-8 h-8 mb-2" />
 			<p class="font-heading font-semibold text-[#1B365D] text-sm">Thử Thách</p>
 			<p class="text-[#1B365D]/45 text-xs mt-0.5">Kiếm thêm credits</p>
 		</a>
 	</div>
 </div>
 
-<!-- Bottom Nav -->
-<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-[#1B365D]/8 px-6 py-3">
-	<div class="flex justify-around max-w-lg mx-auto">
-		{#each [
-			{ href: '/dashboard', icon: '🏠', label: 'Trang Chủ', active: true },
-			{ href: '/lessons',   icon: '📖', label: 'Bài Học',   active: false },
-			{ href: '/credits',   icon: '⚡', label: 'Credits',   active: false },
-			{ href: '/profile',   icon: '👤', label: 'Cá Nhân',   active: false }
-		] as nav}
-			<a href={nav.href} class="flex flex-col items-center gap-1 {nav.active ? 'text-[#F2A906]' : 'text-[#1B365D]/40'} hover:text-[#1B365D] transition-colors">
-				<span class="text-xl">{nav.icon}</span>
-				<span class="text-[10px] font-medium">{nav.label}</span>
-			</a>
-		{/each}
-	</div>
-</nav>
-<div class="h-20"></div> <!-- bottom nav spacer -->
+<BottomNav active="dashboard" />

@@ -180,7 +180,7 @@
 
 					<!-- Listen to example -->
 					<div class="mb-4">
-						<AudioPlayer text={speakingPrompt} title="Nghe mẫu" subtitle="Bấm để nghe cách phát âm" voice="kore" />
+						<AudioPlayer text={speakingPrompt} title="Nghe mẫu" subtitle="Bấm để nghe cách phát âm" />
 					</div>
 
 					<!-- Recording area -->

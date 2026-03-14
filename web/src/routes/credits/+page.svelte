@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BottomNav from '$lib/components/BottomNav.svelte';
 	const { data } = $props();
 	const { credits, history } = data;
 
@@ -41,7 +42,7 @@
 					<span class="text-[#1B365D]/35 text-lg">/ {credits.allowance}</span>
 				</div>
 			</div>
-			<div class="text-5xl">⚡</div>
+			<img src="/icons/i_credit.png" alt="Credits" class="w-12 h-12" />
 		</div>
 
 		<!-- Progress bar -->
@@ -64,7 +65,7 @@
 		<div class="space-y-2.5">
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-2.5">
-					<div class="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-base">🎙️</div>
+					<div class="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center p-1.5"><img src="/icons/i_microphone.png" alt="" class="w-full h-full" /></div>
 					<div>
 						<p class="text-sm font-medium text-[#1B365D]">Hội Thoại AI (mỗi lượt)</p>
 						<p class="text-xs text-[#1B365D]/40">1 tin nhắn gửi đến AI client</p>
@@ -74,7 +75,7 @@
 			</div>
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-2.5">
-					<div class="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center text-base">⭐</div>
+					<div class="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center p-1.5"><img src="/icons/i_writing.png" alt="" class="w-full h-full" /></div>
 					<div>
 						<p class="text-sm font-medium text-[#1B365D]">Chấm điểm hội thoại</p>
 						<p class="text-xs text-[#1B365D]/40">Phân tích & phản hồi từ AI</p>
@@ -107,7 +108,7 @@
 						{#each entries as entry}
 							<div class="bg-white rounded-xl px-4 py-3 border border-[#1B365D]/6 flex items-center justify-between">
 								<div class="flex items-center gap-3">
-									<div class="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-sm">🎙️</div>
+									<div class="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center p-1.5"><img src="/icons/i_microphone.png" alt="" class="w-full h-full" /></div>
 									<div>
 										<p class="text-sm font-medium text-[#1B365D]">{entry.lessonTitle}</p>
 										{#if entry.score !== null}
@@ -138,3 +139,5 @@
 		</p>
 	</div>
 </div>
+
+<BottomNav active="credits" />
