@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Video, Camera, FileText, Play, Loader, ChevronUp, ChevronDown, X, CheckCircle, XCircle, AlertTriangle } from 'lucide-svelte';
+	import { Video, Camera, FileText, Play, Loader, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, X, CheckCircle, XCircle, AlertTriangle } from 'lucide-svelte';
 	const { data } = $props();
 
 	type FileEntry = { name: string; url: string; type: string; sizeBytes: number };
@@ -13,6 +13,18 @@
 
 	let runs     = $state<Run[]>(data.runs as Run[]);
 	let expanded = $state<string | null>((data.runs as Run[])[0]?.id ?? null);
+
+	// Carousel indices per run (keyed by run id)
+	let videoIndex = $state<Record<string, number>>({});
+	let shotIndex  = $state<Record<string, number>>({});
+
+	function getVideoIdx(runId: string): number { return videoIndex[runId] ?? 0; }
+	function getShotIdx(runId: string): number  { return shotIndex[runId] ?? 0; }
+
+	function prevVideo(runId: string, total: number) { videoIndex[runId] = ((getVideoIdx(runId) - 1) + total) % total; }
+	function nextVideo(runId: string, total: number) { videoIndex[runId] = (getVideoIdx(runId) + 1) % total; }
+	function prevShot(runId: string, total: number)  { shotIndex[runId] = ((getShotIdx(runId) - 1) + total) % total; }
+	function nextShot(runId: string, total: number)  { shotIndex[runId] = (getShotIdx(runId) + 1) % total; }
 
 	// Lightbox state
 	let lightboxUrl  = $state<string | null>(null);
@@ -216,39 +228,57 @@
 								<span><strong>Files:</strong> {run.files.length}</span>
 							</div>
 
-							<!-- ── Videos ── -->
+							<!-- ── Videos Carousel ── -->
 							{#if videos(run).length > 0}
-								<p class="section-label"><Video size={14} /> Recordings ({videos(run).length})</p>
-								<div class="video-grid">
-									{#each videos(run) as v}
-										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-										<div class="video-card" onclick={() => openLightbox(v.url, 'video')} title="Click to view full screen">
-											<!-- svelte-ignore a11y_media_has_caption -->
-											<video
-												src={v.url}
-												muted
-												preload="metadata"
-												class="video-el"
-												title={v.name}
-											></video>
-											<p class="video-name" title={v.name}>{v.name.replace(/__/g, ' › ')}</p>
-											<p class="video-size">{fmtBytes(v.sizeBytes)}</p>
+								{@const vids = videos(run)}
+								{@const vi = getVideoIdx(run.id)}
+								{@const currentVid = vids[vi]}
+								<p class="section-label"><Video size={14} /> Recordings</p>
+								<div class="carousel">
+									{#if vids.length > 1}
+										<button class="carousel-btn carousel-prev" onclick={(e) => { e.stopPropagation(); prevVideo(run.id, vids.length); }}><ChevronLeft size={18} /></button>
+									{/if}
+									<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+									<div class="carousel-slide" onclick={() => openLightbox(currentVid.url, 'video')} title="Click to view">
+										<!-- svelte-ignore a11y_media_has_caption -->
+										<video src={currentVid.url} muted preload="metadata" class="carousel-media" title={currentVid.name}></video>
+										<div class="carousel-info">
+											<span class="carousel-name">{currentVid.name.replace(/__/g, ' › ')}</span>
+											<span class="carousel-meta">{fmtBytes(currentVid.sizeBytes)}</span>
 										</div>
-									{/each}
+									</div>
+									{#if vids.length > 1}
+										<button class="carousel-btn carousel-next" onclick={(e) => { e.stopPropagation(); nextVideo(run.id, vids.length); }}><ChevronRight size={18} /></button>
+									{/if}
 								</div>
+								{#if vids.length > 1}
+									<div class="carousel-counter">{vi + 1} / {vids.length}</div>
+								{/if}
 							{/if}
 
-							<!-- ── Screenshots ── -->
+							<!-- ── Screenshots Carousel ── -->
 							{#if shots(run).length > 0}
-								<p class="section-label"><Camera size={14} /> Screenshots ({shots(run).length})</p>
-								<div class="shot-grid">
-									{#each shots(run) as s}
-										<button class="shot-link" onclick={() => openLightbox(s.url, 'image')}>
-											<img src={s.url} alt={s.name} class="shot-img" />
-											<p class="shot-name">{s.name.replace(/__/g, ' › ')}</p>
-										</button>
-									{/each}
+								{@const ss = shots(run)}
+								{@const si = getShotIdx(run.id)}
+								{@const currentShot = ss[si]}
+								<p class="section-label"><Camera size={14} /> Screenshots</p>
+								<div class="carousel">
+									{#if ss.length > 1}
+										<button class="carousel-btn carousel-prev" onclick={(e) => { e.stopPropagation(); prevShot(run.id, ss.length); }}><ChevronLeft size={18} /></button>
+									{/if}
+									<button class="carousel-slide" onclick={() => openLightbox(currentShot.url, 'image')} title="Click to view">
+										<img src={currentShot.url} alt={currentShot.name} class="carousel-media" />
+										<div class="carousel-info">
+											<span class="carousel-name">{currentShot.name.replace(/__/g, ' › ')}</span>
+										</div>
+									</button>
+									{#if ss.length > 1}
+										<button class="carousel-btn carousel-next" onclick={(e) => { e.stopPropagation(); nextShot(run.id, ss.length); }}><ChevronRight size={18} /></button>
+									{/if}
 								</div>
+								{#if ss.length > 1}
+									<div class="carousel-counter">{si + 1} / {ss.length}</div>
+								{/if}
 							{/if}
 
 							<!-- ── Log ── -->
@@ -385,31 +415,87 @@
 		display: flex; align-items: center; gap: 6px;
 	}
 
-	/* Video grid */
-	.video-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: 12px;
-	}
-	.video-card { background: #f8f9fb; border-radius: 8px; overflow: hidden; cursor: pointer; transition: opacity 0.2s; border: 1px solid #e8ecf1; }
-	.video-card:hover { opacity: 0.85; }
-	.video-el { width: 100%; display: block; max-height: 200px; object-fit: contain; background: #1e293b; pointer-events: none; }
-	.video-name {
-		font-size: 0.72rem; color: #94a3b8; padding: 4px 8px 0; white-space: nowrap;
-		overflow: hidden; text-overflow: ellipsis;
-	}
-	.video-size { font-size: 0.68rem; color: #cbd5e1; padding: 0 8px 6px; }
-
-	/* Screenshot grid */
-	.shot-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	/* Carousel */
+	.carousel {
+		display: flex;
+		align-items: center;
 		gap: 8px;
+		background: #f8f9fb;
+		border: 1px solid #e8ecf1;
+		border-radius: 10px;
+		overflow: hidden;
+		padding: 6px;
 	}
-	.shot-link { display: block; width: 100%; text-align: left; cursor: pointer; border: 1px solid #e8ecf1; padding: 0; background: #f8f9fb; border-radius: 6px; overflow: hidden; text-decoration: none; transition: opacity 0.2s; }
-	.shot-link:hover { opacity: 0.85; }
-	.shot-img  { width: 100%; display: block; max-height: 140px; object-fit: cover; }
-	.shot-name { font-size: 0.68rem; color: #94a3b8; padding: 4px 6px 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+	.carousel-btn {
+		background: #ffffff;
+		border: 1px solid #e8ecf1;
+		color: #94a3b8;
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		flex-shrink: 0;
+		transition: all 0.15s;
+	}
+	.carousel-btn:hover { border-color: #f2a906; color: #b07d04; }
+
+	.carousel-slide {
+		flex: 1;
+		min-width: 0;
+		cursor: pointer;
+		border-radius: 6px;
+		overflow: hidden;
+		background: #1e293b;
+		border: none;
+		padding: 0;
+		text-align: left;
+		transition: opacity 0.2s;
+	}
+	.carousel-slide:hover { opacity: 0.9; }
+
+	.carousel-media {
+		width: 100%;
+		display: block;
+		max-height: 260px;
+		object-fit: contain;
+		pointer-events: none;
+	}
+
+	.carousel-info {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 6px 10px;
+		background: #ffffff;
+	}
+
+	.carousel-name {
+		font-size: 0.72rem;
+		color: #64748b;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		flex: 1;
+	}
+
+	.carousel-meta {
+		font-size: 0.68rem;
+		color: #cbd5e1;
+		flex-shrink: 0;
+		margin-left: 8px;
+	}
+
+	.carousel-counter {
+		text-align: center;
+		font-size: 0.72rem;
+		color: #94a3b8;
+		margin-top: 4px;
+		font-weight: 600;
+	}
 
 	/* Log */
 	.log-details { margin-top: 10px; }

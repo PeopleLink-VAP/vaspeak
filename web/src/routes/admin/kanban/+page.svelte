@@ -1,10 +1,11 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
     import { isAgent, formatElapsed, getInitials, parseJsonArray } from '$lib/utils';
+    import TimeAgo from '$lib/components/TimeAgo.svelte';
     import {
         Target, Bot, User, Clipboard, Link, Lightbulb,
         FolderOpen, ArrowRight, MessageSquare, Paperclip,
-        Clock, X, ChevronUp, ChevronDown
+        Clock, X, ChevronUp, ChevronDown, Activity, PlusCircle, RefreshCw, PanelRightClose, PanelRightOpen
     } from 'lucide-svelte';
 
 
@@ -157,13 +158,16 @@
             const r = await fetch('/admin/api/kanban/focus');
             if (r.ok) { const j = await r.json(); weeklyFocus = j.focus ?? ''; }
         } catch { /* silent */ }
+        await refreshActivity();
         refreshInterval = setInterval(refreshBoard, 15000);
         tickInterval = setInterval(() => { now = Date.now(); }, 1000);
+        activityInterval = setInterval(refreshActivity, 30000);
     });
 
     onDestroy(() => {
         clearInterval(refreshInterval);
         clearInterval(tickInterval);
+        clearInterval(activityInterval);
     });
 
     // ─── Weekly Focus ─────────────────────────────────────────────────────────
@@ -294,6 +298,35 @@
             uploading = false;
         }
     }
+
+    // ─── Activity Feed ────────────────────────────────────────────────────────
+
+    type ActivityItem = {
+        id: string;
+        type: 'task_update' | 'task_created' | 'comment';
+        timestamp: string;
+        title: string;
+        detail: string;
+        actor: string;
+        taskId: string;
+    };
+
+    let activityOpen = $state(false);
+    let activityItems = $state<ActivityItem[]>([]);
+    let activityLoading = $state(false);
+    let activityInterval: ReturnType<typeof setInterval>;
+
+    async function refreshActivity() {
+        try {
+            const res = await fetch('/admin/api/kanban/activity');
+            if (res.ok) activityItems = await res.json();
+        } catch { /* silent */ }
+    }
+
+    const statusLabels: Record<string, string> = {
+        backlog: 'Backlog', todo: 'To Do', in_progress: 'In Progress',
+        review_blocked: 'Blocked', done: 'Done'
+    };
 </script>
 
 <svelte:head>
@@ -307,9 +340,15 @@
             <h1 class="page-title">Kanban Board</h1>
             <p class="page-subtitle">Live · auto-refreshes every 15 s · backed by Turso</p>
         </div>
-        <button class="btn-new" onclick={() => (showNewTaskForm = !showNewTaskForm)}>
-            {showNewTaskForm ? '✕ Cancel' : '+ New Task'}
-        </button>
+        <div class="header-actions">
+            <button class="btn-activity" class:active={activityOpen} onclick={() => (activityOpen = !activityOpen)} title="Toggle activity feed">
+                {#if activityOpen}<PanelRightClose size={16} />{:else}<PanelRightOpen size={16} />{/if}
+                Activity
+            </button>
+            <button class="btn-new" onclick={() => (showNewTaskForm = !showNewTaskForm)}>
+                {showNewTaskForm ? '✕ Cancel' : '+ New Task'}
+            </button>
+        </div>
     </div>
 
     <!-- ── Weekly Focus Banner ────────────────────────────────────────── -->
@@ -430,6 +469,45 @@
         {/each}
     </div>
 </div>
+
+<!-- ── Activity Sidebar ────────────────────────────────────────────────── -->
+{#if activityOpen}
+    <aside class="activity-sidebar">
+        <div class="activity-header">
+            <span class="activity-title"><Activity size={14} /> Activity</span>
+            <button class="activity-close" onclick={() => (activityOpen = false)}><X size={14} /></button>
+        </div>
+        <div class="activity-list">
+            {#each activityItems as item (item.id)}
+                <div class="activity-row" class:activity-comment={item.type === 'comment'} class:activity-created={item.type === 'task_created'}>
+                    <div class="activity-icon">
+                        {#if item.type === 'comment'}
+                            <MessageSquare size={12} />
+                        {:else if item.type === 'task_created'}
+                            <PlusCircle size={12} />
+                        {:else}
+                            <RefreshCw size={12} />
+                        {/if}
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-top-row">
+                            <span class="activity-actor" class:actor-agent={isAgent(item.actor)}>{item.actor || '—'}</span>
+                            <TimeAgo timestamp={item.timestamp} class="activity-time" />
+                        </div>
+                        <p class="activity-task-title">{item.title}</p>
+                        {#if item.type === 'comment'}
+                            <p class="activity-detail activity-comment-text">{item.detail}</p>
+                        {:else}
+                            <span class="activity-status-chip">{statusLabels[item.detail] ?? item.detail}</span>
+                        {/if}
+                    </div>
+                </div>
+            {:else}
+                <p class="activity-empty">No activity yet</p>
+            {/each}
+        </div>
+    </aside>
+{/if}
 
 <!-- ── Task Detail Panel ───────────────────────────────────────────────── -->
 {#if selectedTask}
@@ -1214,4 +1292,179 @@
     }
     .btn-upload:hover:not(:disabled) { border-color: #f2a906; color: #b07d04; }
     .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Header actions ─────────────────────────────────────────────── */
+    .header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .btn-activity {
+        background: #ffffff;
+        border: 1px solid #e8ecf1;
+        color: #64748b;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.83rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-activity:hover { border-color: #cbd5e1; color: #475569; }
+    .btn-activity.active { background: #fef8e7; border-color: #f2a906; color: #b07d04; }
+
+    /* ── Activity Sidebar ─────────────────────────────────────────── */
+    .activity-sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: min(340px, 100vw);
+        background: #ffffff;
+        border-left: 1px solid #e8ecf1;
+        z-index: 150;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -4px 0 16px rgba(0,0,0,0.04);
+        animation: slide-in 0.2s ease-out;
+    }
+
+    @keyframes slide-in {
+        from { transform: translateX(100%); opacity: 0; }
+        to   { transform: translateX(0); opacity: 1; }
+    }
+
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 16px 12px;
+        border-bottom: 1px solid #e8ecf1;
+        flex-shrink: 0;
+    }
+
+    .activity-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .activity-close {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 4px;
+        line-height: 1;
+        border-radius: 4px;
+    }
+    .activity-close:hover { color: #1e293b; }
+
+    .activity-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+    }
+
+    .activity-row {
+        display: flex;
+        gap: 10px;
+        padding: 10px 16px;
+        border-bottom: 1px solid #f8f9fb;
+        transition: background 0.1s;
+    }
+    .activity-row:hover { background: #fafbfc; }
+
+    .activity-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .activity-row.activity-comment .activity-icon { background: #eff6ff; color: #3b82f6; }
+    .activity-row.activity-created .activity-icon { background: #ecfdf5; color: #22c55e; }
+
+    .activity-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .activity-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 2px;
+    }
+
+    .activity-actor {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #64748b;
+    }
+    .actor-agent {
+        color: #b07d04;
+    }
+
+    :global(.activity-time) {
+        font-size: 0.68rem !important;
+        color: #cbd5e1 !important;
+        flex-shrink: 0;
+    }
+
+    .activity-task-title {
+        font-size: 0.78rem;
+        color: #1e293b;
+        margin: 0;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .activity-detail {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        margin: 3px 0 0;
+        line-height: 1.35;
+    }
+
+    .activity-comment-text {
+        font-style: italic;
+    }
+
+    .activity-status-chip {
+        display: inline-block;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 1px 7px;
+        border-radius: 4px;
+        background: #f1f5f9;
+        color: #64748b;
+        margin-top: 3px;
+    }
+
+    .activity-empty {
+        text-align: center;
+        color: #cbd5e1;
+        font-size: 0.8rem;
+        padding: 32px 16px;
+        font-style: italic;
+    }
 </style>
