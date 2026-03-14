@@ -217,7 +217,6 @@
 			rpScore = null;     rpError = ''; rpStreamText = ''; rpState = 'idle';
 		} else {
 			saveProgress();
-			goto('/dashboard');
 		}
 	}
 
@@ -231,11 +230,15 @@
 		else nextBlock();
 	}
 
+	// ── Rewards state ──────────────────────────────────────────────
+	let rewardToast = $state<{ streakBonus?: { credits: number; message: string }; newMilestones?: Array<{ id: string; label: string; icon: string; credits: number }> } | null>(null);
+	let showingRewards = $state(false);
+
 	async function saveProgress() {
 		const blockCompletions: Record<string, boolean> = {};
 		for (let i = 0; i < totalBlocks; i++) blockCompletions[`block_${i + 1}`] = completedBlocks.has(i);
 		try {
-			await fetch('/api/progress', {
+			const res = await fetch('/api/progress', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -246,7 +249,16 @@
 					reflectionNotes: reflectionText || null
 				})
 			});
+			const json = await res.json();
+			if (json.rewards && (json.rewards.streakBonus || json.rewards.newMilestones?.length)) {
+				rewardToast = json.rewards;
+				showingRewards = true;
+				// Show rewards for 4 seconds then navigate
+				setTimeout(() => { goto('/dashboard'); }, 4000);
+				return;
+			}
 		} catch { /* silent */ }
+		goto('/dashboard');
 	}
 </script>
 
@@ -596,3 +608,51 @@
 		</div>
 	</div>
 </div>
+
+<!-- Reward celebration overlay -->
+{#if showingRewards && rewardToast}
+	<div class="fixed inset-0 z-50 bg-[#1B365D]/80 backdrop-blur-sm flex items-center justify-center p-6 animate-[fadeIn_0.3s_ease-out]" data-testid="reward-overlay">
+		<div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center animate-[scaleIn_0.4s_ease-out]">
+			<div class="text-5xl mb-4">🎉</div>
+			<h2 class="font-heading font-bold text-[#1B365D] text-xl mb-2">Bài học hoàn thành!</h2>
+
+			{#if rewardToast.streakBonus}
+				<div class="bg-[#F2A906]/10 border border-[#F2A906]/30 rounded-xl p-4 mb-3 animate-[slideUp_0.5s_ease-out_0.2s_both]">
+					<div class="text-2xl mb-1">🔥 +{rewardToast.streakBonus.credits} credits</div>
+					<p class="text-sm text-[#1B365D]/60">{rewardToast.streakBonus.message}</p>
+				</div>
+			{/if}
+
+			{#if rewardToast.newMilestones?.length}
+				{#each rewardToast.newMilestones as m, i}
+					<div class="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-2 animate-[slideUp_0.5s_ease-out_{0.4+i*0.15}s_both]" style="animation-delay: {0.4 + i * 0.15}s">
+						<div class="flex items-center justify-center gap-2 mb-1">
+							<span class="text-2xl">{m.icon}</span>
+							<span class="font-bold text-[#1B365D]">{m.label}</span>
+						</div>
+						{#if m.credits > 0}
+							<p class="text-sm text-purple-600 font-medium">+{m.credits} credits thưởng!</p>
+						{/if}
+					</div>
+				{/each}
+			{/if}
+
+			<p class="text-xs text-[#1B365D]/40 mt-4">Đang chuyển về trang chủ...</p>
+		</div>
+	</div>
+{/if}
+
+<style>
+	@keyframes fadeIn {
+		from { opacity: 0; }
+		to { opacity: 1; }
+	}
+	@keyframes scaleIn {
+		from { opacity: 0; transform: scale(0.8); }
+		to { opacity: 1; transform: scale(1); }
+	}
+	@keyframes slideUp {
+		from { opacity: 0; transform: translateY(20px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+</style>
