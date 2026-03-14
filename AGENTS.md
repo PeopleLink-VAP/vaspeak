@@ -23,7 +23,7 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 ### Database Schema (SQLite / libsql)
 | Table | Key columns |
 |---|---|
-| `profiles` | id, email, display_name, email_verified, role, current_level, niche, streak_count, last_active_date |
+| `profiles` | id, email, display_name, email_verified, role, current_level, niche, native_language, avatar_url, streak_count, last_active_date |
 | `auth_passwords` | user_id (FK), password_hash |
 | `email_verifications` | id, user_id, email, code, expires_at |
 | `password_resets` | id, user_id, token (unique), expires_at (1hr) |
@@ -38,13 +38,14 @@ VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence
 | `telegram_messages` | id, user_id, telegram_chat_id, direction, message_text, message_type |
 | `newsletter_subscribers` | id, email (unique), source, subscribed_at |
 | `blacklisted_domains` | id, domain (unique) |
+| `user_feedback` | id, user_id (FK), topic, message, attachment_url, created_at |
 
 ### Key Routes
-**App pages**: `/` (landing), `/login`, `/auth/magic`, `/dashboard`, `/lessons`, `/lesson/[day]`, `/credits`, `/vocabulary`, `/challenges`, `/profile`.
+**App pages**: `/` (landing), `/login`, `/auth/magic`, `/dashboard`, `/lessons`, `/lesson/[day]`, `/credits`, `/vocabulary`, `/challenges`, `/profile`, `/help`.
 
 **Admin pages**: `/admin` (dashboard), `/admin/kanban`, `/admin/users`, `/admin/lessons`, `/admin/waitlist`, `/admin/e2e-testing`, `/admin/settings`.
 
-**APIs**: `/api/roleplay`, `/api/progress`, `/api/credits`, `/api/waitlist`, `/api/telegram/link`, `/api/telegram/webhook`, `/api/telegram/send-daily-challenge`.
+**APIs**: `/api/roleplay`, `/api/progress`, `/api/credits`, `/api/waitlist`, `/api/telegram/link`, `/api/telegram/webhook`, `/api/telegram/send-daily-challenge`, `/api/support/chat`.
 
 **Admin APIs**: `/admin/api/activity` (user signups/waitlist/progress), `/admin/api/kanban/activity` (task updates/comments), `/admin/api/kanban/tasks`, `/admin/api/users/[id]`.
 
