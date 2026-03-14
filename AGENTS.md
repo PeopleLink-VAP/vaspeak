@@ -1,97 +1,116 @@
 # VASpeak - AI Agent Master Context
 
-This document provides the compressed, essential context for AI agents and human developers working on VASpeak.
+Compressed essential context for AI agents working on VASpeak.
 
-## 1. Project Overview & Gamification Pivot
+## 1. Project Overview
 VASpeak is a gamified, mobile-first, "Duolingo-like" English speaking confidence trainer for Vietnamese Virtual Assistants (VAs).
-- **Core Loop**: Short, daily, 4-block lessons (Listening, Pattern Drilling, AI Roleplay, Emotional Reflection). Emphasizes speaking/listening over reading/writing.
-- **Niches**: Users start in General Communication. Unlocking 'Working VA' level unlocks 8 specific niche tracks (Ecommerce, Video Editor, Operations, etc.).
-- **Gamification**: Users get monthly AI Credits (e.g., 100/mo). Earning milestones unlocks rewards and templates. Includes daily challenges, vocabulary bank, and a community forum.
-- **Platform**: SvelteKit web app, structured as a Progressive Web App (PWA) for native-like installation and mobile/desktop reminders.
+- **Core Loop**: Short daily 4-block lessons (Listening, Pattern Drilling, AI Roleplay, Emotional Reflection).
+- **Niches**: General Communication → unlock 8 niche tracks (Ecommerce, Video Editor, Operations, etc.).
+- **Gamification**: Monthly AI Credits (100/mo), milestones, daily challenges, vocabulary bank.
+- **Platform**: SvelteKit PWA for mobile/desktop.
+- **Language**: Primary UI language is Vietnamese (`lang="vi"` in `app.html`).
 
-## 2. Tech Stack & Architecture
-- **Frontend**: SvelteKit 5 (Using Runes exclusively: `$state`, `$derived`, `$props`), TypeScript, Tailwind CSS 4.
-- **Backend / DB**: Serverless SvelteKit API routes. **Local SQLite (`libsql`)** replaces SpacetimeDB. Admin Kanban board uses a remote **Turso** database.
-- **Auth**: Fully custom server-side auth. Email/password (bcrypt) + magic links (Resend). 7-day httpOnly JWT cookies. Anti-enumeration on all sensitive flows. Email verification enforced on password login.
-- **AI Integration**: Groq API (Llama models) used for dynamic roleplay (Block 3), pronunciation scoring, lesson content generation, and Telegram vocab challenges. Credit balance is checked before every Groq call.
-- **Telegram Bot**: `@vaspeak_bot` — daily vocab challenges via Telegram. Webhook at `/api/telegram/webhook`. Cron runs hourly to send timezone-aware challenges. Bot token in `TELEGRAM_BOT_TOKEN` env var.
-- **System Management**: Admin dashboard at `/admin` with health metrics, PM2 status, Kanban board (Turso-backed), E2E recording viewer, and settings page.
-- **Deployment**: Self-hosted via PM2. `vaspeak-prod` on port 19300 → `vaspeak.alphabits.team`. `vaspeak-dev` on port 19301 → `vaspeak-beta.alphabits.team`. Both managed by `ecosystem.config.cjs`. Production uses `@sveltejs/adapter-node` (`node build/index.js`).
+## 2. Tech Stack
+- **Frontend**: SvelteKit 5 (Runes: `$state`, `$derived`, `$props`, `$effect`), TypeScript, Tailwind CSS 4.
+- **Backend**: SvelteKit API routes. Local SQLite (`@libsql/client`). Admin Kanban via remote Turso.
+- **Auth**: Custom server-side. Email/password (bcrypt) + magic links (Resend). 7-day httpOnly JWT. Anti-enumeration.
+- **AI**: Groq API (Llama) for roleplay, pronunciation, content gen, Telegram vocab. Credit-gated.
+- **Telegram**: `@vaspeak_bot` — daily vocab challenges, hourly cron, webhook at `/api/telegram/webhook`.
+- **Icons**: `lucide-svelte` for admin, custom PNGs (`/static/icons/`) for app pages. No emoji in UI.
+- **Admin**: 3-column layout (nav sidebar | content | activity panel). Light theme, Lucide icons.
+- **Deploy**: PM2 self-hosted. `vaspeak-prod` :19300 → `vaspeak.alphabits.team`. `vaspeak-dev` :19301 → `vaspeak-beta.alphabits.team`. Adapter: `@sveltejs/adapter-node`.
 
-### Database Schema Shapes (SQLite / libsql)
-- `profiles`: id, email, display_name, email_verified (0/1), role ('user'|'admin'), current_level, niche, native_language, streak_count, last_active_date, created_at, updated_at.
-- `auth_passwords`: user_id (FK→profiles), password_hash.
-- `email_verifications`: id, user_id, email, code, expires_at. *(Token for email verification flow — not yet wired to sending.)*
-- `password_resets`: id, user_id, token (unique), expires_at (1hr).
-- `magic_links`: id, user_id, token (unique), expires_at (15min). *(Single-use, consumed on verify.)*
-- `user_credits`: user_id (PK), monthly_allowance (100), credits_used, subscription_status ('free'|'pro'), reset_date. *(Check balance before every Groq call.)*
-- `credit_events`: id, user_id, delta (negative=spent, positive=earned), reason ('roleplay'|'daily_bonus'|'milestone'), created_at. *(Written by spendCredits() and earnCredits() in $lib/server/credits.ts.)*
-- `lessons`: id, day_number, week_number, week_theme, niche ('general'|'ecommerce'|'video_editor'|etc.), title, content (JSON blocks array), is_published, created_at, updated_at.
-- `user_progress`: id, user_id, lesson_id, block_completions (JSON), simulation_scores (JSON), stress_level (1-3), reflection_notes, completed_at. UNIQUE(user_id, lesson_id).
-- `vocabulary_bank`: id, user_id, word, definition, context_sentence, lesson_id, mastered (0/1), added_at.
-- `telegram_links`: user_id (PK), telegram_chat_id, telegram_username, link_token, linked_at, reminder_hour (default 8), timezone (default 'Asia/Ho_Chi_Minh'). *(User ↔ Telegram chat mapping. link_token used during QR/deep-link flow, cleared on link.)*
-- `telegram_challenges`: id, user_id, word, correct_index, options (JSON), answered (0/1), user_answer, answered_at, correct (0/1), credits_earned, created_at. *(Stores each vocab challenge for answer verification and stats.)*
-- `telegram_messages`: id, user_id, telegram_chat_id, direction ('in'|'out'), message_text, message_type, metadata (JSON), created_at. *(Full conversation log.)*
-- `newsletter_subscribers`: id, email (unique), source ('landing'|'app'), subscribed_at.
-- `blacklisted_domains`: id, domain (unique), added_at. *(Admin-managed disposable email domain block list.)*
+### Database Schema (SQLite / libsql)
+| Table | Key columns |
+|---|---|
+| `profiles` | id, email, display_name, email_verified, role, current_level, niche, streak_count, last_active_date |
+| `auth_passwords` | user_id (FK), password_hash |
+| `email_verifications` | id, user_id, email, code, expires_at |
+| `password_resets` | id, user_id, token (unique), expires_at (1hr) |
+| `magic_links` | id, user_id, token (unique), expires_at (15min), single-use |
+| `user_credits` | user_id (PK), monthly_allowance (100), credits_used, subscription_status, reset_date |
+| `credit_events` | id, user_id, delta, reason, created_at |
+| `lessons` | id, day_number, week_number, week_theme, niche, title, content (JSON), is_published |
+| `user_progress` | id, user_id, lesson_id, block_completions (JSON), simulation_scores (JSON), stress_level (1-3), completed_at |
+| `vocabulary_bank` | id, user_id, word, definition, context_sentence, lesson_id, mastered (0/1) |
+| `telegram_links` | user_id (PK), telegram_chat_id, telegram_username, reminder_hour, timezone |
+| `telegram_challenges` | id, user_id, word, correct_index, options (JSON), answered, correct, credits_earned |
+| `telegram_messages` | id, user_id, telegram_chat_id, direction, message_text, message_type |
+| `newsletter_subscribers` | id, email (unique), source, subscribed_at |
+| `blacklisted_domains` | id, domain (unique) |
 
 ### Key Routes
-- `/` — Landing page + waitlist
-- `/login` — Login, register, forgot password, magic link
-- `/auth/magic` — Magic link token verification
-- `/dashboard` — User dashboard (streak, credits, today's lesson CTA)
-- `/lesson/[day]` — Full 4-block lesson page (SQLite-backed)
-- `/credits` — Credits overview and usage ledger
-- `/admin` — Admin dashboard (password-protected)
-- `/admin/kanban` — Turso-backed Kanban board
-- `/admin/settings` — System health, DB status, env info
-- `/admin/e2e-testing` — Playwright recording viewer + run trigger
-- `/api/roleplay` — Groq AI roleplay endpoint (credit-gated)
-- `/api/progress` — User progress write endpoint
-- `/api/credits` — Credits ledger API
-- `/api/waitlist` — Waitlist signup endpoint
-- `/api/telegram/link` — GET/POST/PATCH/DELETE for Telegram link management
-- `/api/telegram/webhook` — Telegram Bot webhook (commands: /start, /word, /status, /time, /stop, A/B/C/D answers)
-- `/api/telegram/send-daily-challenge` — Cron-triggered daily vocab sender (Bearer CRON_SECRET auth)
+**App pages**: `/` (landing), `/login`, `/auth/magic`, `/dashboard`, `/lessons`, `/lesson/[day]`, `/credits`, `/vocabulary`, `/challenges`, `/profile`.
 
-## 3. Design & Styling Rules
-**Aesthetics**: Mobile-first, friendly, rounded UI inheriting Virtual Assistant PRO's identity.
-- **Primary Color**: Sunflower Gold `#F2A906` (Primary CTAs, Active States, Progress bars. *Never put white text on sunflower, always use navy text.*)
-- **Secondary/Text Color**: Deep Navy `#1B365D` (Headings, secondary buttons, main text).
-- **Background**: Warm White `#FFFBF1`. Cards use White `#FFFFFF`.
-- **Typography**: `Plus Jakarta Sans` for Headings, `Inter` for Body.
-- **Components**: Generously rounded cards (`border-radius: 16px`) with navy shadow. Hover states use sunflower glow. Buttons `radius: 6px`. No gratuitous animations (use `fade-in`, simple transforms).
+**Admin pages**: `/admin` (dashboard), `/admin/kanban`, `/admin/users`, `/admin/lessons`, `/admin/waitlist`, `/admin/e2e-testing`, `/admin/settings`.
 
-## 4. Development & Testing Rules
-- **DB Access**: API routes use `$lib/server/db.ts` for SQLite via `@libsql/client` and `$lib/server/turso.ts` for admin Kanban via Turso remote.
-- **Auth Helpers**: `$lib/server/auth.ts` (JWT, bcrypt), `$lib/server/email.ts` (Resend), `$lib/server/magic-link.ts` (token gen/verify), `$lib/server/credits.ts` (balance checks), `$lib/server/groq.ts` (Groq API wrapper), `$lib/server/telegram.ts` (Telegram bot API, vocab challenge generation, `sendVocabChallenge()`).
-- **Reusable Components**: `TelegramConnect.svelte` (self-contained Telegram link/unlink/QR/timezone picker), `BottomNav.svelte` (app navigation), `AudioRecorder.svelte` (Web Audio capture).
-- **Gamification**: `$lib/gamification.ts` — pure functions for milestone detection (`checkMilestones`, `getNewMilestones`), streak bonus calculation, reward helpers. 12 milestones defined (streak, lesson, vocab, roleplay).
-- **E2E Testing**: Playwright (`npx playwright test`). Test heavily on Mobile viewports (Pixel 5, iPhone 12 configs). E2E recordings visible in `/admin/e2e-testing`. Tests in `tests/e2e/` and `tests/telegram.spec.ts`.
-- **Audio/Web API**: Extensive reliance on Web Audio API and MediaRecorder. Pay attention to autoplay policies requiring user gestures.
-- **PWA**: `manifest.webmanifest` in `/static`, `service-worker.ts` at `src/`, install prompt logic in `src/lib/pwa.ts` (SSR-safe, client-only).
+**APIs**: `/api/roleplay`, `/api/progress`, `/api/credits`, `/api/waitlist`, `/api/telegram/link`, `/api/telegram/webhook`, `/api/telegram/send-daily-challenge`.
+
+**Admin APIs**: `/admin/api/activity` (user signups/waitlist/progress), `/admin/api/kanban/activity` (task updates/comments), `/admin/api/kanban/tasks`, `/admin/api/users/[id]`.
+
+## 3. Design System — "Editorial Chromeless"
+
+### App Pages (mobile-first)
+- **Philosophy**: Clean, chromeless, editorial. No card shadows. Hairline dividers. Typography-driven.
+- **Page bg**: `#FAFAF8`, text: `#1A1A1A`, muted: `#A3A3A3`, accent: `#D4960A` (gold), success: `#10B981`.
+- **Top bar**: `sticky top-0 bg-[#FAFAF8]/95 backdrop-blur-lg border-b border-[#E8E8E8]`.
+- **Inputs**: Underline-only (`border-b`), never boxed. Labels: muted uppercase.
+- **Modals**: Bottom-sheet on mobile, centered on desktop.
+- **Icons**: Custom PNGs in `/static/icons/`, inline SVG for chrome. **Never emoji**.
+- **Fonts**: Headings = `Plus Jakarta Sans`, body = `Inter`.
+
+### Admin Pages (desktop-first, 3-column)
+- **Layout**: `admin-shell` flex container → nav sidebar (240px) | main content (flex:1) | activity panel (300px, collapsible).
+- **Colors**: bg `#f8f9fb`, cards `#ffffff` with `border: 1px solid #e8ecf1`, text `#1e293b`, muted `#94a3b8`, accent `#f2a906`.
+- **Icons**: `lucide-svelte` library. Import specific icons, never use emoji.
+- **Activity sidebar**: 3rd column, shows kanban activity by default, user activity on `/admin/users`. Collapsible to 48px. Hidden on <1024px. Auto-refreshes via `$effect` watching `$page.url.pathname`.
+- **Timestamps**: SQLite stores UTC without `Z`. APIs normalize with `utc()` helper appending `Z`. Client uses `TimeAgo.svelte` component.
+- **E2E recordings**: Carousel view (1/N) with prev/next, not grid dump.
+
+### Shared Components
+| Component | Location | Purpose |
+|---|---|---|
+| `BottomNav.svelte` | `$lib/components/` | App bottom navigation bar |
+| `TimeAgo.svelte` | `$lib/components/` | Relative timestamp ("3m ago"), auto-updates, respects browser TZ |
+| `TelegramConnect.svelte` | `$lib/components/` | Self-contained Telegram link/unlink/QR/timezone picker |
+| `AudioRecorder.svelte` | `$lib/components/` | Web Audio capture for lesson blocks |
+
+### Shared Stores
+| Store | Location | Purpose |
+|---|---|---|
+| `adminActivity` | `$lib/stores/adminActivity.ts` | Activity sidebar open state + ActivityItem type |
+
+## 4. Development Rules
+- **DB**: `$lib/server/db.ts` (SQLite via libsql), `$lib/server/turso.ts` (admin Kanban remote).
+- **Auth**: `$lib/server/auth.ts` (JWT/bcrypt), `$lib/server/email.ts` (Resend), `$lib/server/magic-link.ts`.
+- **Credits**: `$lib/server/credits.ts` — `spendCredits()`, `earnCredits()`. Check balance before every Groq call.
+- **Gamification**: `$lib/gamification.ts` — `checkMilestones`, `getNewMilestones`. 12 milestones defined.
+- **Timestamp convention**: SQLite stores UTC without `Z` suffix. When serving to client, use `utc()` helper to append `Z` so `new Date()` parses correctly.
+- **Svelte 5**: Runes mode only. Use `$state`, `$derived`, `$props`, `$effect`. No `<svelte:component>`, use direct `<Component />`.
+- **E2E**: Playwright. Mobile viewports (Pixel 5, iPhone 12). Tests in `tests/e2e/`. Recordings at `/admin/e2e-testing`.
 - **Commands**: `npm run dev`, `npm run build`, `npm run test:unit`, `npx playwright test`.
-- **PM2**: `pm2 reload ecosystem.config.cjs --update-env` to reload prod/dev with latest env vars.
+- **Deploy**: `npm run build && pm2 reload ecosystem.config.cjs --update-env`.
 
-## 5. Current Roadmap / Next Steps
-1. ✅ **Tech Stack Pivot**: Strip out SpacetimeDB, wire up SQLite (`@libsql/client`).
-2. ✅ **Schema Setup**: SQLite tables created — users, auth tokens, progress, credits, vocab, lessons, telegram.
-3. ✅ **Auth System**: Full email/password + magic link auth, JWT session cookies, route guards, disposable email blocking.
-4. ✅ **Dashboard & Lesson Pages**: `/dashboard` and `/lesson/[day]` wired to SQLite with real progress tracking.
-5. ✅ **AI Roleplay Engine**: Groq API integration for Block 3 (Guided Simulation) with credit gating.
-6. ✅ **Admin Dashboard**: `/admin` with health metrics, Kanban (Turso), E2E viewer, and settings page.
-7. ✅ **PWA Mechanics**: Service worker, `manifest.webmanifest`, install prompt, VAP app icons.
-8. ✅ **Magic Link Auth**: Passwordless login via emailed token (Resend), 15-min expiry, anti-enumeration.
-9. ✅ **Credits System**: Credit ledger UI at `/credits`, API at `/api/credits`, balance checked before AI calls.
-10. ✅ **Production Deployment**: PM2 `ecosystem.config.cjs` with full env vars for both prod (19300) and dev (19301).
-11. ✅ **Gamification Engine**: Milestones (12 defined), streak bonuses, badges grid on profile with earned/locked states.
-12. ✅ **49 Days of Content**: Weeks 1-7 seeded (W1 manual, W2-3 manual, W4-7 AI-generated via `scripts/seed-weeks-4-7.js`).
-13. ✅ **Vocabulary Bank**: UI and API at `/vocabulary` with challenge stats banner and source badges (lesson/telegram).
-14. ✅ **Placement Test**: 4-step assessment flow with audio sample and niche selection.
-15. ✅ **Telegram Bot Integration**: `@vaspeak_bot` with QR linking, daily vocab challenges (/word), answer verification (A/B/C/D), +1 credit rewards, timezone-aware reminders, conversation logging. Cron: `0 * * * *`.
-16. ✅ **Custom Icon System**: All emoji replaced with custom PNG icons across landing, dashboard, lesson, placement, challenges, and profile pages.
-17. 🔄 **Audio Recording Polish**: Web Audio API + MediaRecorder for Block 2 and 3. Wired but needs E2E testing.
-18. 🔄 **Monetization**: Credit top-up flow, Pro plan upgrade, payment integration.
-19. 🔄 **Community Forum**: Social feature for VAs to practice together.
-20. 🔄 **50+ Days Content**: Extend to Weeks 8+ (currently 49 days, need 50+).
-21. 🔄 **Niche-Specific Lessons**: Generate lesson content for ecommerce, video_editor, and other niche tracks.
+## 5. Roadmap
+### ✅ Complete
+1. SQLite stack, schema, auth (email/password + magic links)
+2. Dashboard, lesson pages, AI roleplay engine (Groq, credit-gated)
+3. Admin dashboard, Kanban (Turso), E2E viewer, settings
+4. PWA (service worker, manifest, install prompt)
+5. Credits system (ledger UI, API, balance checks)
+6. PM2 deployment (prod :19300, dev :19301)
+7. Gamification engine (12 milestones, streak bonuses, badges)
+8. 49 days content (W1-3 manual, W4-7 AI-generated)
+9. Vocabulary bank, placement test, Telegram bot integration
+10. Custom icon system (PNG + Lucide), editorial chromeless redesign
+11. Admin light theme, Lucide icons, 3-column layout with activity sidebar
+12. Admin users page (tabbed profile popup: activity timeline, progress, credits)
+13. Reusable `TimeAgo` component, UTC timestamp normalization
+14. E2E carousel view for recordings/screenshots
+
+### 🔄 In Progress
+15. Audio recording polish (Web Audio + MediaRecorder, needs E2E testing)
+16. Monetization (credit top-up, Pro plan, payment integration)
+17. Community forum (social feature for VAs)
+18. 50+ days content (extend beyond Week 7)
+19. Niche-specific lesson generation (ecommerce, video_editor, etc.)

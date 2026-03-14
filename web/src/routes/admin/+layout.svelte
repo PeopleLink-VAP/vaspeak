@@ -8,7 +8,6 @@
         X, PanelRightClose, PanelRightOpen
     } from 'lucide-svelte';
     import TimeAgo from '$lib/components/TimeAgo.svelte';
-    import { isAgent } from '$lib/utils';
     import type { ActivityItem } from '$lib/stores/adminActivity';
 
     let { children } = $props();
@@ -38,10 +37,8 @@
         }
     ];
 
-    let currentPath = $state('');
-    $effect(() => {
-        if (typeof window !== 'undefined') currentPath = window.location.pathname;
-    });
+    // Reactively track the current path via SvelteKit's page store
+    let currentPath = $derived($page.url.pathname);
 
     // ── Activity panel (third column) ───────────────────────────────────
 
@@ -49,18 +46,25 @@
     let activityInterval: ReturnType<typeof setInterval>;
     let panelOpen = $state(true);
 
+    function activityEndpoint(pathname: string): string {
+        if (pathname.startsWith('/admin/users')) return '/admin/api/activity';
+        return '/admin/api/kanban/activity';
+    }
+
     async function refreshActivity() {
         try {
-            const path = currentPath.startsWith('/admin/kanban')
-                ? '/admin/api/kanban/activity'
-                : '/admin/api/activity';
-            const res = await fetch(path);
+            const res = await fetch(activityEndpoint(currentPath));
             if (res.ok) activityItems = await res.json();
         } catch { /* silent */ }
     }
 
-    onMount(async () => {
-        await refreshActivity();
+    // Re-fetch whenever the page path changes
+    $effect(() => {
+        const _path = currentPath; // reactive dependency
+        refreshActivity();
+    });
+
+    onMount(() => {
         activityInterval = setInterval(refreshActivity, 30000);
     });
 
