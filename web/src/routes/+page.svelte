@@ -166,7 +166,7 @@
 		<div class="mt-14 flex flex-wrap items-center justify-center gap-4 text-sm text-[#1B365D]/50">
 			<span class="flex items-center gap-1.5">🇻🇳 Dành riêng cho VA Việt Nam</span>
 			<span class="w-px h-4 bg-[#1B365D]/10 hidden sm:block"></span>
-			<span class="flex items-center gap-1.5">🎙️ Luyện qua hội thoại thực tế</span>
+			<span class="flex items-center gap-1.5"><img src="/icons/i_microphone.png" alt="" class="w-4 h-4" /> Luyện qua hội thoại thực tế</span>
 			<span class="w-px h-4 bg-[#1B365D]/10 hidden sm:block"></span>
 			<span class="flex items-center gap-1.5">📱 Cài như app trên điện thoại</span>
 		</div>
@@ -216,14 +216,14 @@
 		</div>
 		<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
 			{#each [
-				{ step: '01', icon: '🎧', label: 'Nghe hiểu', desc: 'Nghe đoạn hội thoại với khách hàng nước ngoài và trả lời câu hỏi.' },
-				{ step: '02', icon: '💬', label: 'Luyện mẫu câu', desc: 'Đọc to và lặp lại các cấu trúc câu chuyên nghiệp theo từng tình huống.' },
-				{ step: '03', icon: '🎙️', label: 'Thực hành hội thoại', desc: 'Đóng vai VA trong tình huống giao tiếp thực tế với khách hàng.' },
-				{ step: '04', icon: '⭐', label: 'Nhìn lại và tiến bộ', desc: 'Ghi lại cảm xúc sau mỗi bài, theo dõi streak và mở khóa phần thưởng.' }
+				{ step: '01', icon: '/icons/i_listen.png', label: 'Nghe hiểu', desc: 'Nghe đoạn hội thoại với khách hàng nước ngoài và trả lời câu hỏi.' },
+				{ step: '02', icon: '/icons/i_speaking.png', label: 'Luyện mẫu câu', desc: 'Đọc to và lặp lại các cấu trúc câu chuyên nghiệp theo từng tình huống.' },
+				{ step: '03', icon: '/icons/i_microphone.png', label: 'Thực hành hội thoại', desc: 'Đóng vai VA trong tình huống giao tiếp thực tế với khách hàng.' },
+				{ step: '04', icon: '/icons/i_writing.png', label: 'Nhìn lại và tiến bộ', desc: 'Ghi lại cảm xúc sau mỗi bài, theo dõi streak và mở khóa phần thưởng.' }
 			] as item, i}
 				<div class="reveal reveal-d{i+1} lift bg-white rounded-2xl p-6 shadow-[0_2px_20px_rgba(27,54,93,0.06)] relative">
 					<div class="absolute top-5 right-5 text-[#1B365D]/8 font-heading font-black text-3xl">{item.step}</div>
-					<div class="text-2xl mb-4">{item.icon}</div>
+					<img src={item.icon} alt={item.label} class="w-8 h-8 mb-4" />
 					<h3 class="font-heading font-semibold text-[#1B365D] text-base mb-2">{item.label}</h3>
 					<p class="text-[#1B365D]/55 text-sm leading-relaxed">{item.desc}</p>
 				</div>
@@ -246,15 +246,15 @@
 		</div>
 		<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
 			{#each [
-				{ icon: '🏆', title: '8 Ngành Nghề VA', desc: 'Ecommerce, Video Editing, Operations, Customer Support. Nội dung sát với công việc thực tế.' },
-				{ icon: '⚡', title: 'Credits Hàng Tháng', desc: 'Mỗi tháng nhận 100 credits để thực hành hội thoại. Hoàn thành bài học để nhận thêm.' },
-				{ icon: '🔥', title: 'Streak Hàng Ngày', desc: 'Duy trì thói quen học mỗi ngày để mở khóa templates và phần thưởng.' },
-				{ icon: '📚', title: 'Kho Từ Vựng', desc: 'Từ vựng bạn gặp trong bài được lưu lại kèm ví dụ cụ thể để ôn tập sau.' },
-				{ icon: '📊', title: 'Theo Dõi Tiến Độ', desc: 'Xem bạn đã hoàn thành bao nhiêu bài, streak bao nhiêu ngày và điểm từng buổi.' },
-				{ icon: '📱', title: 'Cài Trên Điện Thoại', desc: 'Cài VASpeak lên màn hình như app thật. Học mọi lúc không cần mở trình duyệt.' }
+				{ icon: '/icons/i_challenge.png', title: '8 Ngành Nghề VA', desc: 'Ecommerce, Video Editing, Operations, Customer Support. Nội dung sát với công việc thực tế.' },
+				{ icon: '/icons/i_credit.png', title: 'Credits Hàng Tháng', desc: 'Mỗi tháng nhận 100 credits để thực hành hội thoại. Hoàn thành bài học để nhận thêm.' },
+				{ icon: '/icons/i_lesson.png', title: 'Streak Hàng Ngày', desc: 'Duy trì thói quen học mỗi ngày để mở khóa templates và phần thưởng.' },
+				{ icon: '/icons/i_abc.png', title: 'Kho Từ Vựng', desc: 'Từ vựng bạn gặp trong bài được lưu lại kèm ví dụ cụ thể để ôn tập sau.' },
+				{ icon: '/icons/i_listen2.png', title: 'Theo Dõi Tiến Độ', desc: 'Xem bạn đã hoàn thành bao nhiêu bài, streak bao nhiêu ngày và điểm từng buổi.' },
+				{ icon: '/icons/i_speak.png', title: 'Cài Trên Điện Thoại', desc: 'Cài VASpeak lên màn hình như app thật. Học mọi lúc không cần mở trình duyệt.' }
 			] as feat, i}
 				<div class="reveal reveal-d{(i%3)+1} feat-card rounded-2xl p-6 border border-white/8 bg-white/6 backdrop-blur-sm">
-					<div class="text-3xl mb-4">{feat.icon}</div>
+					<img src={feat.icon} alt={feat.title} class="w-10 h-10 mb-4" />
 					<h3 class="font-heading font-semibold text-white text-base mb-2">{feat.title}</h3>
 					<p class="text-white/50 text-sm leading-relaxed">{feat.desc}</p>
 				</div>

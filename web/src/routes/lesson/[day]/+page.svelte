@@ -372,7 +372,7 @@
 							</div>
 						{:else}
 							<button onclick={() => { drError = ''; drTranscript = null; drResult = null; drRecorder.start(); }} class="w-full bg-white border border-[#1B365D]/20 rounded-xl py-3.5 flex items-center justify-center gap-2 text-[#1B365D] text-sm font-bold hover:bg-[#F2A906]/10 hover:border-[#F2A906]/40 active:scale-95 transition-all">
-								🎙️ Bấm để nói
+								<img src="/icons/i_microphone2.png" alt="" class="w-5 h-5" /> Bấm để nói
 							</button>
 						{/if}
 
@@ -398,7 +398,7 @@
 			{:else if block.type === 'roleplay'}
 				<!-- Scenario header -->
 				<div class="bg-[#1B365D] text-white rounded-2xl p-4 mb-3">
-					<p class="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1">Kịch bản · ⚡{block.credit_cost ?? 3} credits/lượt</p>
+					<p class="text-xs font-semibold uppercase tracking-wider text-white/50 mb-1 flex items-center gap-1">Kịch bản · <img src="/icons/i_credit.png" alt="" class="w-3.5 h-3.5 inline" />{block.credit_cost ?? 3} credits/lượt</p>
 					<p class="text-sm text-white/85 leading-relaxed">{block.scenario}</p>
 				</div>
 
@@ -406,7 +406,7 @@
 					<!-- Pre-start: persona + criteria + start button -->
 					<div class="bg-white rounded-2xl p-4 border border-[#1B365D]/8 shadow-sm mb-3">
 						<div class="flex items-center gap-2 mb-2">
-							<div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-base">🤖</div>
+							<div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center p-1.5"><img src="/icons/i_speaking.png" alt="AI" class="w-full h-full" /></div>
 							<div>
 								<p class="font-semibold text-[#1B365D] text-sm">AI Client</p>
 								<p class="text-[#1B365D]/40 text-xs">{block.client_persona}</p>
@@ -421,9 +421,9 @@
 					</div>
 					<button
 						onclick={startRoleplay}
-						class="w-full py-3.5 rounded-xl font-bold text-sm bg-purple-600 text-white shadow-lg shadow-purple-500/20 hover:bg-purple-700 active:scale-95 transition-all"
+						class="w-full py-3.5 rounded-xl font-bold text-sm bg-purple-600 text-white shadow-lg shadow-purple-500/20 hover:bg-purple-700 active:scale-95 transition-all flex items-center justify-center gap-2"
 					>
-						🎙️ Bắt đầu hội thoại AI
+						<img src="/icons/i_microphone2.png" alt="" class="w-5 h-5" /> Bắt đầu hội thoại AI
 					</button>
 				{:else}
 					<!-- Chat thread -->
@@ -431,7 +431,7 @@
 						<!-- Credits badge -->
 						{#if rpCreditsLeft !== null}
 							<div class="flex justify-end px-3 pt-2">
-								<span class="text-xs bg-[#F2A906]/10 text-[#1B365D]/60 px-2 py-0.5 rounded-full">⚡ {rpCreditsLeft} credits</span>
+								<span class="text-xs bg-[#F2A906]/10 text-[#1B365D]/60 px-2 py-0.5 rounded-full flex items-center gap-1"><img src="/icons/i_credit.png" alt="" class="w-3.5 h-3.5" /> {rpCreditsLeft} credits</span>
 							</div>
 						{/if}
 						<!-- Messages -->
@@ -439,20 +439,20 @@
 							{#each rpMessages as msg (msg.role + msg.content.slice(0, 12))}
 								{#if msg.role === 'assistant'}
 									<div class="flex gap-2 items-start">
-										<div class="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+										<div class="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center p-1 flex-shrink-0"><img src="/icons/i_speaking.png" alt="AI" class="w-full h-full" /></div>
 										<div class="bg-[#F8F5FF] rounded-2xl rounded-tl-none px-3 py-2 text-sm text-[#1B365D] leading-relaxed max-w-[85%]">{msg.content}</div>
 									</div>
 								{:else}
 									<div class="flex gap-2 items-start justify-end">
 										<div class="bg-[#F2A906]/15 rounded-2xl rounded-tr-none px-3 py-2 text-sm text-[#1B365D] leading-relaxed max-w-[85%]">{msg.content}</div>
-										<div class="w-7 h-7 rounded-full bg-[#F2A906]/20 flex items-center justify-center text-sm flex-shrink-0">🙋</div>
+										<div class="w-7 h-7 rounded-full bg-[#F2A906]/20 flex items-center justify-center p-1 flex-shrink-0"><img src="/icons/i_user.png" alt="You" class="w-full h-full" /></div>
 									</div>
 								{/if}
 							{/each}
 							<!-- Streaming indicator -->
 							{#if rpStreaming}
 								<div class="flex gap-2 items-start">
-									<div class="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+									<div class="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center p-1 flex-shrink-0"><img src="/icons/i_speaking.png" alt="AI" class="w-full h-full" /></div>
 									<div class="bg-[#F8F5FF] rounded-2xl rounded-tl-none px-3 py-2 text-sm text-[#1B365D] leading-relaxed max-w-[85%]">
 										{#if rpStreamText}{rpStreamText}{:else}<span class="animate-pulse">…</span>{/if}
 									</div>
@@ -462,8 +462,8 @@
 						<!-- Input row -->
 						<div class="border-t border-[#1B365D]/8 flex gap-2 p-2 items-end">
 							{#if rpState === 'recording'}
-								<div class="flex-1 flex items-center justify-center p-3 text-red-500 text-sm font-medium animate-pulse border border-red-500/20 rounded-xl bg-red-50">
-									🎤 Đang ghi âm · {formatRecordTime(rpElapsed)}
+								<div class="flex-1 flex items-center justify-center gap-2 p-3 text-red-500 text-sm font-medium animate-pulse border border-red-500/20 rounded-xl bg-red-50">
+									<img src="/icons/i_microphone2.png" alt="" class="w-4 h-4" /> Đang ghi âm · {formatRecordTime(rpElapsed)}
 								</div>
 								<button
 									onclick={() => rpRecorder.stop()}
@@ -486,7 +486,7 @@
 										disabled={rpStreaming || rpState === 'processing'}
 										title="Nhập bằng giọng nói"
 										class="px-3 py-1.5 rounded-xl bg-white border border-[#1B365D]/20 text-[#1B365D] font-bold text-sm hover:bg-[#F2A906]/10 active:scale-95 transition-all text-center disabled:opacity-50"
-									>🎙️</button>
+									><img src="/icons/i_microphone2.png" alt="Voice" class="w-5 h-5" /></button>
 									<button
 										onclick={sendRoleplayMessage}
 										disabled={rpStreaming || rpState === 'processing' || !rpUserDraft.trim()}

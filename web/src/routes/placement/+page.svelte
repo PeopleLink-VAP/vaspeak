@@ -174,7 +174,7 @@
 			{:else}
 				<!-- Step 4: Speaking Sample (Audio) -->
 				<div class="flex-1 animate-[fadeIn_0.3s_ease-out]" data-testid="step-audio">
-					<div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-2xl mb-4">🎙️</div>
+					<div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center p-2.5 mb-4"><img src="/icons/i_microphone.png" alt="" class="w-full h-full" /></div>
 					<h2 class="font-heading font-bold text-[#1B365D] text-2xl mb-2 leading-tight">Thử giọng nhanh<br>(không bắt buộc)</h2>
 					<p class="text-[#1B365D]/60 text-sm mb-4">Đọc đoạn văn dưới đây bằng tiếng Anh. Chúng tôi sẽ dùng AI để đánh giá trình độ phát âm của bạn.</p>
 
@@ -228,7 +228,7 @@
 								class="w-full bg-white border border-[#1B365D]/20 rounded-xl py-3.5 flex items-center justify-center gap-2 text-[#1B365D] text-sm font-bold hover:bg-[#F2A906]/10 hover:border-[#F2A906]/40 active:scale-95 transition-all"
 								data-testid="start-recording"
 							>
-								🎙️ Bấm để ghi âm
+								<img src="/icons/i_microphone2.png" alt="" class="w-5 h-5" /> Bấm để ghi âm
 							</button>
 							<button
 								onclick={() => { audioSkipped = true; }}
