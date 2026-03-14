@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { turso, ensureKanbanSchema } from '$lib/server/turso';
-import crypto from 'crypto';
+import { nanoid } from 'nanoid';
 
 export async function GET() {
     await ensureKanbanSchema();
@@ -11,7 +11,7 @@ export async function GET() {
 export async function POST({ request }) {
     await ensureKanbanSchema();
     const body = await request.json();
-    const id = crypto.randomUUID();
+    const id = nanoid(10);
 
     await turso.execute({
         sql: `INSERT INTO tasks (id, title, description, expected_outcome, status, assignee, workstream)

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
+    import { page } from '$app/stores';
     import { isAgent, formatElapsed, getInitials, parseJsonArray } from '$lib/utils';
     import TimeAgo from '$lib/components/TimeAgo.svelte';
     import {
@@ -86,6 +87,7 @@
     let isCreating = $state(false);
 
     // Task detail panel
+    let pathTaskId = $derived($page.params.taskId?.startsWith('.') ? $page.params.taskId.slice(1) : $page.params.taskId);
     let selectedTask = $state<Task | null>(null);
     let taskComments = $state<Comment[]>([]);
     let loadingComments = $state(false);
@@ -159,6 +161,19 @@
             if (r.ok) { const j = await r.json(); weeklyFocus = j.focus ?? ''; }
         } catch { /* silent */ }
         await refreshActivity();
+        
+        // Initial deep link processing
+        if (pathTaskId) {
+            const found = allTasks.find(t => t.id === pathTaskId);
+            if (found) {
+                openTask(found, false);
+            } else {
+                fetch(`/admin/api/kanban/tasks/${pathTaskId}`)
+                    .then(r => { if (r.ok) r.json().then(j => openTask(j, false)); })
+                    .catch(() => {});
+            }
+        }
+
         refreshInterval = setInterval(refreshBoard, 15000);
         tickInterval = setInterval(() => { now = Date.now(); }, 1000);
         activityInterval = setInterval(refreshActivity, 30000);
@@ -242,14 +257,33 @@
 
     // ─── Task Detail Panel ────────────────────────────────────────────────────
 
-    async function openTask(task: Task) {
+    async function openTask(task: Task, updateUrl = true) {
         selectedTask = task;
+        if (updateUrl) {
+            history.pushState({}, '', '/admin/kanban.' + task.id);
+        }
         await loadComments(task.id);
     }
 
-    function closePanel() {
+    function closePanel(updateUrl = true) {
         selectedTask = null;
         taskComments = [];
+        if (updateUrl) {
+            history.pushState({}, '', '/admin/kanban');
+        }
+    }
+
+    function handlePopState() {
+        const path = window.location.pathname;
+        const match = path.match(/\/admin\/kanban\.([a-zA-Z0-9_-]+)$/);
+        if (match) {
+            const id = match[1];
+            const found = allTasks.find(t => t.id === id);
+            if (found) openTask(found, false);
+            else fetch(`/admin/api/kanban/tasks/${id}`).then(r => { if (r.ok) r.json().then(j => openTask(j, false)); });
+        } else if (path.endsWith('/admin/kanban')) {
+            closePanel(false);
+        }
     }
 
     async function loadComments(taskId: string) {
@@ -332,6 +366,8 @@
 <svelte:head>
     <title>Kanban Board — VASpeak Admin</title>
 </svelte:head>
+
+<svelte:window onpopstate={handlePopState} />
 
 <div class="kanban-page">
     <!-- ── Header ──────────────────────────────────────────────────────── -->
@@ -421,7 +457,10 @@
                         >
                             <div class="task-top">
                                 <span class="task-title">{task.title}</span>
-                                <button class="task-delete" onclick={(e) => { e.stopPropagation(); deleteTask(task.id); }} title="Delete">×</button>
+                                <div class="task-actions">
+                                    <button class="task-permalink" title="Copy permalink" onclick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(window.location.origin + '/admin/kanban.' + task.id); }}><Link size={12} /></button>
+                                    <button class="task-delete" onclick={(e) => { e.stopPropagation(); deleteTask(task.id); }} title="Delete">×</button>
+                                </div>
                             </div>
 
                             {#if task.description}
@@ -511,12 +550,12 @@
 
 <!-- ── Task Detail Panel ───────────────────────────────────────────────── -->
 {#if selectedTask}
-    <div class="panel-backdrop" role="presentation" onclick={closePanel} onkeydown={(e) => e.key === 'Escape' && closePanel()}></div>
+    <div class="panel-backdrop" role="presentation" onclick={() => closePanel()} onkeydown={(e) => e.key === 'Escape' && closePanel()}></div>
     <div class="detail-panel">
         <div class="panel-header">
             <div class="panel-title-row">
                 <h2 class="panel-title">{selectedTask.title}</h2>
-                <button class="panel-close" onclick={closePanel}><X size={16} /></button>
+                <button class="panel-close" onclick={() => closePanel()}><X size={16} /></button>
             </div>
             <div class="panel-meta">
                 {#if selectedTask.assignee}
@@ -534,6 +573,9 @@
                 {#if selectedTask.status === 'in_progress'}
                     <span class="meta-chip elapsed-chip"><Clock size={12} /> {elapsed(selectedTask.updated_at)}</span>
                 {/if}
+                <button class="meta-chip action-chip" onclick={() => navigator.clipboard.writeText(window.location.origin + '/admin/kanban.' + selectedTask?.id)}>
+                    <Link size={12} /> Permalink
+                </button>
             </div>
         </div>
 

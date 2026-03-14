@@ -1,6 +1,15 @@
 import { json } from '@sveltejs/kit';
 import { turso } from '$lib/server/turso';
 
+export async function GET({ params }) {
+    const rs = await turso.execute({
+        sql: 'SELECT * FROM tasks WHERE id = ?',
+        args: [params.id]
+    });
+    if (rs.rows.length === 0) return json({ error: 'Task not found' }, { status: 404 });
+    return json(rs.rows[0]);
+}
+
 export async function PATCH({ params, request }) {
     const body = await request.json();
     const sets: string[] = [];

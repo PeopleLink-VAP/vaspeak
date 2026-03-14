@@ -128,6 +128,7 @@ All routes are under `/admin/` and protected by Basic Auth.
 
 - The board auto-refreshes every 3 seconds — humans see your updates automatically
 - All data is stored in Turso (SQLite-compatible cloud database)
+- **Short IDs**: Tasks now use 10-character URL-safe IDs. Always use the `kanban.[short_id]` convention (e.g. `kanban.MTSdg59jIN`) inside your commit messages, PRs, and system context. Humans can navigate directly to `/admin/kanban.[short_id]`.
 - `follow_up_steps` and `files_changed` must be JSON-stringified arrays
 - Always set `updated_at = CURRENT_TIMESTAMP` when updating tasks
 - Before creating a task, query for existing active tasks to avoid duplicates

@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { turso, ensureKanbanSchema } from '$lib/server/turso';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-import crypto from 'crypto';
+import { nanoid } from 'nanoid';
 
 const UPLOAD_DIR = 'static/uploads/kanban';
 
@@ -16,7 +16,7 @@ export async function POST({ params, request }) {
     }
 
     const ext = file.name.split('.').pop() ?? 'png';
-    const filename = `${params.id}_${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    const filename = `${params.id}_${nanoid(8)}.${ext}`;
     const uploadPath = join(UPLOAD_DIR, filename);
 
     await mkdir(UPLOAD_DIR, { recursive: true });
@@ -27,7 +27,7 @@ export async function POST({ params, request }) {
     await turso.execute({
         sql: 'INSERT INTO task_comments (id, task_id, author, body) VALUES (?, ?, ?, ?)',
         args: [
-            crypto.randomUUID(),
+            nanoid(10),
             params.id,
             'attachment',
             `📎 [${file.name}](/uploads/kanban/${filename})`
