@@ -34,7 +34,7 @@
 	});
 
 	function getLabel(s: TTSState): string {
-		if (s === 'loading') return 'Đang tạo giọng nói AI...';
+		if (s === 'loading') return 'Đang tạo giọng nói...';
 		if (s === 'speaking') return 'Đang phát · nhấn để tạm dừng';
 		if (s === 'paused') return 'Tạm dừng · nhấn để tiếp tục';
 		return subtitle;

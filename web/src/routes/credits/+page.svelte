@@ -19,14 +19,14 @@
 </script>
 
 <svelte:head>
-	<title>AI Credits — VASpeak</title>
+	<title>Điểm Luyện Tập — VASpeak</title>
 </svelte:head>
 
 <div class="min-h-screen bg-[#FAFAF8] pb-24">
 	<!-- Top Bar -->
 	<div class="sticky top-0 z-10 bg-[#FAFAF8]/95 backdrop-blur-lg border-b border-[#E8E8E8] px-5 py-4 flex items-center gap-3">
 		<a href="/dashboard" class="text-[#A3A3A3] hover:text-[#1A1A1A] transition-colors text-lg leading-none">←</a>
-		<h1 class="font-heading font-bold text-[#1A1A1A] text-base tracking-tight">AI Credits</h1>
+		<h1 class="font-heading font-bold text-[#1A1A1A] text-base tracking-tight">Điểm Luyện Tập</h1>
 	</div>
 
 	<div class="max-w-md mx-auto px-5 pt-6 flex flex-col gap-6">
@@ -70,7 +70,7 @@
 							<img src="/icons/i_microphone.png" alt="" class="w-full h-full" />
 						</div>
 						<div>
-							<p class="text-sm font-medium text-[#1A1A1A]">Hội Thoại AI (mỗi lượt)</p>
+							<p class="text-sm font-medium text-[#1A1A1A]">Hội Thoại (mỗi lượt)</p>
 							<p class="text-xs text-[#A3A3A3]">1 tin nhắn gửi đến AI client</p>
 						</div>
 					</div>
@@ -83,7 +83,7 @@
 						</div>
 						<div>
 							<p class="text-sm font-medium text-[#1A1A1A]">Chấm điểm hội thoại</p>
-							<p class="text-xs text-[#A3A3A3]">Phân tích & phản hồi từ AI</p>
+							<p class="text-xs text-[#A3A3A3]">Phân tích & phản hồi chi tiết</p>
 						</div>
 					</div>
 					<span class="text-sm font-semibold text-[#10B981]">Miễn phí</span>
@@ -101,7 +101,7 @@
 			{#if days.length === 0}
 				<div class="text-center py-10">
 					<p class="text-4xl mb-3">🌱</p>
-					<p class="text-[#A3A3A3] text-sm mb-4">Chưa có lịch sử. Hãy bắt đầu hội thoại AI đầu tiên!</p>
+					<p class="text-[#A3A3A3] text-sm mb-4">Chưa có lịch sử. Hãy bắt đầu hội thoại đầu tiên!</p>
 					<a href="/dashboard" class="inline-block bg-[#D4960A] text-[#1A1A1A] font-bold px-5 py-2.5 rounded-lg text-sm">
 						Bắt đầu học →
 					</a>
@@ -124,7 +124,7 @@
 											{#if entry.score !== null}
 												<p class="text-xs text-[#10B981]">Điểm: {entry.score}/100</p>
 											{:else}
-												<p class="text-xs text-[#A3A3A3]">Hội thoại AI</p>
+												<p class="text-xs text-[#A3A3A3]">Hội thoại</p>
 											{/if}
 										</div>
 										{#if entry.creditsSpent > 0}
@@ -144,8 +144,8 @@
 		<!-- Monthly note -->
 		<div class="bg-[#F5F0E6]/60 rounded-2xl p-4 text-center">
 			<p class="text-sm text-[#6B6B6B]">
-				Credits được làm mới vào đầu mỗi tháng.<br>
-				<strong class="text-[#1A1A1A]">{credits.allowance} credits</strong> mỗi tháng với gói Free.
+				Điểm luyện tập được làm mới vào đầu mỗi tháng.<br>
+				<strong class="text-[#1A1A1A]">{credits.allowance} điểm</strong> mỗi tháng với gói Free.
 			</p>
 		</div>
 

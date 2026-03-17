@@ -12,6 +12,7 @@
 	let drTranscript  = $state<string | null>(null);
 	let drResult      = $state<'pass' | 'fail' | null>(null);
 	let drError       = $state('');
+	let skipCount     = $state(0); // track consecutive skips (no recording attempt)
 
 	const drRecorder = createAudioRecorder({
 		maxDuration: 15,
@@ -46,8 +47,21 @@
 		return () => drRecorder.destroy();
 	});
 
-	function nextPattern() {
+	function nextPattern(attempted = false) {
 		drRecorder.destroy();
+		// If user didn't attempt this pattern, count as skip
+		if (!attempted && drTranscript === null) {
+			skipCount++;
+		} else {
+			skipCount = 0; // reset if they actually tried
+		}
+
+		// After 2 consecutive skips, jump to complete to avoid endless repetition
+		if (skipCount >= 2) {
+			oncomplete();
+			return;
+		}
+
 		if (drillingIndex < patterns.length - 1) {
 			drillingIndex++;
 			drTranscript = null; drResult = null; drError = ''; drState = 'idle';
@@ -108,7 +122,7 @@
 <div class="fixed bottom-0 left-0 right-0 bg-[#FAFAF8]/90 backdrop-blur-lg border-t border-[#E8E8E8] px-5 py-4">
 	<div class="max-w-lg mx-auto">
 		<button
-			onclick={nextPattern}
+			onclick={() => nextPattern(drTranscript !== null)}
 			class="w-full py-3.5 rounded-lg font-bold text-sm bg-[#D4960A] text-[#1A1A1A] hover:bg-[#b07d08] active:scale-[0.97] transition-all"
 		>
 			{drillingIndex < patterns.length - 1 ? `Mẫu tiếp theo (${drillingIndex + 2}/${patterns.length}) →` : 'Hoàn thành block này →'}

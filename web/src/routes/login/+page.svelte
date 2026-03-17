@@ -120,8 +120,11 @@
 				</button>
 
 				<div class="text-center text-xs text-[#A3A3A3] flex items-center gap-2 justify-center">
-					<span>Không nhớ mật khẩu?</span>
-					<button type="button" onclick={() => tab = 'magic'} class="text-[#D4960A] font-semibold hover:underline">
+					<a href="/auth/reset-password" class="text-[#D4960A] font-semibold hover:underline">
+						Quên mật khẩu?
+					</a>
+					<span>·</span>
+					<button type="button" onclick={() => tab = 'magic'} class="text-[#A3A3A3] hover:text-[#6B6B6B] transition-colors">
 						Dùng magic link
 					</button>
 				</div>

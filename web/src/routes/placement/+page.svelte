@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import AudioPlayer from '$lib/components/AudioPlayer.svelte';
 	import { createAudioRecorder, formatRecordTime, transcribeAudio } from '$lib/audio-recorder';
 
@@ -11,6 +12,7 @@
 	let experience = $state('');
 	let speaking   = $state('');
 	let niche      = $state('general');
+	let showWelcome = $state(false);
 
 	// Audio assessment state (Step 4)
 	let audioState: 'idle' | 'recording' | 'processing' | 'done' = $state('idle');
@@ -34,13 +36,14 @@
 	});
 
 	const niches = [
+		{ value: 'executive_assistant', label: 'Trợ Lý Giám Đốc (EA)', icon: '💼' },
+		{ value: 'operations_onboarding', label: 'Trợ Lý Vận Hành & Onboarding', icon: '📊' },
 		{ value: 'general', label: 'Tiếng Anh Giao Tiếp Cơ Bản', icon: '🌍' },
 		{ value: 'customer_support', label: 'Hỗ Trợ Khách Hàng (CS)', icon: '🎧' },
-		{ value: 'data_entry', label: 'Nhập Liệu & Hành Chính', icon: '📋' },
-		{ value: 'social_media', label: 'Quản Lý Mạng Xã Hội', icon: '📱' },
 		{ value: 'ecommerce', label: 'Thương Mại Điện Tử (eCom)', icon: '🛒' },
 		{ value: 'video_editor', label: 'Biên Tập Video', icon: '🎬' },
-		{ value: 'executive_assistant', label: 'Trợ Lý Giám Đốc (EA)', icon: '💼' }
+		{ value: 'social_media', label: 'Quản Lý Mạng Xã Hội', icon: '📱' },
+		{ value: 'data_entry', label: 'Nhập Liệu & Hành Chính', icon: '📋' },
 	];
 
 	const speakingPrompt = "Hi, my name is [your name]. I would like to apply for a Virtual Assistant position. I have experience in [your skill], and I am available to work Monday to Friday.";
@@ -67,7 +70,18 @@
 
 	<div class="bg-white rounded-3xl p-6 shadow-[0_4px_14px_rgba(27,54,93,0.06)] border border-[#1B365D]/6 flex-1 flex flex-col relative">
 		
-		<form method="POST" action="?/submit" use:enhance class="flex-1 flex flex-col">
+		<form method="POST" action="?/submit" use:enhance={({ formElement }) => {
+			return async ({ result, update }) => {
+				if (result.type === 'redirect') {
+					// Show welcome overlay before navigating
+					showWelcome = true;
+					await new Promise(r => setTimeout(r, 2800));
+					goto(result.location);
+				} else {
+					await update();
+				}
+			};
+		}} class="flex-1 flex flex-col">
 			<input type="hidden" name="experience" value={experience} />
 			<input type="hidden" name="speaking" value={speaking} />
 			<input type="hidden" name="transcript" value={transcript} />
@@ -279,3 +293,21 @@
 		to { opacity: 1; transform: translateY(0); }
 	}
 </style>
+
+<!-- Welcome overlay (shows briefly after placement submit) -->
+{#if showWelcome}
+	<div class="fixed inset-0 z-50 bg-[#1B365D] flex flex-col items-center justify-center px-8 text-center">
+		<div class="animate-[fadeIn_0.5s_ease-out]">
+			<div class="w-20 h-20 bg-[#F2A906] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[#F2A906]/30">
+				<span class="text-[#1B365D] font-black text-2xl">VS</span>
+			</div>
+			<h1 class="font-heading font-bold text-white text-3xl mb-3">Chào mừng đến với VASpeak!</h1>
+			<p class="text-white/70 text-base leading-relaxed mb-8">Hồ sơ học tập của bạn đã được thiết lập.<br/>Hãy bắt đầu hành trình luyện nói nào! 🚀</p>
+			<div class="flex justify-center gap-1.5">
+				<div class="w-2 h-2 bg-[#F2A906] rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+				<div class="w-2 h-2 bg-[#F2A906] rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+				<div class="w-2 h-2 bg-[#F2A906] rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+			</div>
+		</div>
+	</div>
+{/if}

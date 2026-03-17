@@ -1,10 +1,11 @@
 <script lang="ts">
 	import BottomNav from '$lib/components/BottomNav.svelte';
 
-	// States: loading | playing | answering | correct | wrong | error
-	type GameState = 'loading' | 'playing' | 'answering' | 'correct' | 'wrong' | 'error';
+	// States: setup | loading | playing | answering | correct | wrong | error | done
+	type GameState = 'setup' | 'loading' | 'playing' | 'answering' | 'correct' | 'wrong' | 'error' | 'done';
 
-	let gameState: GameState = $state('loading');
+	let gameState: GameState = $state('setup');
+	let sessionTarget = $state(10); // How many words to learn this session
 	let challenge = $state<{
 		word: string;
 		question: string;
@@ -24,6 +25,11 @@
 	let errorMsg = $state('');
 	let streak = $state(0);
 	let totalPlayed = $state(0);
+	let correctCount = $state(0);
+	let showCreditToast = $state(false);
+	let creditToastValue = $state(0);
+
+	const sessionOptions = [5, 10, 15, 20];
 
 	async function loadChallenge() {
 		gameState = 'loading';
@@ -74,7 +80,14 @@
 			totalPlayed++;
 			if (data.correct) {
 				streak++;
+				correctCount++;
 				credits = Math.max(0, credits);
+				// Show credit popup
+				if (data.creditsEarned > 0) {
+					creditToastValue = data.creditsEarned;
+					showCreditToast = true;
+					setTimeout(() => { showCreditToast = false; }, 2000);
+				}
 			} else {
 				streak = 0;
 			}
@@ -86,15 +99,27 @@
 	}
 
 	function playNext() {
+		// Check if session complete
+		if (totalPlayed >= sessionTarget) {
+			gameState = 'done';
+			return;
+		}
+		loadChallenge();
+	}
+
+	function endSession() {
+		gameState = 'done';
+	}
+
+	function startSession(target: number) {
+		sessionTarget = target;
+		totalPlayed = 0;
+		correctCount = 0;
+		streak = 0;
 		loadChallenge();
 	}
 
 	const labels = ['A', 'B', 'C', 'D'];
-
-	// Auto-load on mount
-	$effect(() => {
-		loadChallenge();
-	});
 </script>
 
 <svelte:head>
@@ -111,6 +136,21 @@
 			<h1 class="font-heading font-bold text-[#1A1A1A] text-base tracking-tight">Từ Của Ngày</h1>
 		</div>
 		<div class="flex items-center gap-3">
+			{#if gameState !== 'setup' && gameState !== 'done'}
+				<!-- Session progress -->
+				<span class="text-xs text-[#A3A3A3] font-medium">{totalPlayed}/{sessionTarget}</span>
+				<!-- Exit session button -->
+				<button
+					onclick={endSession}
+					class="text-xs text-[#A3A3A3] hover:text-red-400 transition-colors font-medium flex items-center gap-1"
+					title="Kết thúc phiên"
+				>
+					<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+					Thoát
+				</button>
+			{/if}
 			{#if streak > 0}
 				<div class="flex items-center gap-1 text-[#D4960A]">
 					<img src="/icons/i_challenge.png" alt="" class="w-4 h-4" />
@@ -124,10 +164,49 @@
 		</div>
 	</div>
 
+	<!-- Credit Toast Popup -->
+	{#if showCreditToast}
+		<div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#D4960A] text-[#1A1A1A] font-bold text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-creditPop">
+			<img src="/icons/i_credit.png" alt="" class="w-4 h-4" />
+			+{creditToastValue} điểm thưởng!
+		</div>
+	{/if}
+
 	<div class="max-w-md mx-auto px-5 pt-8 flex flex-col gap-6">
 
-		<!-- Loading State -->
-		{#if gameState === 'loading'}
+		<!-- ── SETUP SCREEN ── -->
+		{#if gameState === 'setup'}
+			<div class="flex flex-col items-center text-center py-8 gap-6">
+				<div class="w-16 h-16 rounded-2xl bg-[#F5F0E6] flex items-center justify-center">
+					<img src="/icons/i_abc.png" alt="" class="w-9 h-9" />
+				</div>
+				<div>
+					<h2 class="font-heading font-bold text-[#1A1A1A] text-2xl mb-2">Từ Của Ngày</h2>
+					<p class="text-sm text-[#6B6B6B] leading-relaxed">Luyện từ vựng tiếng Anh mỗi ngày<br />để tích lũy điểm thưởng.</p>
+				</div>
+
+				<div class="w-full">
+					<p class="text-xs font-semibold text-[#A3A3A3] uppercase tracking-wider mb-4">Học bao nhiêu từ hôm nay?</p>
+					<div class="grid grid-cols-4 gap-3">
+						{#each sessionOptions as opt}
+							<button
+								onclick={() => startSession(opt)}
+								id="session-{opt}"
+								class="py-4 rounded-xl border-2 font-bold text-lg transition-all
+									{opt === 10
+										? 'border-[#D4960A] bg-[#D4960A]/10 text-[#D4960A]'
+										: 'border-[#E8E8E8] bg-white text-[#1A1A1A] hover:border-[#D4960A]/50 hover:bg-[#D4960A]/5 active:scale-95'}"
+							>
+								{opt}
+							</button>
+						{/each}
+					</div>
+					<p class="text-xs text-[#A3A3A3] mt-3 text-center">Mỗi câu đúng = +1 điểm thưởng</p>
+				</div>
+			</div>
+
+		<!-- ── LOADING STATE ── -->
+		{:else if gameState === 'loading'}
 			<div class="flex flex-col items-center justify-center py-20 gap-4">
 				<div class="w-12 h-12 rounded-2xl bg-[#F5F0E6] flex items-center justify-center animate-pulse">
 					<img src="/icons/i_abc.png" alt="" class="w-7 h-7" />
@@ -140,7 +219,7 @@
 				</div>
 			</div>
 
-		<!-- Error State -->
+		<!-- ── ERROR STATE ── -->
 		{:else if gameState === 'error'}
 			<div class="flex flex-col items-center justify-center py-16 gap-4 text-center">
 				<div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center">
@@ -155,8 +234,44 @@
 				</button>
 			</div>
 
-		<!-- Playing / Answering / Result -->
+		<!-- ── DONE / SESSION COMPLETE ── -->
+		{:else if gameState === 'done'}
+			<div class="flex flex-col items-center text-center py-10 gap-5">
+				<div class="text-5xl">🎉</div>
+				<div>
+					<h2 class="font-heading font-bold text-[#1A1A1A] text-2xl mb-2">Phiên học hoàn thành!</h2>
+					<p class="text-sm text-[#6B6B6B]">Bạn đã học <strong>{totalPlayed}</strong> từ, trả lời đúng <strong>{correctCount}/{totalPlayed}</strong>.</p>
+				</div>
+				<div class="bg-[#D4960A]/10 rounded-2xl p-5 w-full">
+					<div class="flex items-center justify-center gap-2 mb-1">
+						<img src="/icons/i_credit.png" alt="" class="w-5 h-5" />
+						<span class="font-heading font-bold text-2xl text-[#D4960A]">+{correctCount}</span>
+					</div>
+					<p class="text-xs text-[#6B6B6B]">điểm thưởng kiếm được phiên này</p>
+				</div>
+				<div class="flex gap-3 w-full">
+					<button
+						onclick={() => { gameState = 'setup'; totalPlayed = 0; correctCount = 0; streak = 0; }}
+						class="flex-1 py-3.5 rounded-xl border-2 border-[#E8E8E8] text-sm font-semibold text-[#1A1A1A] hover:border-[#D4960A]/50 active:scale-95 transition-all"
+					>
+						Chơi lại
+					</button>
+					<a
+						href="/challenges"
+						class="flex-1 py-3.5 rounded-xl text-center bg-[#1A1A1A] text-white text-sm font-bold hover:bg-[#333] active:scale-95 transition-all"
+					>
+						Về trang chủ
+					</a>
+				</div>
+			</div>
+
+		<!-- ── PLAYING / ANSWERING / RESULT ── -->
 		{:else if challenge}
+			<!-- Session progress bar -->
+			<div class="w-full h-1 bg-[#E8E8E8] rounded-full overflow-hidden -mt-2">
+				<div class="h-full bg-[#D4960A] rounded-full transition-all duration-300" style="width: {(totalPlayed / sessionTarget) * 100}%"></div>
+			</div>
+
 			<!-- Question Card -->
 			<div class="relative">
 				<div class="flex items-baseline gap-2 mb-4">
@@ -246,7 +361,7 @@
 								<div>
 									<p class="font-heading font-bold text-[#10B981] text-base">Chính xác!</p>
 									<p class="text-xs text-[#10B981]/80 font-medium flex items-center gap-1">
-										<img src="/icons/i_credit.png" alt="" class="w-3 h-3" /> +1 credit
+										<img src="/icons/i_credit.png" alt="" class="w-3 h-3" /> +1 điểm thưởng
 									</p>
 								</div>
 							{:else}
@@ -275,22 +390,39 @@
 					{/if}
 				</div>
 
-				<!-- Next Button -->
+				<!-- Next/Done Button -->
+				{#if totalPlayed >= sessionTarget}
+					<button
+						onclick={() => { gameState = 'done'; }}
+						class="w-full py-4 rounded-xl font-bold text-sm bg-[#10B981] text-white hover:bg-[#0da871] active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+					>
+						🎉 Hoàn thành phiên học!
+					</button>
+				{:else}
+					<button
+						onclick={playNext}
+						class="w-full py-4 rounded-xl font-bold text-sm bg-[#1A1A1A] text-white hover:bg-[#333] active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+					>
+						Từ tiếp theo ({totalPlayed + 1}/{sessionTarget})
+						<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+					</button>
+				{/if}
+
+				<!-- Early exit button -->
 				<button
-					onclick={playNext}
-					class="w-full py-4 rounded-xl font-bold text-sm bg-[#1A1A1A] text-white hover:bg-[#333] active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+					onclick={endSession}
+					class="w-full text-center text-xs text-[#A3A3A3] hover:text-[#6B6B6B] transition-colors py-1"
 				>
-					Từ tiếp theo
-					<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+					Kết thúc phiên sớm →
 				</button>
 			{/if}
 		{/if}
 
 		<!-- Stats footer (subtle) -->
-		{#if totalPlayed > 0}
+		{#if totalPlayed > 0 && gameState !== 'done' && gameState !== 'setup'}
 			<div class="text-center py-2">
 				<p class="text-[10px] text-[#A3A3A3] font-medium uppercase tracking-wider">
-					Phiên này: {totalPlayed} từ · {streak > 0 ? `chuỗi ${streak}` : 'chưa có chuỗi'}
+					Phiên này: {totalPlayed}/{sessionTarget} từ · {streak > 0 ? `chuỗi ${streak}` : 'chưa có chuỗi'}
 				</p>
 			</div>
 		{/if}
@@ -311,6 +443,13 @@
 		60% { transform: translateX(-3px); }
 		80% { transform: translateX(2px); }
 	}
+	@keyframes creditPop {
+		0% { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(0.9); }
+		20% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.05); }
+		80% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+		100% { opacity: 0; transform: translateX(-50%) translateY(-4px) scale(0.95); }
+	}
 	.animate-slideUp { animation: slideUp 0.35s ease-out forwards; }
 	.animate-shake { animation: shake 0.4s ease-in-out; }
+	.animate-creditPop { animation: creditPop 2s ease-out forwards; }
 </style>

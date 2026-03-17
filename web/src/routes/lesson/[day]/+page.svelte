@@ -11,7 +11,7 @@
 	const blockMeta = [
 		{ label: 'Nghe & Giải Mã', icon: '/icons/i_listen.png' },
 		{ label: 'Luyện Mẫu Câu', icon: '/icons/i_speaking.png' },
-		{ label: 'Hội Thoại AI',   icon: '/icons/i_microphone.png' },
+		{ label: 'Hội Thoại',       icon: '/icons/i_microphone.png' },
 		{ label: 'Phản Hồi',       icon: '/icons/i_writing.png' }
 	];
 
@@ -147,7 +147,7 @@
 
 			{#if rewardToast.streakBonus}
 				<div class="bg-[#D4960A]/10 rounded-xl p-4 mb-3" style="animation: slideUp 0.5s ease-out 0.2s both">
-					<div class="text-2xl mb-1">🔥 +{rewardToast.streakBonus.credits} credits</div>
+					<div class="text-2xl mb-1">🔥 +{rewardToast.streakBonus.credits} điểm thưởng</div>
 					<p class="text-sm text-[#6B6B6B]">{rewardToast.streakBonus.message}</p>
 				</div>
 			{/if}

@@ -84,7 +84,7 @@
 			if (!res.ok) {
 				const j = await res.json().catch(() => ({})) as any;
 				rpError    = res.status === 402
-					? `Hết AI Credits! Còn ${j.remaining ?? 0} credits.`
+					? `Hết điểm luyện tập! Còn ${j.remaining ?? 0} điểm.`
 					: (j.error ?? 'Lỗi không xác định.');
 				rpMessages = rpMessages.slice(0, -1);
 				return;
@@ -140,7 +140,7 @@
 
 <!-- Scenario header -->
 <div class="bg-[#1A1A1A] text-white rounded-xl p-4 mb-4">
-	<p class="text-xs font-semibold uppercase tracking-wider text-white/45 mb-1 flex items-center gap-1">Kịch bản · <img src="/icons/i_credit.png" alt="" class="w-3.5 h-3.5 inline" />{block.credit_cost ?? 3} credits/lượt</p>
+	<p class="text-xs font-semibold uppercase tracking-wider text-white/45 mb-1 flex items-center gap-1">Kịch bản · <img src="/icons/i_credit.png" alt="" class="w-3.5 h-3.5 inline" />{block.credit_cost === 1 ? '1 điểm/lượt' : `${block.credit_cost ?? 3} điểm/lượt`}</p>
 	<p class="text-sm text-white/80 leading-relaxed">{block.scenario}</p>
 </div>
 
@@ -148,9 +148,9 @@
 	<!-- Pre-start -->
 	<div class="mb-4">
 		<div class="flex items-center gap-2 mb-3">
-			<div class="w-8 h-8 rounded-full bg-[#F3EFFF] flex items-center justify-center p-1.5"><img src="/icons/i_speaking.png" alt="AI" class="w-full h-full" /></div>
+			<div class="w-8 h-8 rounded-full bg-[#F3EFFF] flex items-center justify-center p-1.5"><img src="/icons/i_speaking.png" alt="Client" class="w-full h-full" /></div>
 			<div>
-				<p class="font-semibold text-[#1A1A1A] text-sm">AI Client</p>
+				<p class="font-semibold text-[#1A1A1A] text-sm">Client (mô phỏng)</p>
 				<p class="text-[#A3A3A3] text-xs">{block.client_persona}</p>
 			</div>
 		</div>
@@ -165,7 +165,7 @@
 		onclick={startRoleplay}
 		class="w-full py-3.5 rounded-lg font-bold text-sm bg-[#1A1A1A] text-white hover:bg-[#333] active:scale-95 transition-all flex items-center justify-center gap-2"
 	>
-		<img src="/icons/i_microphone2.png" alt="" class="w-5 h-5 invert" /> Bắt đầu hội thoại AI
+		<img src="/icons/i_microphone2.png" alt="" class="w-5 h-5 invert" /> Bắt đầu hội thoại
 	</button>
 {:else}
 	<!-- Chat thread -->
@@ -173,7 +173,7 @@
 		<!-- Credits badge -->
 		{#if rpCreditsLeft !== null}
 			<div class="flex justify-end mb-2">
-				<span class="text-xs bg-[#D4960A]/10 text-[#6B6B6B] px-2.5 py-0.5 rounded-full flex items-center gap-1"><img src="/icons/i_credit.png" alt="" class="w-3.5 h-3.5" /> {rpCreditsLeft} credits</span>
+				<span class="text-xs bg-[#D4960A]/10 text-[#6B6B6B] px-2.5 py-0.5 rounded-full flex items-center gap-1"><img src="/icons/i_credit.png" alt="" class="w-3.5 h-3.5" /> {rpCreditsLeft} điểm còn lại</span>
 			</div>
 		{/if}
 		<!-- Messages -->
