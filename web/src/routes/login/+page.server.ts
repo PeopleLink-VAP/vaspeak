@@ -74,41 +74,52 @@ export const actions: Actions = {
 
 		// Validation
 		if (!email || !password || !displayName) {
-			return fail(400, { action: 'register', error: 'All fields are required.' });
+			return fail(400, { action: 'register', error: 'Vui lòng điền đầy đủ tất cả các trường.' });
 		}
 		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-			return fail(400, { action: 'register', error: 'Invalid email address.' });
+			return fail(400, { action: 'register', error: 'Địa chỉ email không hợp lệ.' });
 		}
 		if (password.length < 8) {
-			return fail(400, { action: 'register', error: 'Password must be at least 8 characters.' });
+			return fail(400, { action: 'register', error: 'Mật khẩu phải có ít nhất 8 ký tự.' });
 		}
 
 		// Block disposable email providers
 		if (isDisposableEmail(email)) {
 			return fail(400, {
 				action: 'register',
-				error: 'Disposable or temporary email addresses are not allowed. Please use a real email.'
+				error: 'Email tạm thời hoặc dùng một lần không được chấp nhận. Vui lòng dùng email thật.'
 			});
 		}
 
-		// Check for existing account (anti-enumeration: same message)
+		// Check for existing account
 		const existing = await findUserByEmail(email);
 		if (existing) {
-			return fail(409, { action: 'register', error: 'An account with this email already exists.' });
+			// Anti-enumeration: same message whether verified or not
+			return fail(409, {
+				action: 'register',
+				error: 'Email này đã có tài khoản. Hãy đăng nhập hoặc dùng magic link thay thế.'
+			});
 		}
 
 		const id = randomBytes(8).toString('hex');
 		const passwordHash = await hashPassword(password);
 
 		try {
-			// Create user with email_verified=0 — they must click the email link
 			await createUser({ id, email, displayName, passwordHash });
-		} catch (err) {
+		} catch (err: any) {
 			console.error('[register] DB error:', err);
-			return fail(500, { action: 'register', error: 'Registration failed. Please try again.' });
+			// Catch UNIQUE constraint — email was registered between our check and insert (race)
+			const msg = String(err?.message ?? '');
+			if (msg.includes('UNIQUE') || msg.includes('unique') || msg.includes('already exists')) {
+				return fail(409, {
+					action: 'register',
+					error: 'Email này đã có tài khoản. Hãy đăng nhập hoặc dùng magic link.'
+				});
+			}
+			return fail(500, { action: 'register', error: 'Đăng ký thất bại. Vui lòng thử lại sau.' });
 		}
 
-		// Send verification email (fire-and-forget — don't block registration on email failure)
+		// Send verification email (fire-and-forget)
 		try {
 			const verifyToken = await createVerificationToken(id, email);
 			const origin = PUBLIC_BASE_URL || `${url.protocol}//${url.host}`;
@@ -116,20 +127,19 @@ export const actions: Actions = {
 			const emailData = verificationEmail({
 				to: email,
 				link: verifyLink,
-				code: verifyToken.slice(0, 6).toUpperCase(), // not shown in email, kept for future OTP support
+				code: verifyToken.slice(0, 6).toUpperCase(),
 				expiryMinutes: VERIFICATION_EXPIRY_MINUTES
 			});
 			await sendEmail(emailData);
 		} catch (err) {
 			console.error('[register] Failed to send verification email:', err);
-			// Don't fail registration — user can request a resend later
+			// Don't fail registration — user can use magic link to verify
 		}
 
-		// Don't auto-login. Show a "check your email" message.
 		return {
 			action: 'register',
 			success: true,
-			message: `Account created! We've sent a verification link to ${email}. Click it to activate your account and log in.`
+			message: `Tài khoản đã tạo thành công! Chúng tôi đã gửi link xác thực tới ${email}. Nhấp vào link để kích hoạt tài khoản và đăng nhập.`
 		};
 	},
 

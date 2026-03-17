@@ -157,8 +157,9 @@
 				>
 					<div class="text-center pb-2">
 						<p class="text-sm text-[#6B6B6B] leading-relaxed">
-							Nhập email của bạn — chúng tôi sẽ gửi một link đăng nhập tức thì. Không cần mật khẩu!
+							Dành cho <strong class="text-[#1A1A1A]">tài khoản đã đăng ký</strong>. Nhập email — chúng tôi sẽ gửi link đăng nhập tức thì, không cần mật khẩu.
 						</p>
+						<p class="text-xs text-[#A3A3A3] mt-1.5">⚠️ Chưa có tài khoản? Hãy <button type="button" onclick={() => tab = 'register'} class="text-[#D4960A] font-semibold hover:underline">đăng ký trước</button>.</p>
 					</div>
 
 					<div>
